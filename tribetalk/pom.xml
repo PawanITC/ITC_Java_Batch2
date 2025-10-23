@@ -11,7 +11,7 @@
 	<groupId>com.tribetalk</groupId>
 	<artifactId>tribetalk</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>tribetalk</name>
 	<description>A community-driven microblogging platform, inspired by Twitter.</description>
 	<url/>
