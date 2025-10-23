@@ -41,7 +41,7 @@ jobs:
           cache: maven
 
       - name: Build (Maven)
-        working-directory: TribetalkApplication
+        working-directory: tribetalk
         run: mvn -B -ntp -DskipTests package
 
       # This step will upload jar. 
