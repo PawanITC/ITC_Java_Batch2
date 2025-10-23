@@ -8,6 +8,7 @@ public class TribetalkApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(TribetalkApplication.class, args);
+		
 	}
 
 }
