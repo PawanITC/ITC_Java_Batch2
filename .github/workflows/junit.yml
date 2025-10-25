@@ -31,7 +31,7 @@ jobs:
 
       - name: Junit Test Run
         working-directory: ${{env.Working_Directory}}
-        run: mvn -f tribetalk/pom.xml -B test
+        run: mvn -B test
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
