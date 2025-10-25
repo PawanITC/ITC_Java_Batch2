@@ -20,12 +20,10 @@ jobs:
 
       - name: Set up Java
         uses: actions/setup-java@v4
-#        working-directory: ${{env.Working_Directory}}
+
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
-          cache: maven
-          cache-dependency-path: tribetalk/pom.xml
 
       - name: Junit Test Run
         working-directory: ${{env.Working_Directory}}
