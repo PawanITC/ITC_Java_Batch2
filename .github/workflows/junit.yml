@@ -8,7 +8,7 @@ on:
 
 env:
   JAVA_VERSION: '21'
-  Working_Directory: 'tribetalk
+  Working_Directory: 'tribetalk'
 
 jobs:
   test:
