@@ -17,24 +17,28 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception{
-        httpSecurity
-                .csrf(csrf->csrf.disable())
-                .authorizeHttpRequests(auth->auth
-                        .requestMatchers("/api/users/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/v3/api-docs.yaml",
-                                "/v3/api-docs.json"
-                        ).permitAll()
-                        .requestMatchers("/").permitAll()
-                        .anyRequest().authenticated())
-                            // Allow frames for H2 console
-                            .headers(headers -> headers.frameOptions(frame -> frame.disable()));;
+//        httpSecurity
+//                .csrf(csrf->csrf.disable())
+//                .authorizeHttpRequests(auth->auth
+//                        .requestMatchers("/api/users/**").permitAll()
+//                        .requestMatchers("/h2-console/**").permitAll()
+//                        .requestMatchers(
+//                                "/swagger-ui.html",
+//                                "/swagger-ui/**",
+//                                "/v3/api-docs/**",
+//                                "/v3/api-docs.yaml",
+//                                "/v3/api-docs.json"
+//                        ).permitAll()
+//                        .requestMatchers("/").permitAll()
+//                        .anyRequest().authenticated())
+//                            // Allow frames for H2 console
+//                            .headers(headers -> headers.frameOptions(frame -> frame.disable()));;
 
 
+               httpSecurity.csrf(csrf -> csrf.disable())   // Disable CSRF if you use REST/API
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()   // Permit all requests
+                );
         return httpSecurity.build();
     }
 
