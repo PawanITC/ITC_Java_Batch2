@@ -1,12 +1,12 @@
-package com.tribetalk.tribetalk.service.impl;
+package com.learning.tribetalk.service.impl;
 
-import com.tribetalk.tribetalk.dto.RegistrationRequest;
-import com.tribetalk.tribetalk.dto.UserResponse;
-import com.tribetalk.tribetalk.entity.User;
-import com.tribetalk.tribetalk.exception.DuplicateResourceException;
-import com.tribetalk.tribetalk.exception.ResourceNotFoundException;
-import com.tribetalk.tribetalk.repository.UserRepository;
-import com.tribetalk.tribetalk.service.UserService;
+import com.learning.tribetalk.dto.RegistrationRequest;
+import com.learning.tribetalk.dto.UserResponse;
+import com.learning.tribetalk.entity.User;
+import com.learning.tribetalk.exception.DuplicateResourceException;
+import com.learning.tribetalk.exception.ResourceNotFoundException;
+import com.learning.tribetalk.repository.UserRepository;
+import com.learning.tribetalk.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;

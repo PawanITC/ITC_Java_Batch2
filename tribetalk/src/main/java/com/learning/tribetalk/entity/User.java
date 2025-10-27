@@ -1,4 +1,4 @@
-package com.tribetalk.tribetalk.entity;
+package com.learning.tribetalk.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

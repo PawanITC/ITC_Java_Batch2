@@ -1,7 +1,7 @@
-package com.tribetalk.tribetalk.service;
+package com.learning.tribetalk.service;
 
-import com.tribetalk.tribetalk.dto.RegistrationRequest;
-import com.tribetalk.tribetalk.dto.UserResponse;
+import com.learning.tribetalk.dto.RegistrationRequest;
+import com.learning.tribetalk.dto.UserResponse;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.tribetalk.tribetalk;
+package com.learning.tribetalk;
 
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;

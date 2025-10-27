@@ -1,6 +1,6 @@
-package com.tribetalk.tribetalk.repository;
+package com.learning.tribetalk.repository;
 
-import com.tribetalk.tribetalk.entity.User;
+import com.learning.tribetalk.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

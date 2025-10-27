@@ -1,4 +1,4 @@
-package com.tribetalk.tribetalk.dto;
+package com.learning.tribetalk.dto;
 
 public record MessageResponse(String message) {
 }

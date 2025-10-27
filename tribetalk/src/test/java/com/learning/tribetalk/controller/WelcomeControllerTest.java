@@ -1,4 +1,4 @@
-package com.tribetalk.tribetalk.controller;
+package com.learning.tribetalk.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

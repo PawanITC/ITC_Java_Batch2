@@ -1,4 +1,4 @@
-package com.tribetalk.tribetalk;
+package com.learning.tribetalk;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

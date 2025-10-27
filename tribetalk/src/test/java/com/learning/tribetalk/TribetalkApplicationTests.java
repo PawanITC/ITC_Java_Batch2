@@ -1,4 +1,4 @@
-package com.tribetalk.tribetalk;
+package com.learning.tribetalk;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

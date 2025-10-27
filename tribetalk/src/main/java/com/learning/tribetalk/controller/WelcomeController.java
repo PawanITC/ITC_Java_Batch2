@@ -1,4 +1,4 @@
-package com.tribetalk.tribetalk.controller;
+package com.learning.tribetalk.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

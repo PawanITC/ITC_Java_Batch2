@@ -1,9 +1,9 @@
-package com.tribetalk.tribetalk.controller;
+package com.learning.tribetalk.controller;
 
-import com.tribetalk.tribetalk.dto.MessageResponse;
-import com.tribetalk.tribetalk.dto.RegistrationRequest;
-import com.tribetalk.tribetalk.dto.UserResponse;
-import com.tribetalk.tribetalk.service.UserService;
+import com.learning.tribetalk.dto.MessageResponse;
+import com.learning.tribetalk.dto.RegistrationRequest;
+import com.learning.tribetalk.dto.UserResponse;
+import com.learning.tribetalk.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 public class UserController {
     private final UserService userService;
 
