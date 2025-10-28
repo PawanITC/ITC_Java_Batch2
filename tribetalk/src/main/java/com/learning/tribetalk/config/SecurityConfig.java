@@ -29,11 +29,23 @@ public class SecurityConfig {
                                 "/v3/api-docs.yaml",
                                 "/v3/api-docs.json"
                         ).permitAll()
-                        .requestMatchers("/").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/favicon.ico",
+                                "/manifest.json",
+                                "/static/**",
+                                "/assets/**"
+                        ).permitAll()
+                        .requestMatchers("/", "/**").permitAll()
                         .anyRequest().authenticated())
                             // Allow frames for H2 console
                             .headers(headers -> headers.frameOptions(frame -> frame.disable()));;
-
+        /*httpSecurity
+                .csrf(csrf -> csrf.disable())   // Disable CSRF if you use REST/API
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()   // Permit all requests
+                );*/
 
         return httpSecurity.build();
     }

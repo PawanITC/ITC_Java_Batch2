@@ -3,6 +3,8 @@ import { FcGoogle } from "react-icons/fc";
 import { FiMail, FiLock } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import CreateAccountModal from "../components/CreateAccountModal";
+import logo from "../assets/logo.png";
+
 
 function Home() {
   const [showModal, setShowModal] = useState(false);
@@ -11,7 +13,7 @@ function Home() {
       {/* Left side: Logo */}
       <div className="w-full md:w-1/2 flex items-center justify-center px-6 md:px-12 py-12">
         <img
-          src="/src/assets/logo.png"
+          src={logo}
           alt="TribeTalk Logo"
           className="w-[300px] md:w-[450px] h-auto object-contain"
         />
