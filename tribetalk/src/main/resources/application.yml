@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: tribetalk
+
+  datasource:
+    url: jdbc:h2:mem:tribetalkdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  sql:
+    init:
+      mode: always
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+jwt:
+  secret: change_this_to_a_long_random_secret_with_min_256_bits
+  expirationMillis: 3600000
