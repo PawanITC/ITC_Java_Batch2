@@ -7,6 +7,10 @@ import com.learning.tribetalk.exception.DuplicateResourceException;
 import com.learning.tribetalk.exception.ResourceNotFoundException;
 import com.learning.tribetalk.repository.UserRepository;
 import com.learning.tribetalk.service.UserService;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,7 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
 
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository repo;
     private final PasswordEncoder passwordEncoder;
@@ -75,5 +79,27 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserResponse> getAllUsers() {
         return repo.findAll().stream().map(user->new UserResponse(user.getId(),user.getUsername(),user.getEmail())).toList();
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        System.out.println("Trying to load user: " + username);
+
+        var user = repo.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        System.out.println("User found: " + user.getUsername() + ", password: " + user.getPassword());
+
+        var authorities = user.getAuthorities().stream()
+                .map(a -> new SimpleGrantedAuthority(a.getAuthority()))
+                .toList();
+
+        System.out.println("Authorities: " + authorities);
+
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getUsername())
+                .password(user.getPassword()) // {noop} prefix if plain password
+                .authorities(authorities)
+                .build();
     }
 }

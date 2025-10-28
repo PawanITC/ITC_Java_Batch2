@@ -1,9 +1,10 @@
-INSERT INTO users (username, password, enabled) VALUES
-                                                    ('user1', 'password1', true),
-                                                    ('admin', 'adminPass', true);
+-- Users
+INSERT INTO users (username, email, password) VALUES ('alice', 'alice@example.com', 'password123');
+INSERT INTO users (username, email, password) VALUES ('bob', 'bob@example.com', 'password123');
+INSERT INTO users (username, email, password) VALUES ('charlie', 'charlie@example.com', 'password123');
 
-INSERT INTO authorities (username, authority)
-VALUES
-    ('user1', 'ROLE_USER'),
-    ('admin', 'ROLE_ADMIN'),
-    ('admin', 'ROLE_USER');
+-- Authorities
+INSERT INTO authorities (authority, user_id) VALUES ('ROLE_USER', 1);
+INSERT INTO authorities (authority, user_id) VALUES ('ROLE_ADMIN', 1);
+INSERT INTO authorities (authority, user_id) VALUES ('ROLE_USER', 2);
+INSERT INTO authorities (authority, user_id) VALUES ('ROLE_USER', 3);
