@@ -38,6 +38,14 @@ public class SecurityConfig {
                                 "/v3/api-docs.yaml",
                                 "/v3/api-docs.json"
                         ).permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/favicon.ico",
+                                "/manifest.json",
+                                "/static/**",
+                                "/assets/**"
+                        ).permitAll()
                         //.requestMatchers("/").permitAll()
                         .anyRequest().authenticated());
         // Allow frames for H2 cons
