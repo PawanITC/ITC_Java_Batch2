@@ -5,6 +5,7 @@ import com.learning.tribetalk.dto.RegistrationRequest;
 import com.learning.tribetalk.dto.UserResponse;
 import com.learning.tribetalk.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +28,7 @@ public class UserController {
 
     @Operation(summary = "Register a new user", description = "Creates a new user with username, email, and password")
     @PostMapping("/save")
-    public ResponseEntity<MessageResponse> registerUser(@RequestBody RegistrationRequest request){
+    public ResponseEntity<MessageResponse> registerUser(@RequestBody @Valid RegistrationRequest request){
         userService.registerUser(request);
         return ResponseEntity.ok(new MessageResponse("User Registered Successfully"));
     }

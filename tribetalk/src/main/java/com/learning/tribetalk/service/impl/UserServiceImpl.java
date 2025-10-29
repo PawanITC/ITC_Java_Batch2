@@ -7,14 +7,18 @@ import com.learning.tribetalk.exception.DuplicateResourceException;
 import com.learning.tribetalk.exception.ResourceNotFoundException;
 import com.learning.tribetalk.repository.UserRepository;
 import com.learning.tribetalk.service.UserService;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -22,26 +26,38 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository repo;
     private final PasswordEncoder passwordEncoder;
-    public UserServiceImpl(UserRepository repo,PasswordEncoder passwordEncoder){
+    private final MeterRegistry meterRegistry;
+    public UserServiceImpl(UserRepository repo,PasswordEncoder passwordEncoder,MeterRegistry meterRegistry){
         this.repo=repo;
         this.passwordEncoder=passwordEncoder;
+        this.meterRegistry=meterRegistry;
     }
 
     @Override
     @Transactional
     public void registerUser(RegistrationRequest request) {
-        if(repo.existsByUsername(request.username())){
-            throw new DuplicateResourceException("Username already in use: " + request.username());
+
+        try{
+            if(repo.existsByUsername(request.username())){
+
+                throw new DuplicateResourceException("Username already in use: " + request.username());
+            }
+            if(repo.existsByEmail(request.email())){
+
+                throw new DuplicateResourceException("Email already in use: " + request.username());
+            }
+            String encodedpassword= passwordEncoder.encode(request.password());
+            User user=new User();
+            user.setPassword(encodedpassword);
+            user.setUsername(request.username());
+            user.setEmail(request.email());
+            repo.save(user);
+            meterRegistry.counter("user_registrations_total").increment();
         }
-        if(repo.existsByEmail(request.email())){
-            throw new DuplicateResourceException("Email already in use: " + request.username());
+        catch (Exception e){
+            throw e;
         }
-        String encodedpassword= passwordEncoder.encode(request.password());
-        User user=new User();
-        user.setPassword(encodedpassword);
-        user.setUsername(request.username());
-        user.setEmail(request.email());
-        repo.save(user);
+
     }
 
     @Override
@@ -102,4 +118,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .authorities(authorities)
                 .build();
     }
+
+    public long getTotalUsers() {
+        return 0;
+    }
+
+
 }

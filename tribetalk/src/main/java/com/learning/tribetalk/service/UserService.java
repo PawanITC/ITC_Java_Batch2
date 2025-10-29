@@ -10,4 +10,5 @@ public interface UserService {
     void updateUser(Long id,RegistrationRequest request);
     void deleteUser(Long id);
     List<UserResponse> getAllUsers();
+    long getTotalUsers();
 }
