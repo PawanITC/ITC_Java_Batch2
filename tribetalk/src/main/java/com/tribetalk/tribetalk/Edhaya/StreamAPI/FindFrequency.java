@@ -1,7 +1,15 @@
+
+
+/*
+Compute frequency Map<Character, Long> for characters in a string.
+
+Hints: s.chars().mapToObj(c -> (char) c), groupingBy(Function.identity(), counting()).
+
+ */
+
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.lang.*;
 
 public class FindFrequency {

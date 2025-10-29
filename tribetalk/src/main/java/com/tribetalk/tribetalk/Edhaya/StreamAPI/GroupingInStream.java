@@ -6,6 +6,16 @@ Alternatively groupingBy with toCollection(TreeSet) then convert to List.
  */
 
 
+
+/*
+Group words by first letter into a Map<Character, List<String>> with words sorted in each group.
+
+Hints: groupingBy(s -> s.charAt(0), mapping(Function.identity(), collectingAndThen(toList(), l -> { sort(l);
+return l; }))).
+
+Alternatively groupingBy with toCollection(TreeSet) then convert to List.
+ */
+
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;

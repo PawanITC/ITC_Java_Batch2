@@ -1,3 +1,5 @@
+package com.tribetalk.tribetalk.Edhaya.SingleTon;
+
 public class SingleTon1 {
     private static volatile SingleTon1 instance;
     private SingleTon1() {}

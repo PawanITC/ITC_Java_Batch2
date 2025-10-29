@@ -1,13 +1,13 @@
+package com.tribetalk.tribetalk.Talha;
+
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-public class StreamsEmployeeCountDepartment {
+public class StreamTopthreePaidEmployees {
 
     public static void main(String[] args) {
-        //                Build a Map<Department, Long> of employee counts per department.
-//        Hints: Collectors.groupingBy(Employee::getDepartment, counting()).
         List<StreamAssignment.Employee> employeeList = new ArrayList<>();
         StreamAssignment.Employee e1 = new StreamAssignment.Employee("Talha", "Backend", 15);
         employeeList.add(e1);
@@ -17,13 +17,10 @@ public class StreamsEmployeeCountDepartment {
         employeeList.add(e3);
         StreamAssignment.Employee e4 = new StreamAssignment.Employee("Edhaya", "DevOps", 29);
         employeeList.add(e4);
-        Map<String, Long> departmentWiseCount = employeeList.stream().collect(Collectors.groupingBy(StreamAssignment.Employee::department, Collectors.counting()));
-        departmentWiseCount.forEach((department, count) -> {
-            System.out.printf("Department : %S | Count : %d%n", department, count);
-        });
+        List<String> topThreePaidEmployees=employeeList.stream().sorted(Comparator.comparing(StreamAssignment.Employee::salary).reversed()).limit(3).map(StreamAssignment.Employee::name).collect(Collectors.toList());
+        for(String name:topThreePaidEmployees)
+        {
+            System.out.printf("Employee : %S %n",name);
+        }
     }
-    public record Employee (String name,String department,double salary){};
-
 }
-
-

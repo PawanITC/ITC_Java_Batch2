@@ -1,12 +1,11 @@
+
 /* Turn a Map<K, List<V>> into a flat List<V> preserving insertion order from values.
 
 Hints: map.entrySet().stream(), flatMap(e -> e.getValue().stream()).
 
  */
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class MapIntoList {
 
@@ -15,7 +14,7 @@ public class MapIntoList {
         Map<String, List<String>> books = new LinkedHashMap<>();
         books.put("fiction", List.of("HarryPotter", "Persy Jackson"));
         books.put("Science", List.of("Immunology", "Quantum Mechanics"));
-        books.put("Novels", List.of("Ponniyin Selvan", ""));
+        books.put("Novels", List.of("Ponniyin Selvan"));
 
         List<String> books_in_library = books.entrySet()
                 .stream()
