@@ -4,6 +4,7 @@ import com.learning.tribetalk.dto.RegistrationRequest;
 import com.learning.tribetalk.entity.Authority;
 import com.learning.tribetalk.entity.User;
 import com.learning.tribetalk.repository.AuthorityRepository;
+import com.learning.tribetalk.service.GitHubEmailService;
 import com.learning.tribetalk.service.UserService;
 import com.learning.tribetalk.service.impl.UserServiceImpl;
 import jakarta.servlet.ServletException;
@@ -14,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -22,10 +25,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -37,27 +37,52 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
     @Autowired
     private final JwtUtil jwtUtils;
 
+    private final OAuth2AuthorizedClientService authorizedClientService;
+
+
+
     @Autowired  // Spring will call this constructor automatically
-    public OAuth2LoginSuccessHandler(UserService userService, JwtUtil jwtUtils) {
+    public OAuth2LoginSuccessHandler(UserService userService, JwtUtil jwtUtils, OAuth2AuthorizedClientService authorizedClientService) {
         this.userService = userService;
         this.jwtUtils = jwtUtils;
+        this.authorizedClientService = authorizedClientService;
     }
     @Autowired
     AuthorityRepository roleRepository;
+
+    @Autowired
+    GitHubEmailService gitHubEmailService;
 
     @Value("${frontend.url}")
     private String frontendUrl;
 
     String username;
     String idAttributeKey;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         OAuth2AuthenticationToken oAuth2AuthenticationToken = (OAuth2AuthenticationToken) authentication;
         if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId()) || "google".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())) {
+            OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+
+            OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
+                    oauthToken.getAuthorizedClientRegistrationId(),
+                    oauthToken.getName()
+            );
+
             DefaultOAuth2User principal = (DefaultOAuth2User) authentication.getPrincipal();
+                String accessToken = client.getAccessToken().getTokenValue();
+
             Map<String, Object> attributes = principal.getAttributes();
-            String email = attributes.getOrDefault("login", "").toString();
-            String name = attributes.getOrDefault("name", "").toString();
+            String email = Optional.ofNullable(attributes.get("email"))
+                    .map(Object::toString)
+                    .orElseGet(() -> {
+
+                            String token = client.getAccessToken().getTokenValue();
+                            return gitHubEmailService.fetchPrimaryEmail(token);
+
+                    });
+            String name = Optional.ofNullable(attributes.get("name")).map(Object::toString).orElse("");
             if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())) {
                 username = attributes.getOrDefault("login", "").toString();
                 idAttributeKey = "id";
@@ -72,7 +97,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 
             userService.findByEmail(email)
                     .ifPresentOrElse(user -> {
-                        // ✅ Convert existing authorities to SimpleGrantedAuthority
+                        //  Convert existing authorities to SimpleGrantedAuthority
                         var authorities = user.getAuthorities().stream()
                                 .map(auth -> new SimpleGrantedAuthority(auth.getAuthority()))
                                 .toList();
@@ -133,7 +158,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         // Generate JWT
         String jwtToken = jwtUtils.generateToken(email,authorities);
 
-        // ✅ Redirect frontend with JWT
+        //  Redirect frontend with JWT
         String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
                 .queryParam("token", jwtToken)
                 .build().toUriString();
