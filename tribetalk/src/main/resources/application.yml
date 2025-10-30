@@ -8,6 +8,17 @@ spring:
     username: sa
     password:
 
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: Ov23liGm8fihan8YBuCU
+            client-secret: 0dc9230ac778fe76c4c4645ed1fe685f1dc8d502
+            scope: read:user,user:email
+
+frontend:
+  url: http://localhost:8080
   sql:
     init:
       mode: always
@@ -44,11 +55,13 @@ management:
     health:
       show-details: always
   metrics:
-    export:
-      prometheus:
-        enabled: true
     distribution:
       percentiles-histogram:
         http.server.requests: true
     tags:
       application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+

@@ -2,6 +2,7 @@ package com.learning.tribetalk.service.impl;
 
 import com.learning.tribetalk.dto.RegistrationRequest;
 import com.learning.tribetalk.dto.UserResponse;
+import com.learning.tribetalk.entity.Authority;
 import com.learning.tribetalk.entity.User;
 import com.learning.tribetalk.exception.DuplicateResourceException;
 import com.learning.tribetalk.exception.ResourceNotFoundException;
@@ -23,6 +24,8 @@ import java.sql.Time;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
@@ -74,6 +77,17 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 user.setPassword(encodedpassword);
                 user.setUsername(request.username());
                 user.setEmail(request.email());
+                //            Set<Authority> authorities;
+//            if (request.authorities() == null || request.authorities().isEmpty()) {
+//                Authority defaultAuthority = new Authority();
+//                defaultAuthority.setAuthority("ROLE_USER");
+//                defaultAuthority.setUser(user);
+//                authorities = Set.of(defaultAuthority);
+//            } else {
+//                // Use authorities provided in the request
+//                authorities = request.authorities();
+//                authorities.forEach(auth -> auth.setUser(user)); // link each authority to user
+//            }
                 repo.save(user);
                 meterRegistry.counter("user_registrations_total").increment();
                 registerSuccessCounter.increment();

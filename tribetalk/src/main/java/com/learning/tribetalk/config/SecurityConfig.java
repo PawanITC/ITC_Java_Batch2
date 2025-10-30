@@ -2,18 +2,19 @@ package com.learning.tribetalk.config;
 
 import com.learning.tribetalk.security.JwtAuthenticationFilter;
 import com.learning.tribetalk.security.JwtUtil;
+import com.learning.tribetalk.security.OAuth2LoginSuccessHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
-
+    @Autowired
+    OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
@@ -32,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/users/save").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("oauth2/**").permitAll()
                         .requestMatchers("/actuator/prometheus").permitAll()  // allow Prometheus
                         .requestMatchers(
                                 "/swagger-ui.html",
@@ -49,7 +51,10 @@ public class SecurityConfig {
                                 "/assets/**"
                         ).permitAll()
                         //.requestMatchers("/").permitAll()
-                        .anyRequest().authenticated());
+                        .anyRequest().authenticated())
+                .oauth2Login(oAuth2->{
+                        oAuth2.successHandler(oAuth2LoginSuccessHandler);
+                });
         // Allow frames for H2 cons
 
 

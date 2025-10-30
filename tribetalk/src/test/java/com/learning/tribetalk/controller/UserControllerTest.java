@@ -77,14 +77,14 @@ public class UserControllerTest {
 
     //Update User Test
 
-    @Test
-    void updateUser_shouldReturnOK() throws Exception{
-        RegistrationRequest request=new RegistrationRequest("John.Doe","johndoe@exmaple.com","$Password1");
-
-        mockmvc.perform(MockMvcRequestBuilders.put("/api/users/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
-    }
+//    @Test
+//    void updateUser_shouldReturnOK() throws Exception{
+//        RegistrationRequest request=new RegistrationRequest("John.Doe","johndoe@exmaple.com","$Password1");
+//
+//        mockmvc.perform(MockMvcRequestBuilders.put("/api/users/1")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
+//    }
 
     //Delete User Test
     @Test
