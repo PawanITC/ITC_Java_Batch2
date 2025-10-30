@@ -8,6 +8,8 @@ import com.learning.tribetalk.exception.ResourceNotFoundException;
 import com.learning.tribetalk.repository.UserRepository;
 import com.learning.tribetalk.service.UserService;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Timer;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.sql.Time;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -27,36 +30,60 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final UserRepository repo;
     private final PasswordEncoder passwordEncoder;
     private final MeterRegistry meterRegistry;
+
+    private final Counter registerSuccessCounter;
+    private final Counter registerFailureCounter;
+    private final Timer registerTimer;
+
     public UserServiceImpl(UserRepository repo,PasswordEncoder passwordEncoder,MeterRegistry meterRegistry){
         this.repo=repo;
         this.passwordEncoder=passwordEncoder;
         this.meterRegistry=meterRegistry;
+
+        this.registerSuccessCounter=Counter.builder("user_registration_total")
+                .description("Number of successful user registrations")
+                .tag("status","success")
+                .register(meterRegistry);
+
+        this.registerFailureCounter=Counter.builder("user_registration_total")
+                .description("Number of failed user registrations")
+                .tag("status","failure")
+                .register(meterRegistry);
+
+        this.registerTimer= Timer.builder("user_registration_duration_seconds")
+                .description("Time taken to register a user")
+                .register(meterRegistry);
     }
 
     @Override
     @Transactional
     public void registerUser(RegistrationRequest request) {
 
-        try{
-            if(repo.existsByUsername(request.username())){
-
-                throw new DuplicateResourceException("Username already in use: " + request.username());
+        registerTimer.record(()->{
+            try{
+                if(repo.existsByUsername(request.username())){
+                    registerFailureCounter.increment();
+                    throw new DuplicateResourceException("Username already in use: " + request.username());
+                }
+                if(repo.existsByEmail(request.email())){
+                    registerFailureCounter.increment();
+                    throw new DuplicateResourceException("Email already in use: " + request.username());
+                }
+                String encodedpassword= passwordEncoder.encode(request.password());
+                User user=new User();
+                user.setPassword(encodedpassword);
+                user.setUsername(request.username());
+                user.setEmail(request.email());
+                repo.save(user);
+                meterRegistry.counter("user_registrations_total").increment();
+                registerSuccessCounter.increment();
             }
-            if(repo.existsByEmail(request.email())){
-
-                throw new DuplicateResourceException("Email already in use: " + request.username());
+            catch (Exception e){
+                registerFailureCounter.increment();
+                throw e;
             }
-            String encodedpassword= passwordEncoder.encode(request.password());
-            User user=new User();
-            user.setPassword(encodedpassword);
-            user.setUsername(request.username());
-            user.setEmail(request.email());
-            repo.save(user);
-            meterRegistry.counter("user_registrations_total").increment();
-        }
-        catch (Exception e){
-            throw e;
-        }
+        });
+
 
     }
 
