@@ -1,24 +1,67 @@
 spring:
   application:
     name: tribetalk
+
   datasource:
-    url: jdbc:h2:file:./data/testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE
+    url: jdbc:h2:mem:tribetalkdb
     driver-class-name: org.h2.Driver
     username: sa
     password:
+
+  sql:
+    init:
+      mode: always
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+
   h2:
     console:
       enabled: true
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-  devtools:
-    restart:
-      enabled: false
+      path: /h2-console
+
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: Ov23liGm8fihan8YBuCU
+            client-secret: 0dc9230ac778fe76c4c4645ed1fe685f1dc8d502
+            scope:
+              - read:user
+              - user:email
+
+frontend:
+  url: http://localhost:8080
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: user-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  redis:
+    host:localhost
+    port:6379
 
 server:
-  port: 8081
+  port: 8080
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+jwt:
+  secret: change_this_to_a_long_random_secret_with_min_256_bits
+  expirationMillis: 3600000
 
 management:
   endpoints:
@@ -39,3 +82,7 @@ management:
         http.server.requests: true
     tags:
       application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true

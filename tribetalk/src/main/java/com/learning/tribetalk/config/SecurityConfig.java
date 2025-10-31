@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/api/users/save").permitAll()
+                        .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("oauth2/**").permitAll()
                         .requestMatchers("/actuator/prometheus").permitAll()  // allow Prometheus

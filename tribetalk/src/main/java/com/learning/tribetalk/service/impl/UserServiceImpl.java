@@ -6,11 +6,14 @@ import com.learning.tribetalk.entity.Authority;
 import com.learning.tribetalk.entity.User;
 import com.learning.tribetalk.exception.DuplicateResourceException;
 import com.learning.tribetalk.exception.ResourceNotFoundException;
+import com.learning.tribetalk.metrics.annotations.BusinessMetric;
 import com.learning.tribetalk.repository.UserRepository;
 import com.learning.tribetalk.service.UserService;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -32,72 +35,31 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository repo;
     private final PasswordEncoder passwordEncoder;
-    private final MeterRegistry meterRegistry;
 
-    private final Counter registerSuccessCounter;
-    private final Counter registerFailureCounter;
-    private final Timer registerTimer;
-
-    public UserServiceImpl(UserRepository repo,PasswordEncoder passwordEncoder,MeterRegistry meterRegistry){
+    public UserServiceImpl(UserRepository repo,PasswordEncoder passwordEncoder){
         this.repo=repo;
         this.passwordEncoder=passwordEncoder;
-        this.meterRegistry=meterRegistry;
 
-        this.registerSuccessCounter=Counter.builder("user_registration_total")
-                .description("Number of successful user registrations")
-                .tag("status","success")
-                .register(meterRegistry);
-
-        this.registerFailureCounter=Counter.builder("user_registration_total")
-                .description("Number of failed user registrations")
-                .tag("status","failure")
-                .register(meterRegistry);
-
-        this.registerTimer= Timer.builder("user_registration_duration_seconds")
-                .description("Time taken to register a user")
-                .register(meterRegistry);
     }
 
     @Override
     @Transactional
+    @BusinessMetric("user.registration")
     public void registerUser(RegistrationRequest request) {
-
-        registerTimer.record(()->{
-            try{
-                if(repo.existsByUsername(request.username())){
-                    registerFailureCounter.increment();
-                    throw new DuplicateResourceException("Username already in use: " + request.username());
-                }
-                if(repo.existsByEmail(request.email())){
-                    registerFailureCounter.increment();
-                    throw new DuplicateResourceException("Email already in use: " + request.username());
-                }
-                String encodedpassword= passwordEncoder.encode(request.password());
-                User user=new User();
-                user.setPassword(encodedpassword);
-                user.setUsername(request.username());
-                user.setEmail(request.email());
-                //            Set<Authority> authorities;
-//            if (request.authorities() == null || request.authorities().isEmpty()) {
-//                Authority defaultAuthority = new Authority();
-//                defaultAuthority.setAuthority("ROLE_USER");
-//                defaultAuthority.setUser(user);
-//                authorities = Set.of(defaultAuthority);
-//            } else {
-//                // Use authorities provided in the request
-//                authorities = request.authorities();
-//                authorities.forEach(auth -> auth.setUser(user)); // link each authority to user
-//            }
-                repo.save(user);
-                meterRegistry.counter("user_registrations_total").increment();
-                registerSuccessCounter.increment();
-            }
-            catch (Exception e){
-                registerFailureCounter.increment();
-                throw e;
-            }
-        });
-
+        if(repo.existsByUsername(request.username())){
+            throw new DuplicateResourceException("Username already in use: " + request.username());
+        }
+        if(repo.existsByEmail(request.email())){
+            throw new DuplicateResourceException("Email already in use: " + request.username());
+        }
+        String encodedpassword= passwordEncoder.encode(request.password());
+        System.out.println("User Details"+request);
+        System.out.println("encoded"+encodedpassword);
+        User user=new User();
+        user.setPassword(encodedpassword);
+        user.setUsername(request.username());
+        user.setEmail(request.email());
+        repo.save(user);
 
     }
 
@@ -128,6 +90,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "usernamecache",key = "#username")
     public void deleteUser(Long id) {
         User user=repo.findById(id).orElseThrow(()->new ResourceNotFoundException("No User Found"));
         repo.delete(user);
@@ -139,6 +102,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
+    @Cacheable(cacheNames = "usernamecache",key = "#username")
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         System.out.println("Trying to load user: " + username);
 
