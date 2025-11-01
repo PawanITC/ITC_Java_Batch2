@@ -86,3 +86,7 @@ management:
     metrics:
       export:
         enabled: true
+
+app:
+  url: http://localhost:5173
+

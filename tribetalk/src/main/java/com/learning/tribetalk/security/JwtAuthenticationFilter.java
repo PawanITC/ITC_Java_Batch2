@@ -2,6 +2,7 @@ package com.learning.tribetalk.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -32,13 +33,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-         final String header = request.getHeader("Authorization");
+        /*final String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String token = header.substring(7);
+        final String token = header.substring(7);*/
+
+        final String token = extractFromCookies(request);
         try {
             String username = jwtUtil.extractUsername(token);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -60,5 +63,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String extractFromCookies(HttpServletRequest request) {
+        if(request.getCookies()==null) return null;
+        for (Cookie cookie : request.getCookies()){
+            if("accessToken".equalsIgnoreCase(cookie.getName())){
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 }

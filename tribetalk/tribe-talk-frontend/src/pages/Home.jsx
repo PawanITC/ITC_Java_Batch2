@@ -1,18 +1,85 @@
 import { useState } from "react";
-import { FcGoogle } from "react-icons/fc";
-import { FiMail, FiLock } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import axios from "axios";
+import { AiOutlineGithub } from "react-icons/ai";
+import { FiUser, FiLock } from "react-icons/fi";
+import { Link, useNavigate } from "react-router-dom";
 import CreateAccountModal from "../components/CreateAccountModal";
-import  logo  from "../assets/logo.png";
+import { toast } from "react-toastify";
+import Logo from "/src/assets/logo.png";
+import axiosInstance from "../services/axiosInstance";
 
 function Home() {
   const [showModal, setShowModal] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
+  const navigate=useNavigate();
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target;
+    setLoginForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleGithubLogin = async (e) => {
+    e.preventDefault();
+    const BACKEND_URL=import.meta.env.VITE_API_BASE_URL;
+    const GITHUB_CLIENT_ID=import.meta.env.VITE_GITHUB_CLIENT_ID;
+    const redirectUrl=`${BACKEND_URL}/api/auth/login`;
+    const githubAuthUrl=`https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUrl)}&scope=user:email`;
+    console.log(githubAuthUrl);
+    window.location.href=githubAuthUrl;
+
+  }
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    
+    const { username, password } = loginForm;
+
+    // Basic validation
+    if (!username.trim() || !password.trim()) {
+      toast.warn("Please fill in both email and password.");
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.post('/auth/login', {
+        username: username,
+        password: password,
+      });
+      const token = response?.data?.token;
+      if (!token) {
+        toast.error("Unexpected response. Please try again.");
+        return;
+      }
+
+      localStorage.setItem("accessToken", token);
+      toast.success("Login successful!");
+      navigate('/mainpage');
+      // Optional: redirect or fetch user profile here
+    } catch (error) {
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message;
+
+      if (!status) {
+        toast.error("Network error. Please check your connection.");
+        return;
+      }
+
+      const errorMessages = {
+        400: "Bad request. Please check your input.",
+        401: "Invalid email or password.",
+        403: "Access denied. Please check your account.",
+        404: "User not found.",
+        500: "Server error. Please try again later.",
+      };
+
+      toast.error("Login failed. Please try again.");
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen w-full bg-neutral-900 text-yellow-100">
       {/* Left side: Logo */}
       <div className="w-full md:w-1/2 flex items-center justify-center px-6 md:px-12 py-12">
         <img
-          src={logo}
+          src={Logo}
           alt="TribeTalk Logo"
           className="w-[300px] md:w-[450px] h-auto object-contain"
         />
@@ -45,9 +112,9 @@ function Home() {
         </div>
 
         <div className="w-full max-w-md space-y-4">
-          <button className="cursor-pointer w-full max-w-md flex items-center justify-center gap-3 px-4 py-1 bg-white text-neutral-900 rounded-full border border-gray-300 shadow-sm hover:bg-yellow-100 transition duration-200">
-            <FcGoogle className="text-xl" />
-            <span className="font-medium">Sign in with Google</span>
+          <button className="cursor-pointer w-full max-w-md flex items-center justify-center gap-3 px-4 py-1 bg-white text-neutral-900 rounded-full border border-gray-300 shadow-sm hover:bg-yellow-100 transition duration-200" type="button" onClick={handleGithubLogin}>
+            <AiOutlineGithub className="text-xl" />
+            <span className="font-medium">Sign in with Github</span>
           </button>
 
           <button
@@ -66,12 +133,19 @@ function Home() {
           <div className="grow h-px bg-yellow-700" />
         </div>
 
-        <div className="w-full max-w-md space-y-4">
+        <form
+          className="w-full max-w-md space-y-4"
+          onSubmit={handleLoginSubmit}
+        >
           <div className="flex items-center border border-yellow-500 rounded-md bg-neutral-900 px-3 py-2">
-            <FiMail className="text-yellow-400 mr-2" />
+            <FiUser className="text-yellow-400 mr-2" />
             <input
-              type="email"
-              placeholder="Enter your email"
+              type="text"
+              name="username"
+              autoComplete="username"
+              value={loginForm.username}
+              onChange={handleLoginChange}
+              placeholder="Enter your username"
               className="bg-transparent w-full text-yellow-100 placeholder-yellow-400 focus:outline-none"
             />
           </div>
@@ -79,14 +153,23 @@ function Home() {
             <FiLock className="text-yellow-400 mr-2" />
             <input
               type="password"
+              name="password"
+              autoComplete="current-password"
+              value={loginForm.password}
+              onChange={handleLoginChange}
               placeholder="Enter your password"
               className="bg-transparent w-full text-yellow-100 placeholder-yellow-400 focus:outline-none"
             />
           </div>
-          <button className="cursor-pointer w-full max-w-md flex items-center justify-center gap-3 px-4 py-1 bg-white text-neutral-900 rounded-full border border-gray-300 shadow-sm hover:bg-yellow-100 transition duration-200">
+          <button
+            type="submit"
+            className={
+              "cursor-pointer w-full flex items-center justify-center gap-3 px-4 py-1 rounded-full border border-gray-300 shadow-sm transition duration-200"
+            }
+          >
             <span className="font-medium">Sign In</span>
           </button>
-        </div>
+        </form>
       </div>
 
       {showModal && <CreateAccountModal onClose={() => setShowModal(false)} />}

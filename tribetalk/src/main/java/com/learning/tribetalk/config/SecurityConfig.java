@@ -4,15 +4,26 @@ import com.learning.tribetalk.security.JwtAuthenticationFilter;
 import com.learning.tribetalk.security.JwtUtil;
 import com.learning.tribetalk.security.OAuth2LoginSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
+
+    @Value("${app.url}")
+    private String url;
+
     @Autowired
     OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final JwtUtil jwtUtil;
@@ -29,6 +40,9 @@ public class SecurityConfig {
 
         httpSecurity
                 .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // ADD THIS
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/users/**").permitAll()
@@ -68,4 +82,15 @@ public class SecurityConfig {
     }
 
 
+    @Bean
+    public CorsFilter corsFilter(){
+        CorsConfiguration corsConfig=new CorsConfiguration();
+        corsConfig.setAllowedOrigins(Arrays.asList(url));
+        corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","PATCH","DELETE"));
+        corsConfig.setAllowCredentials(true);
+        corsConfig.setAllowedHeaders(Arrays.asList("*"));
+        UrlBasedCorsConfigurationSource source=new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**",corsConfig);
+        return new CorsFilter(source);
+    }
 }

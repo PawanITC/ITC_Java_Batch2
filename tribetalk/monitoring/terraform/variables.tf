@@ -50,5 +50,5 @@ variable "mongodb_db" {
 
 variable "enable_redis" {
   type = bool
-  default = true
+  default = false
 }

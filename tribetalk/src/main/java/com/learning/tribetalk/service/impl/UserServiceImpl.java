@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             throw new DuplicateResourceException("Username already in use: " + request.username());
         }
         if(repo.existsByEmail(request.email())){
-            throw new DuplicateResourceException("Email already in use: " + request.username());
+            throw new DuplicateResourceException("Email already in use: " + request.email());
         }
         String encodedpassword= passwordEncoder.encode(request.password());
         System.out.println("User Details"+request);
