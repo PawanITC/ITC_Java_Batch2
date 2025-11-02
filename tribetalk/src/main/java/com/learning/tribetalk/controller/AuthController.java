@@ -75,4 +75,6 @@ public class AuthController {
         UserDetails userDetails=userDetailsService.loadUserByUsername(username);
         return ResponseEntity.ok(userDetails);
     }
+
+
 }

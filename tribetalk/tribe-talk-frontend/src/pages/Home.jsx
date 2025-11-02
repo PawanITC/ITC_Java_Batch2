@@ -21,11 +21,10 @@ function Home() {
     e.preventDefault();
     const BACKEND_URL=import.meta.env.VITE_API_BASE_URL;
     const GITHUB_CLIENT_ID=import.meta.env.VITE_GITHUB_CLIENT_ID;
-    const redirectUrl=`${BACKEND_URL}/api/auth/login`;
+    const redirectUrl=`http://localhost:8080/api/github/callback`;
     const githubAuthUrl=`https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUrl)}&scope=user:email`;
-    console.log(githubAuthUrl);
     window.location.href=githubAuthUrl;
-
+    
   }
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -48,28 +47,19 @@ function Home() {
         toast.error("Unexpected response. Please try again.");
         return;
       }
-
-      localStorage.setItem("accessToken", token);
       toast.success("Login successful!");
       navigate('/mainpage');
       // Optional: redirect or fetch user profile here
     } catch (error) {
       const status = error?.response?.status;
-      const message = error?.response?.data?.message;
-
+      const message = error?.response?.data?.message || "Login failed. Please try again.";
+      if(message){
+        toast.error(message);  
+      }
       if (!status) {
         toast.error("Network error. Please check your connection.");
         return;
       }
-
-      const errorMessages = {
-        400: "Bad request. Please check your input.",
-        401: "Invalid email or password.",
-        403: "Access denied. Please check your account.",
-        404: "User not found.",
-        500: "Server error. Please try again later.",
-      };
-
       toast.error("Login failed. Please try again.");
     }
   };

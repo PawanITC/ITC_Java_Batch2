@@ -52,3 +52,19 @@ variable "enable_redis" {
   type = bool
   default = false
 }
+
+variable "enable_springapp" {
+  type = bool
+  default = true
+}
+
+variable "spring_app_image" {
+  type = string
+  default = "tribetalk-app:latest"
+}
+
+variable "spring_app_port" {
+  type = number
+  default = 8080
+
+}

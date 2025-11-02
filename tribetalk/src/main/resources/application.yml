@@ -26,14 +26,15 @@ spring:
       client:
         registration:
           github:
-            client-id: Ov23liGm8fihan8YBuCU
-            client-secret: 0dc9230ac778fe76c4c4645ed1fe685f1dc8d502
+            client-id: Ov23lizJ8kpXKzpZZi2P
+            client-secret: 58d5de6261dc8b9d2585f513e39cb4c443e63e66
             scope:
               - read:user
               - user:email
-
+#existingclientsecret - 0dc9230ac778fe76c4c4645ed1fe685f1dc8d502
+#existingclientid     - Ov23liGm8fihan8YBuCU
 frontend:
-  url: http://localhost:8080
+  url: http://localhost:8080/api/github/callback
 
   kafka:
     bootstrap-servers: localhost:9092
