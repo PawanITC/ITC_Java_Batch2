@@ -22,8 +22,8 @@ function Home() {
     const BACKEND_URL=import.meta.env.VITE_API_BASE_URL;
     const GITHUB_CLIENT_ID=import.meta.env.VITE_GITHUB_CLIENT_ID;
     const redirectUrl=`http://localhost:8080/api/github/callback`;
-    const githubAuthUrl=`https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUrl)}&scope=user:email`;
-    window.location.href=githubAuthUrl;
+    const githubAuthUrl=`https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=user:email`;
+    window.location.href="http://localhost:8080/oauth2/authorization/github";
     
   }
   const handleLoginSubmit = async (e) => {
@@ -55,6 +55,7 @@ function Home() {
       const message = error?.response?.data?.message || "Login failed. Please try again.";
       if(message){
         toast.error(message);  
+        return;
       }
       if (!status) {
         toast.error("Network error. Please check your connection.");

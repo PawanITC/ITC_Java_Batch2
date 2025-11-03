@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -158,11 +160,22 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         // Generate JWT
         String jwtToken = jwtUtils.generateToken(email,authorities);
 
+        ResponseCookie cookie = ResponseCookie.from("accessToken", jwtToken)
+                .httpOnly(true)
+                .secure(false) // true in production (HTTPS)
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(Duration.ofDays(7))
+                .build();
+
+        // ✅ Add cookie to response header
+        response.addHeader("Set-Cookie", cookie.toString());
+        System.out.println(frontendUrl + "/oauth2/redirect");
         //  Redirect frontend with JWT
         String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
                 .queryParam("token", jwtToken)
                 .build().toUriString();
-
+        //response.sendRedirect(targetUrl);
         this.setDefaultTargetUrl(targetUrl);
         super.onAuthenticationSuccess(request, response, authentication);
     }

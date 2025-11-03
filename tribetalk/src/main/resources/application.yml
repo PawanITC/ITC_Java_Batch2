@@ -28,28 +28,15 @@ spring:
           github:
             client-id: Ov23lizJ8kpXKzpZZi2P
             client-secret: 58d5de6261dc8b9d2585f513e39cb4c443e63e66
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope:
               - read:user
               - user:email
 #existingclientsecret - 0dc9230ac778fe76c4c4645ed1fe685f1dc8d502
 #existingclientid     - Ov23liGm8fihan8YBuCU
 frontend:
-  url: http://localhost:8080/api/github/callback
+  url: http://localhost:8080
 
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    consumer:
-      group-id: user-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-
-  redis:
-    host:localhost
-    port:6379
 
 server:
   port: 8080

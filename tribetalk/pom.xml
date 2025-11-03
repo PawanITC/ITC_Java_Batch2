@@ -123,10 +123,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
+        </dependency>-->
     </dependencies>
 
 	<build>
@@ -192,6 +192,7 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.1</version>
                 <executions>
+
                     <execution>
                         <id>copy-react-build</id>
                         <phase>prepare-package</phase>
@@ -200,6 +201,8 @@
                         </goals>
                         <configuration>
                             <outputDirectory>target/classes/templates</outputDirectory>
+                            <overwrite>true</overwrite>
+
                             <resources>
                                 <resource>
                                     <directory>tribe-talk-frontend/dist</directory>
@@ -220,6 +223,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>target/classes/static</outputDirectory>
+                            <overwrite>true</overwrite>
                             <resources>
                                 <resource>
                                     <directory>tribe-talk-frontend/dist</directory>

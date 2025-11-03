@@ -9,6 +9,7 @@ export function AuthProvider({children}){
     const checkAuth = async () => {
         try{
             const response=await axiosInstance.get('/auth/me');
+            console.log(response);
             setUser(response.data);
         }
         catch{
