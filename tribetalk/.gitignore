@@ -18,7 +18,7 @@ monitoring/terraform/data/  # PostgreSQL data directory
 # Data Directory
 # =============================================
 /data/
-
+/node/
 
 HELP.md
 target/
