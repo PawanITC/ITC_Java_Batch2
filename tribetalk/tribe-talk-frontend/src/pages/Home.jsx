@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+<<<<<<< Updated upstream
 import { AiOutlineGithub } from "react-icons/ai";
 import { FiUser, FiLock } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
@@ -7,16 +8,30 @@ import CreateAccountModal from "../components/CreateAccountModal";
 import { toast } from "react-toastify";
 import Logo from "/src/assets/logo.png";
 import axiosInstance from "../services/axiosInstance";
+=======
+import { FcGoogle } from "react-icons/fc";
+import { FiUser, FiLock } from "react-icons/fi";
+import { Link } from "react-router-dom";
+import CreateAccountModal from "../components/Landing/CreateAccountModal";
+import { toast } from "react-toastify";
+import Logo from "/src/assets/logo.png";
+>>>>>>> Stashed changes
 
 function Home() {
   const [showModal, setShowModal] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
+<<<<<<< Updated upstream
   const navigate=useNavigate();
+=======
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+>>>>>>> Stashed changes
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
     setLoginForm((prev) => ({ ...prev, [name]: value }));
   };
 
+<<<<<<< Updated upstream
   const handleGithubLogin = async (e) => {
     e.preventDefault();
     const BACKEND_URL=import.meta.env.VITE_API_BASE_URL;
@@ -29,6 +44,11 @@ function Home() {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     
+=======
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+
+>>>>>>> Stashed changes
     const { username, password } = loginForm;
 
     // Basic validation
@@ -38,15 +58,24 @@ function Home() {
     }
 
     try {
+<<<<<<< Updated upstream
       const response = await axiosInstance.post('/auth/login', {
         username: username,
         password: password,
       });
+=======
+      const response = await axios.post(`${BASE_URL}/auth/login`, {
+        username: username,
+        password: password,
+      });
+
+>>>>>>> Stashed changes
       const token = response?.data?.token;
       if (!token) {
         toast.error("Unexpected response. Please try again.");
         return;
       }
+<<<<<<< Updated upstream
       toast.success("Login successful!");
       navigate('/mainpage');
       // Optional: redirect or fetch user profile here
@@ -57,10 +86,32 @@ function Home() {
         toast.error(message);  
         return;
       }
+=======
+
+      localStorage.setItem("accessToken", token);
+      toast.success("Login successful!");
+      // Optional: redirect or fetch user profile here
+    } catch (error) {
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message;
+
+>>>>>>> Stashed changes
       if (!status) {
         toast.error("Network error. Please check your connection.");
         return;
       }
+<<<<<<< Updated upstream
+=======
+
+      const errorMessages = {
+        400: "Bad request. Please check your input.",
+        401: "Invalid email or password.",
+        403: "Access denied. Please check your account.",
+        404: "User not found.",
+        500: "Server error. Please try again later.",
+      };
+
+>>>>>>> Stashed changes
       toast.error("Login failed. Please try again.");
     }
   };
