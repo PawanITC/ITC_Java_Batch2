@@ -1,3 +1,16 @@
+# Terraform files
+**/.terraform/*
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+terraform.tfstate.d/
+.terraform.lock.hcl
+
+# Terraform data directories
+**/terraform/data/
+
 # Logs
 logs
 *.log

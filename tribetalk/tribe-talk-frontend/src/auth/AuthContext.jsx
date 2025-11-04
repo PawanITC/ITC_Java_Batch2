@@ -1,29 +1,34 @@
-import { createContext,useState,useEffect, useContext } from "react";
+// src/context/AuthContext.jsx
+import React, { createContext, useEffect, useState } from "react";
 import axiosInstance from "../services/axiosInstance";
 
-export const AuthContext=createContext();
+export const AuthContext = createContext();
 
-export function AuthProvider({children}){
-    const [user,setUser]=useState(null);
+export const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    const checkAuth = async () => {
-        try{
-            const response=await axiosInstance.get('/auth/me');
-            console.log(response);
-            setUser(response.data);
-        }
-        catch{
-            setUser(null);
-        }
-    }
+  // Runs once when app loads
+  useEffect(() => {
+    const validateUser = async () => {
+      try {
+        const res = await axiosInstance.get("/auth/validateUser");
+        setIsAuthenticated(true);
+        setUser(res.data.username);
+      } catch {
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    validateUser();
+  }, []);
 
-    useEffect(()=>{
-        checkAuth();
-    },[]);
-
-    return (
-        <AuthContext.Provider value={{user,setUser,checkAuth}}>
-            {children}
-        </AuthContext.Provider>
-    )
-}
+  return (
+    <AuthContext.Provider value={{ isAuthenticated,setIsAuthenticated, user,setUser, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};

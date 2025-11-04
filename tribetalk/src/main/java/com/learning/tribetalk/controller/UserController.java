@@ -7,9 +7,12 @@ import com.learning.tribetalk.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,6 +23,10 @@ public class UserController {
         this.userService=userService;
     }
 
+    @GetMapping("/loggedUser")
+    public ResponseEntity<UserResponse> getUserByUsername(@AuthenticationPrincipal User user){
+        return userService.findByUsername(user.getUsername()).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
     @GetMapping("/all")
     public ResponseEntity<List<UserResponse>> getAllUsers(){
         List<UserResponse> users=userService.getAllUsers();

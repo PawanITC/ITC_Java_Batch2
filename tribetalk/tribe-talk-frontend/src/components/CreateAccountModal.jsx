@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 function CreateAccountModal({ onClose }) {
   const navigate=useNavigate();
   const [form, setForm] = useState({
+    displayname: "",
     username: "",
     email: "",
     password: ""
@@ -19,20 +20,21 @@ function CreateAccountModal({ onClose }) {
   const handleRegister=async (e)=>{
     e.preventDefault();
 
-    const {username,email,password}=form;
+    const {displayname,username,email,password}=form;
 
-    if(!username || !email || !password){
+    if(!username || !email || !password || !displayname){
       toast.warn('Please fill in all fields');
       return false;
     }
     try{
       await axiosInstance.post('/api/users/save',{
         username:username,
+        displayname:displayname,
         password:password,
         email:email
       });
       toast.success('Successfully Registered');
-      navigate('/mainpage');
+      navigate('/main');
     }
     catch(error){
       console.log(error);
@@ -49,7 +51,17 @@ function CreateAccountModal({ onClose }) {
             Create Your Account
           </h2>
 
-          {/* Name */}
+          {/* Display Name */}
+          <input
+            type="text"
+            name="displayname"
+            value={form.displayname}
+            onChange={handleChange}
+            placeholder="Display Name"
+            className="w-full px-4 py-2 rounded-md border border-yellow-500 bg-neutral-900 text-yellow-100 placeholder-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-600 transition"
+          />
+
+          {/* Username */}
           <input
             type="text"
             name="username"

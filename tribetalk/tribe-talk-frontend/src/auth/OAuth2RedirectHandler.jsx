@@ -6,7 +6,7 @@ export default function OAuth2RedirectHandler(){
 
     useEffect(()=>{
         const params=new URLSearchParams(window.location.search);
-        navigate("/mainpage");
+        navigate("/main");
     },[navigate]);
 
     return <p>Redirecting</p>;

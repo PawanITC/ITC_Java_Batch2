@@ -3,6 +3,7 @@ package com.learning.tribetalk.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -53,5 +54,20 @@ public class JwtUtil {
         return parseClaims(token).getBody().getSubject();
     }
 
+    public ResponseCookie generateJwtCookie(String token) {
+        return ResponseCookie.from("jwt", token)
+                .httpOnly(true)
+                .secure(false) // ✅ set true in production
+                .path("/")
+                .maxAge(expirationMillis)
+                .sameSite("Strict")
+                .build();
+    }
 
+    public ResponseCookie getCleanJwtCookie() {
+        return ResponseCookie.from("jwt", "")
+                .path("/")
+                .maxAge(0)
+                .build();
+    }
 }

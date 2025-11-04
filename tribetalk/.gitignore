@@ -1,3 +1,25 @@
+# =============================================
+# Terraform
+# =============================================
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+.terraform.lock.hcl
+terraform.tfstate.d/
+*.tfplan
+
+# =============================================
+# Database and Application Data
+# =============================================
+monitoring/terraform/data/  # PostgreSQL data directory
+# =============================================
+# Data Directory
+# =============================================
+/data/
+
+
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar

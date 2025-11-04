@@ -59,6 +59,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         user.setPassword(encodedpassword);
         user.setUsername(request.username());
         user.setEmail(request.email());
+        user.setDisplayname(request.displayname());
         repo.save(user);
 
     }
@@ -80,7 +81,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
         user.setUsername(request.username());
         user.setEmail(request.email());
-
+        user.setDisplayname(request.displayname());
         if (request.password() != null && !request.password().isBlank()) {
             user.setPassword(passwordEncoder.encode(request.password()));
         }
@@ -90,7 +91,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "usernamecache",key = "#username")
     public void deleteUser(Long id) {
         User user=repo.findById(id).orElseThrow(()->new ResourceNotFoundException("No User Found"));
         repo.delete(user);
@@ -98,11 +98,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public List<UserResponse> getAllUsers() {
-        return repo.findAll().stream().map(user->new UserResponse(user.getId(),user.getUsername(),user.getEmail())).toList();
+        return repo.findAll().stream().map(user->new UserResponse(user.getId(),user.getUsername(),user.getEmail(),user.getDisplayname())).toList();
     }
 
     @Override
-    @Cacheable(cacheNames = "usernamecache",key = "#username")
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         System.out.println("Trying to load user: " + username);
 
@@ -131,6 +130,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public Optional<User> findByEmail(String email) {
         return repo.findByEmail(email);
+    }
+
+    @Override
+    public Optional<UserResponse> findByUsername(String username) {
+        return Optional.ofNullable(repo.findByUsername(username).map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).orElseThrow(() -> new ResourceNotFoundException("User not found")));
     }
 
 

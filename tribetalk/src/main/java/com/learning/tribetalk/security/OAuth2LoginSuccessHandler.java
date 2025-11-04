@@ -122,7 +122,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
                         // Assign default authority
                         Authority roleUser = new Authority();
                         roleUser.setAuthority("ROLE_USER");
-                        RegistrationRequest newUser = new RegistrationRequest(username,email,"oauth2",roleUser);
+                        RegistrationRequest newUser = new RegistrationRequest(username,username,email,"oauth2",roleUser);
                         userService.registerUser(newUser);
 
                         var authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
@@ -160,7 +160,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         // Generate JWT
         String jwtToken = jwtUtils.generateToken(email,authorities);
 
-        ResponseCookie cookie = ResponseCookie.from("accessToken", jwtToken)
+        ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
                 .httpOnly(true)
                 .secure(false) // true in production (HTTPS)
                 .path("/")

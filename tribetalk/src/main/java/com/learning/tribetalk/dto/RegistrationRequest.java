@@ -8,6 +8,9 @@ import jakarta.validation.constraints.Size;
 import java.util.Set;
 
 public record RegistrationRequest(
+        @NotBlank(message = "Display Name is required")
+        @Size(min = 2,max = 40,message = "Display Name must be between 3 to 40 chars")
+        String displayname,
         @NotBlank(message = "Username is required")
         @Size(min = 3,max = 40,message = "Username must be between 3 to 40 chars")
         String username,

@@ -2,17 +2,21 @@ package com.learning.tribetalk.controller;
 
 import com.learning.tribetalk.dto.RegistrationRequest;
 import com.learning.tribetalk.security.JwtUtil;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseCookie;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -36,8 +40,9 @@ public class AuthController {
     record AuthResponse(String token) {}
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<?> login(@RequestBody AuthRequest request, HttpServletResponse response) {
         try{
+            System.out.println(request);
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.username(), request.password())
             );
@@ -48,17 +53,8 @@ public class AuthController {
                     .collect(Collectors.toList());
 
             String token = jwtUtil.generateToken(request.username(), roles);
-
-            ResponseCookie cookie= ResponseCookie.from("accessToken",token)
-                    .httpOnly(true)
-                    .secure(false)
-                    .path("/")
-                    .sameSite("Lax")
-                    .maxAge(Duration.ofDays(7))
-                    .build();
-
-
-            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookie.toString()).body(new AuthResponse("Login Successfull"));
+            ResponseCookie cookie=jwtUtil.generateJwtCookie(token);
+            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookie.toString()).body(new AuthResponse(request.username()));
         }
         catch (BadCredentialsException ex){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse("Invalid Credentials"));
@@ -66,15 +62,15 @@ public class AuthController {
 
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(Authentication authentication){
-        if(authentication==null || !authentication.isAuthenticated()){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not Authenticated");
-        }
-        String username=authentication.getName();
-        UserDetails userDetails=userDetailsService.loadUserByUsername(username);
-        return ResponseEntity.ok(userDetails);
+    @GetMapping("/validateUser")
+    public ResponseEntity<?> me(@AuthenticationPrincipal UserDetails user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(Map.of("username", user.getUsername()));
     }
 
-
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
+        ResponseCookie cookie = jwtUtil.getCleanJwtCookie();
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(Map.of("message", "Logged out successfully"));
+    }
 }

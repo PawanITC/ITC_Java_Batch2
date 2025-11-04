@@ -10,9 +10,12 @@ import { HiOutlineUserGroup } from "react-icons/hi";
 import { MdOutlinePostAdd } from "react-icons/md";
 import logo from "../assets/logo.png";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PostModal from "./Post/PostModal";
+import { toast } from "react-toastify";
+import { AuthContext } from "../auth/AuthContext";
+import axiosInstance from "../services/axiosInstance";
 
 function Sidebar() {
   const navItems = [
@@ -28,7 +31,34 @@ function Sidebar() {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const navigate = useNavigate();
+  const {isAuthenticated,setIsAuthenticated,user,setUser}=useContext(AuthContext);
+  const [userDetails,setUserDetails]=useState(null);
+  useEffect(()=>{
+    const fetchUserDetails=async(e)=>{
+      try{
+        const userResponse=await axiosInstance.get(`/api/users/loggedUser`);
+        setUserDetails(userResponse.data);
+      }
+      catch(err){
+        console.log(err);
+        toast.warn('Error in fetching user details');
+      }
+    };
 
+    fetchUserDetails();
+  },[])
+  const logoutHandler=async (e)=>{
+    try{
+      const response=await axiosInstance.post('auth/logout',{});
+      setIsAuthenticated(false);
+      setUser(null);
+      toast.info('You have been logged out');
+      navigate("/",{replace:true});
+    }
+    catch(err){
+      toast.error(err.message)
+    }
+  }
   return (
     <aside className="fixed top-0 left-0 h-screen w-20 md:w-64 bg-neutral-900 text-yellow-100 border-r border-yellow-800 px-2 md:px-6 py-4 z-50">
       <div className="flex flex-col h-full justify-between">
@@ -81,8 +111,8 @@ function Sidebar() {
                 className="w-10 h-10 rounded-full object-cover"
               />
               <div className="hidden md:flex flex-col">
-                <span className="text-sm font-semibold">User</span>
-                <span className="text-xs text-yellow-400">@username</span>
+                <span className="text-sm font-semibold">{userDetails?.displayname || ''}</span>
+                <span className="text-xs text-yellow-400">{'@'+userDetails?.username || ''}</span>
               </div>
             </div>
           </button>
@@ -91,13 +121,9 @@ function Sidebar() {
             <div className="absolute bottom-16 left-4 bg-neutral-900 text-yellow-100 rounded-md shadow-lg border border-yellow-700 w-64 z-50">
               <button
                 className="w-full text-left px-4 py-3 hover:bg-neutral-800 transition"
-                onClick={() => {
-                  localStorage.removeItem("accessToken");
-                  console.log("Logged out");
-                  navigate("/");
-                }}
+                onClick={logoutHandler}
               >
-                Log out <span className="text-yellow-400">@user</span>
+                Log out <span className="text-yellow-400">{'@'+userDetails?.username || ''}</span>
               </button>
             </div>
           )}
