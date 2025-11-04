@@ -1,0 +1,79 @@
+spring:
+  application:
+    name: tribetalk
+
+  datasource:
+    url: jdbc:h2:mem:tribetalkdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  sql:
+    init:
+      mode: always
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: Ov23lizJ8kpXKzpZZi2P
+            client-secret: 58d5de6261dc8b9d2585f513e39cb4c443e63e66
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - read:user
+              - user:email
+#existingclientsecret - 0dc9230ac778fe76c4c4645ed1fe685f1dc8d502
+#existingclientid     - Ov23liGm8fihan8YBuCU
+frontend:
+  url: http://localhost:8080
+
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+jwt:
+  secret: change_this_to_a_long_random_secret_with_min_256_bits
+  expirationMillis: 3600000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+app:
+  url: http://localhost:5173
