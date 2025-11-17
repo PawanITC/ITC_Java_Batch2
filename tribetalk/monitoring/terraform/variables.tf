@@ -30,7 +30,7 @@ variable "postgres_db" {
 
 variable "enable_mongodb" {
   type = bool
-  default = false
+  default = true
 }
 
 variable "mongodb_user" {
@@ -55,7 +55,7 @@ variable "enable_redis" {
 
 variable "enable_springapp" {
   type = bool
-  default = true
+  default = false
 }
 
 variable "spring_app_image" {
