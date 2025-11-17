@@ -129,7 +129,7 @@ function Sidebar() {
           )}
         </div>
       </div>
-      {showPostModal && <PostModal onClose={() => setShowPostModal(false)} />}
+        {showPostModal && <PostModal onClose={() => setShowPostModal(false)} userDetails={userDetails}/>}
     </aside>
   );
 }

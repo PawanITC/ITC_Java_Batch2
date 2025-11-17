@@ -61,9 +61,9 @@ function CommunityDetails() {
 
       {/* posts feed */}
       <div className="px-4 py-6 space-y-4">
-        {[...Array(5)].map((_, i) => (
-          <PostCard key={i} />
-        ))}
+        {/*{[...Array(5)].map((_, i) => (*/}
+        {/*  <PostCard key={i} />*/}
+        {/*))}*/}
       </div>
     </div>
   );

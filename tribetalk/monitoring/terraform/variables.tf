@@ -8,6 +8,31 @@ variable "enable_kafka" {
   default = false #set to true to enable kafka
 }
 
+variable "enable_s3" {
+  type    = bool
+  default = true # set to true to enable S3 bucket creation
+}
+
+variable "s3_bucket_name" {
+  type    = string
+  default = "tribetalk-media" # must be globally unique
+}
+
+variable "s3_region" {
+  type    = string
+  default = "eu-west-2"
+}
+
+variable "aws_access_key" {
+  type    = string
+  description = "AKIAXPGTL45WIMP5MKJX"
+}
+
+variable "aws_secret_key" {
+  type    = string
+  description = "24lbVuHy9gj5b88phnV4ixVEouOigbm0WW73ToTW"
+}
+
 variable "enable_postgres" {
   type = bool
   default = false #set to true to enable postgres
@@ -30,7 +55,7 @@ variable "postgres_db" {
 
 variable "enable_mongodb" {
   type = bool
-  default = false
+  default = true
 }
 
 variable "mongodb_user" {
@@ -55,7 +80,7 @@ variable "enable_redis" {
 
 variable "enable_springapp" {
   type = bool
-  default = true
+  default = false
 }
 
 variable "spring_app_image" {

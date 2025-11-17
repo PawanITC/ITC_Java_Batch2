@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("oauth2/**").permitAll()
+                        .requestMatchers("/login**").permitAll()
                         .requestMatchers("/actuator/prometheus").permitAll()  // allow Prometheus
                         .requestMatchers(
                                 "/swagger-ui.html",

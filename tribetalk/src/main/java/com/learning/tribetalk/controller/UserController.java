@@ -19,35 +19,43 @@ import java.util.Optional;
 public class UserController {
     private final UserService userService;
 
-    public UserController(UserService userService){
-        this.userService=userService;
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+        return userService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/loggedUser")
-    public ResponseEntity<UserResponse> getUserByUsername(@AuthenticationPrincipal User user){
+    public ResponseEntity<UserResponse> getUserByUsername(@AuthenticationPrincipal User user) {
         return userService.findByUsername(user.getUsername()).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
+
     @GetMapping("/all")
-    public ResponseEntity<List<UserResponse>> getAllUsers(){
-        List<UserResponse> users=userService.getAllUsers();
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
     @Operation(summary = "Register a new user", description = "Creates a new user with username, email, and password")
     @PostMapping("/save")
-    public ResponseEntity<MessageResponse> registerUser(@RequestBody @Valid RegistrationRequest request){
+    public ResponseEntity<MessageResponse> registerUser(@RequestBody @Valid RegistrationRequest request) {
         userService.registerUser(request);
         return ResponseEntity.ok(new MessageResponse("User Registered Successfully"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MessageResponse> updateUser(@PathVariable Long id,@RequestBody RegistrationRequest request){
-        userService.updateUser(id,request);
+    public ResponseEntity<MessageResponse> updateUser(@PathVariable Long id, @RequestBody RegistrationRequest request) {
+        userService.updateUser(id, request);
         return ResponseEntity.ok(new MessageResponse("User updated Successfully"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<MessageResponse> deleteUser(@PathVariable Long id){
+    public ResponseEntity<MessageResponse> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(new MessageResponse("User removed Successfully"));
     }

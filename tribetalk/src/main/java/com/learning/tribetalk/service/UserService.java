@@ -15,4 +15,5 @@ public interface UserService {
     long getTotalUsers();
     Optional<User> findByEmail(String email);
     Optional<UserResponse> findByUsername(String username);
+    Optional<UserResponse> findById(Long id);
 }
