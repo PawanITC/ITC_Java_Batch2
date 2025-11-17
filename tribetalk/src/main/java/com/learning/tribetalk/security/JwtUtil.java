@@ -60,7 +60,7 @@ public class JwtUtil {
                 .secure(false) // ✅ set true in production
                 .path("/")
                 .maxAge(expirationMillis)
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .build();
     }
 

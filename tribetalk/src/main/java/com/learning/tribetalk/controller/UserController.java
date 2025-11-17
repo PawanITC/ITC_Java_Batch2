@@ -33,6 +33,11 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id){
+        return userService.findByUserId(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
     @Operation(summary = "Register a new user", description = "Creates a new user with username, email, and password")
     @PostMapping("/save")
     public ResponseEntity<MessageResponse> registerUser(@RequestBody @Valid RegistrationRequest request){

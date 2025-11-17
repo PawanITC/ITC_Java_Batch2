@@ -171,12 +171,13 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         // ✅ Add cookie to response header
         response.addHeader("Set-Cookie", cookie.toString());
         System.out.println(frontendUrl + "/oauth2/redirect");
+        response.sendRedirect("/oauth2/redirect");
         //  Redirect frontend with JWT
-        String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
+        /*String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
                 .queryParam("token", jwtToken)
                 .build().toUriString();
         //response.sendRedirect(targetUrl);
         this.setDefaultTargetUrl(targetUrl);
-        super.onAuthenticationSuccess(request, response, authentication);
+        super.onAuthenticationSuccess(request, response, authentication);*/
     }
 }

@@ -3,10 +3,10 @@ spring:
     name: tribetalk
 
   datasource:
-    url: jdbc:h2:mem:tribetalkdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/tribetalk
+    driver-class-name: org.postgresql.Driver
+    username: admin
+    password: admin123
 
   sql:
     init:
@@ -14,7 +14,11 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+      show-sql: true
 
   h2:
     console:
@@ -29,9 +33,13 @@ spring:
             client-id: Ov23lizJ8kpXKzpZZi2P
             client-secret: 58d5de6261dc8b9d2585f513e39cb4c443e63e66
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            scope:
-              - read:user
-              - user:email
+            scope: read:user,user:email
+        provider:
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: login
 #existingclientsecret - 0dc9230ac778fe76c4c4645ed1fe685f1dc8d502
 #existingclientid     - Ov23liGm8fihan8YBuCU
 frontend:
@@ -43,20 +51,36 @@ server:
 
 logging:
   level:
-    org:
-      springframework:
-        security: DEBUG
+    root: INFO
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg [traceId=%X{trace_id}] [spanId=%X{span_id}] [requestId=%X{request_id}] [user=%X{user}]%n"
 
 jwt:
   secret: change_this_to_a_long_random_secret_with_min_256_bits
   expirationMillis: 3600000
 
+otel:
+  exporter:
+    otlp:
+      endpoint: http://localhost:4318
+      protocol: http/protobuf
+  logs:
+    exporter: none
+  traces:
+    exporter: otlp
+  service:
+    name: tribetalk
+
 management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
+        include: health, info, metrics, prometheus
     prometheus:
       enabled: true
     health:
@@ -74,6 +98,13 @@ management:
     metrics:
       export:
         enabled: true
+
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
 
 app:
   url: http://localhost:5173
