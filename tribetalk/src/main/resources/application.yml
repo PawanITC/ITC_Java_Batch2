@@ -3,22 +3,26 @@ spring:
     name: tribetalk
 
   datasource:
-    url: jdbc:h2:mem:tribetalkdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/tribetalkdb
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: psql
 
   sql:
     init:
-      mode: always
+      mode: never
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update        # or 'none' / 'validate' / 'create' depending on your setup
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
 
   h2:
     console:
-      enabled: true
+      enabled: false
       path: /h2-console
 
   security:

@@ -1,6 +1,6 @@
 resource "docker_image" "postgres_image" {
   count = var.enable_postgres ? 1 : 0
-  name = "postgres:18"
+  name = "postgres:16"
 }
 
 resource "docker_container" "postgres_container" {
@@ -16,8 +16,8 @@ resource "docker_container" "postgres_container" {
   ]
 
   ports {
-    internal = 5432
-    external = 5432
+    internal = 5434
+    external = 5434
   }
 
   volumes {

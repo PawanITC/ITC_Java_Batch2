@@ -3,10 +3,12 @@ package com.learning.tribetalk.service.impl;
 import com.learning.tribetalk.dto.RegistrationRequest;
 import com.learning.tribetalk.dto.UserResponse;
 import com.learning.tribetalk.entity.Authority;
+import com.learning.tribetalk.entity.Follow;
 import com.learning.tribetalk.entity.User;
 import com.learning.tribetalk.exception.DuplicateResourceException;
 import com.learning.tribetalk.exception.ResourceNotFoundException;
 import com.learning.tribetalk.metrics.annotations.BusinessMetric;
+import com.learning.tribetalk.repository.FollowRepository;
 import com.learning.tribetalk.repository.UserRepository;
 import com.learning.tribetalk.service.UserService;
 
@@ -22,23 +24,26 @@ import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.sql.Time;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository repo;
+    private final FollowRepository followRepo;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository repo,PasswordEncoder passwordEncoder){
-        this.repo=repo;
-        this.passwordEncoder=passwordEncoder;
+    public UserServiceImpl(UserRepository repo, FollowRepository followRepo, PasswordEncoder passwordEncoder) {
+        this.repo = repo;
+        this.passwordEncoder = passwordEncoder;
+        this.followRepo = followRepo;
 
     }
 
@@ -46,16 +51,17 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Transactional
     @BusinessMetric("user.registration")
     public void registerUser(RegistrationRequest request) {
-        if(repo.existsByUsername(request.username())){
+        if (repo.existsByUsername(request.username())) {
             throw new DuplicateResourceException("Username already in use: " + request.username());
         }
-        if(repo.existsByEmail(request.email())){
+        if (repo.existsByEmail(request.email())) {
             throw new DuplicateResourceException("Email already in use: " + request.email());
         }
-        String encodedpassword= passwordEncoder.encode(request.password());
-        System.out.println("User Details"+request);
-        System.out.println("encoded"+encodedpassword);
-        User user=new User();
+        String encodedpassword = passwordEncoder.encode(request.password());
+        System.out.println("User Details " + request);
+        System.out.println("encoded " + encodedpassword);
+        System.out.println("Repo Object Name is  " + repo.toString());
+        User user = new User();
         user.setPassword(encodedpassword);
         user.setUsername(request.username());
         user.setEmail(request.email());
@@ -67,7 +73,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     @Transactional
     public void updateUser(Long id, RegistrationRequest request) {
-        User user=repo.findById(id).orElseThrow(()->new ResourceNotFoundException("User not found"));
+        User user = repo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // Check email uniqueness
         if (!user.getEmail().equalsIgnoreCase(request.email()) && repo.existsByEmail(request.email())) {
@@ -92,13 +98,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     @Transactional
     public void deleteUser(Long id) {
-        User user=repo.findById(id).orElseThrow(()->new ResourceNotFoundException("No User Found"));
+        User user = repo.findById(id).orElseThrow(() -> new ResourceNotFoundException("No User Found"));
         repo.delete(user);
     }
 
     @Override
     public List<UserResponse> getAllUsers() {
-        return repo.findAll().stream().map(user->new UserResponse(user.getId(),user.getUsername(),user.getEmail(),user.getDisplayname())).toList();
+        return repo.findAll().stream().map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).toList();
     }
 
     @Override
@@ -135,6 +141,42 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public Optional<UserResponse> findByUsername(String username) {
         return Optional.ofNullable(repo.findByUsername(username).map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).orElseThrow(() -> new ResourceNotFoundException("User not found")));
+    }
+
+
+    public List<UserResponse> findSuggestedUsers(Long userId) {
+
+        // Step 1: Fetch all users except the current one
+        List<User> users = repo.findAll()
+                .stream()
+                .filter(user -> !user.getId().equals(userId)) // exclude current user
+                .toList();
+
+        // Step 2: Get IDs of users the current user is following
+        List<Long> followingIds = followRepo.findAll().stream()
+                .filter(f -> f.getFollower().getId().equals(userId))
+                .map(f -> f.getFollowing().getId())
+                .distinct()
+                .toList();
+
+        // Step 3: Exclude already-followed users
+        List<User> suggestedUsers = users.stream()
+                .filter(user -> !followingIds.contains(user.getId())) // ✅ correct filter
+                .collect(Collectors.toList());
+
+        // Step 4: Randomize order (optional)
+        Collections.shuffle(suggestedUsers);
+
+        // Step 5: Limit results and map to DTOs
+        return suggestedUsers.stream()
+                .limit(3)
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getDisplayname()
+                ))
+                .toList();
     }
 
 

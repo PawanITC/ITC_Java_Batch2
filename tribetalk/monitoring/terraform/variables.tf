@@ -10,7 +10,7 @@ variable "enable_kafka" {
 
 variable "enable_postgres" {
   type = bool
-  default = false #set to true to enable postgres
+  default = true #set to true to enable postgres
 }
 
 variable "postgres_user" {
@@ -30,7 +30,7 @@ variable "postgres_db" {
 
 variable "enable_mongodb" {
   type = bool
-  default = false
+  default = true
 }
 
 variable "mongodb_user" {
