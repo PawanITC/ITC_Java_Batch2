@@ -10,19 +10,19 @@ spring:
 
   sql:
     init:
-      mode: always
+      mode: never
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update        # or 'none' / 'validate' / 'create' depending on your setup
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-      show-sql: true
+    show-sql: true
 
   h2:
     console:
-      enabled: true
+      enabled: false
       path: /h2-console
 
   security:

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.Set;
 
@@ -25,10 +26,10 @@ public class User {
     @Column(nullable = false)
     private String displayname;
 
-    @Column(nullable = false,unique = true)
+    @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false,unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
@@ -36,6 +37,12 @@ public class User {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<Authority> authorities;
+
+    @Column(nullable = false)
+    private Long followersCount= Long.valueOf(0);
+
+    @Column(nullable = false)
+    private Long followingCount= Long.valueOf(0);;
 
     /*public User(@NotBlank @Size(min = 3,max = 20) String username, @NotBlank String email, String password) {
         this.username=username;

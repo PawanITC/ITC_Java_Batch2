@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/api/users/**").permitAll()
+                        .requestMatchers("/api/follow/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("oauth2/**").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()

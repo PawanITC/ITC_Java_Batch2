@@ -17,7 +17,7 @@ function SuggestionSidebar() {
       {/* Scrollable Suggestions */}
       <div className="px-6 py-6 space-y-8">
         <TodaysNews />
-        <SuggestedUsers />
+            <SuggestedUsers/>
         <TrendingTopics />
       </div>
     </aside>
