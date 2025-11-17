@@ -21,12 +21,16 @@
     "vite": "^7.1.7"
   },
   "dependencies": {
+    "@stomp/stompjs": "^7.2.1",
     "@tailwindcss/vite": "^4.1.16",
+    "@types/sockjs-client": "^1.5.4",
     "axios": "^1.13.1",
     "js-cookie": "^3.0.5",
+    "lucide-react": "^0.553.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.9.4",
     "react-toastify": "^11.0.5",
+    "sockjs-client": "^1.6.1",
     "tailwindcss": "^4.1.16"
   }
 }

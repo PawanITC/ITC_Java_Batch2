@@ -21,7 +21,7 @@ function Home() {
       }
       
     }
-  },[loading,navigate]);
+  },[loading,navigate,isAuthenticated]);
 
   const [showModal, setShowModal] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
@@ -31,10 +31,8 @@ function Home() {
     setLoginForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleGithubLogin = async (e) => {
-    e.preventDefault();
+  const handleGithubLogin = () => {
     window.location.href="http://localhost:8080/oauth2/authorization/github";
-    
   }
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -53,16 +51,14 @@ function Home() {
         password: password,
       });
       setIsAuthenticated(true);
+      setUser(response.data);
       toast.success("Login successful!");
       navigate('/main',{replace:true});
     } catch (error) {
       console.log(error);
       const status = error?.response?.status;
       const message = error?.response?.data?.token || "Login failed. Please try again.";
-      if(message){
-        toast.error(message);  
-        return;
-      }
+      toast.error(message);
     }
   };
 

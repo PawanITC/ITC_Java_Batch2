@@ -1,0 +1,6 @@
+db.notifications.find().pretty()
+show collections
+use tribetalknosqldb
+show dbs
+exit
+show dbs

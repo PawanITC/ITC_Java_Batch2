@@ -15,7 +15,8 @@ export const AuthProvider = ({ children }) => {
       try {
         const res = await axiosInstance.get("/auth/validateUser");
         setIsAuthenticated(true);
-        setUser(res.data.username);
+        console.log("Validated user:", res.data);
+        setUser(res.data);
       } catch {
         setIsAuthenticated(false);
         setUser(null);
