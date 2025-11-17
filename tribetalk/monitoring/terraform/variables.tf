@@ -1,11 +1,16 @@
 variable "enable_monitoring" {
   type = bool
-  default = false #set to true to enable prometheus & grafana
+  default = true #set to true to enable prometheus & grafana
+}
+
+variable "enable_tempo" {
+  type = bool
+  default = true #set to true to enable prometheus & grafana
 }
 
 variable "enable_kafka" {
   type = bool
-  default = false #set to true to enable kafka
+  default = true #set to true to enable kafka
 }
 
 variable "enable_postgres" {
@@ -25,7 +30,7 @@ variable "postgres_password" {
 
 variable "postgres_db" {
   type = string
-  default = "tribetalkdb"
+  default = "tribetalk"
 }
 
 variable "enable_mongodb" {
@@ -55,7 +60,7 @@ variable "enable_redis" {
 
 variable "enable_springapp" {
   type = bool
-  default = true
+  default = false
 }
 
 variable "spring_app_image" {

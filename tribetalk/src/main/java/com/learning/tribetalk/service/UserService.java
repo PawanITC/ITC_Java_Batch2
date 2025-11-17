@@ -17,5 +17,6 @@ public interface UserService {
     Optional<User> findByEmail(String email);
     Optional<UserResponse> findByUsername(String username);
     List<UserResponse> findSuggestedUsers(Long userId);
+    Optional<UserResponse> findByUserId(Long userId);
 
 }

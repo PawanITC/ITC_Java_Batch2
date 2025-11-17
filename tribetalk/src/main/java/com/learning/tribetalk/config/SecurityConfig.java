@@ -1,5 +1,6 @@
 package com.learning.tribetalk.config;
 
+import com.learning.tribetalk.filter.MDCAndTelemetryFilter;
 import com.learning.tribetalk.security.JwtAuthenticationFilter;
 import com.learning.tribetalk.security.JwtUtil;
 import com.learning.tribetalk.security.OAuth2LoginSuccessHandler;
@@ -7,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -38,6 +38,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception{
         var jwtFilter = new JwtAuthenticationFilter(jwtUtil, userDetailsService);
+        var mdcFilter = new MDCAndTelemetryFilter();
 
         httpSecurity
                 .csrf(csrf -> csrf.disable())
@@ -46,10 +47,12 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/api/follow/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("oauth2/**").permitAll()
+                        .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/actuator/prometheus").permitAll()  // allow Prometheus
                         .requestMatchers(
                                 "/swagger-ui.html",
@@ -80,6 +83,9 @@ public class SecurityConfig {
 
         // add JWT filter BEFORE UsernamePasswordAuthenticationFilter so it runs for other endpoints
         httpSecurity.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        //Add MDC Filter after JWT Filter
+        httpSecurity.addFilterAfter( mdcFilter, JwtAuthenticationFilter.class);
         return httpSecurity.build();
     }
 
@@ -87,7 +93,7 @@ public class SecurityConfig {
     @Bean
     public CorsFilter corsFilter(){
         CorsConfiguration corsConfig=new CorsConfiguration();
-        corsConfig.setAllowedOrigins(Arrays.asList(url));
+        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:8080","http://localhost:8082","http://localhost:5173"));
         corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","PATCH","DELETE"));
         corsConfig.setAllowCredentials(true);
         corsConfig.setAllowedHeaders(Arrays.asList("*"));

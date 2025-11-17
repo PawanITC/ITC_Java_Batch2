@@ -143,6 +143,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return Optional.ofNullable(repo.findByUsername(username).map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).orElseThrow(() -> new ResourceNotFoundException("User not found")));
     }
 
+    @Override
+    public Optional<UserResponse> findByUserId(Long userId) {
+        return Optional.ofNullable(repo.findById(userId).map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).orElseThrow(() -> new ResourceNotFoundException("User not found")));
+    }
+
 
     public List<UserResponse> findSuggestedUsers(Long userId) {
 
