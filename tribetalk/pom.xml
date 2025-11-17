@@ -190,6 +190,20 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.38.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+
+        <!--<dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
         </dependency>
@@ -220,9 +234,9 @@
 							<artifactId>lombok</artifactId>
 						</path>
 					</annotationProcessorPaths>
-                    <source>21</source>
-                    <target>21</target>
-                    <compilerArgs>--enable-preview</compilerArgs>
+<!--                    <source>21</source>-->
+<!--                    <target>21</target>-->
+<!--                    <compilerArgs>&#45;&#45;enable-preview</compilerArgs>-->
                 </configuration>
 			</plugin>
 

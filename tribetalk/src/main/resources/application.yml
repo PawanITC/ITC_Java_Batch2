@@ -2,6 +2,14 @@ spring:
   application:
     name: tribetalk
 
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  cache:
+    type: simple
+
   datasource:
     url: jdbc:postgresql://localhost:5432/tribetalk
     driver-class-name: org.postgresql.Driver
@@ -25,6 +33,16 @@ spring:
       enabled: false
       path: /h2-console
 
+  data:
+    mongodb:
+      uri: mongodb://admin:admin123@localhost:27017/tribetalknosqldb?authSource=admin
+
+  aws:
+    accessKey: AKIAXPGTL45WIMP5MKJX
+    secretKey: 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
+    region: eu-north-1
+    bucket: tribetalk-bucket
+
   security:
     oauth2:
       client:
@@ -33,6 +51,17 @@ spring:
             client-id: Ov23lizJ8kpXKzpZZi2P
             client-secret: 58d5de6261dc8b9d2585f513e39cb4c443e63e66
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - read:user
+              - user:email
+          google:
+            client-id: 634703536163-6tqkifb0cg96l302sabbgimf5t4r3qqk.apps.googleusercontent.com
+            client-secret: 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
+            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+            scope:
+              - openid
+              - profile
+              - email
             scope: read:user,user:email
         provider:
           github:
