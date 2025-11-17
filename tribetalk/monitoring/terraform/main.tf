@@ -15,7 +15,8 @@ locals {
 provider "docker" {
   # Use TCP socket for Windows Docker Desktop
   #host = "tcp://localhost:2375"
-  host = "npipe:////./pipe/docker_engine" #for production
+  #host = "npipe:////./pipe/docker_engine" #for production
+  host = "unix:///var/run/docker.sock"
 }
 
 #Create a Docker network for Prometheus

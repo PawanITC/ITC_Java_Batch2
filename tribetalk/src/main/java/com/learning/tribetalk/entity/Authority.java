@@ -4,6 +4,7 @@ package com.learning.tribetalk.entity;
 
 import jakarta.persistence.*;
 
+
 @Entity
 @Table(name = "authorities")
 public class Authority {

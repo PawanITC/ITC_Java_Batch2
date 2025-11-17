@@ -10,38 +10,63 @@ import axiosInstance from "../services/axiosInstance";
 import {AuthContext} from "../auth/AuthContext";
 
 function Home() {
-    const {isAuthenticated, setIsAuthenticated, user, setUser, loading} = useContext(AuthContext);
-    const navigate = useNavigate();
-
-    //Auto Redirecting if User is Authenticated
-    useEffect(() => {
-        if (!loading) {
-            if (isAuthenticated) {
-                toast.info("Redirecting to your Home page");
-                navigate("/main", {replace: true});
-            }
-
-        }
-    }, [loading, navigate]);
-
-    const [showModal, setShowModal] = useState(false);
-    const [loginForm, setLoginForm] = useState({username: "", password: ""});
-
-    const handleLoginChange = (e) => {
-        const {name, value} = e.target;
-        setLoginForm((prev) => ({...prev, [name]: value}));
-    };
-
-    const handleGithubLogin = async (e) => {
-        e.preventDefault();
-        window.location.href = "http://localhost:8080/oauth2/authorization/github";
-
+  const {isAuthenticated,setIsAuthenticated,user,setUser,loading}=useContext(AuthContext);
+  const navigate=useNavigate();
+  
+  //Auto Redirecting if User is Authenticated
+  useEffect(()=>{
+    if(!loading){
+      if(isAuthenticated ){
+        toast.info("Redirecting to your Home page");
+        navigate("/main",{replace:true});
+      }
+      
     }
+  },[loading,navigate,isAuthenticated]);
 
-    const handleGoogleLogin = async (e) => {
+  const [showModal, setShowModal] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
+  
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target;
+    setLoginForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleGithubLogin = () => {
+    window.location.href="http://localhost:8080/oauth2/authorization/github";
+  }
+  
+  const handleGoogleLogin = async (e) => {
         e.preventDefault();
         window.location.href = "http://localhost:8080/oauth2/authorization/google";
 
+    }
+  
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+
+    const { username, password } = loginForm;
+
+    // Basic validation
+    if (!username.trim() || !password.trim()) {
+      toast.warn("Please fill in both email and password.");
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.post('/auth/login', {
+        username: username,
+        password: password,
+      });
+      setIsAuthenticated(true);
+      setUser(response.data);
+      toast.success("Login successful!");
+      navigate('/main',{replace:true});
+    } catch (error) {
+      console.log(error);
+      const status = error?.response?.status;
+      const message = error?.response?.data?.token || "Login failed. Please try again.";
+      toast.error(message);
     }
 
     const handleLoginSubmit = async (e) => {

@@ -3,6 +3,7 @@ package com.learning.tribetalk.controller;
 import com.learning.tribetalk.dto.MessageResponse;
 import com.learning.tribetalk.dto.RegistrationRequest;
 import com.learning.tribetalk.dto.UserResponse;
+import com.learning.tribetalk.service.FollowService;
 import com.learning.tribetalk.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -10,24 +11,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-import java.util.Optional;
+
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
+    private final FollowService followService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
-        return userService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public UserController(UserService userService , FollowService followService) {
+        this.userService=userService;
+        this.followService=followService;
     }
 
     @GetMapping("/loggedUser")
@@ -39,6 +34,11 @@ public class UserController {
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id){
+        return userService.findByUserId(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @Operation(summary = "Register a new user", description = "Creates a new user with username, email, and password")
@@ -58,5 +58,23 @@ public class UserController {
     public ResponseEntity<MessageResponse> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(new MessageResponse("User removed Successfully"));
+    }
+
+    @GetMapping("/suggested-users/{userId}")
+    public ResponseEntity<List<UserResponse>> getSuggestedUsers(@PathVariable Long userId) {
+        List<UserResponse> suggestedUsers=userService.findSuggestedUsers(userId);
+        return ResponseEntity.ok(suggestedUsers);
+    }
+
+    @GetMapping("/{userId}/followers-count")
+    public ResponseEntity<Long> getFollowersCount(@PathVariable Long userId) {
+        long count = followService.getFollowersCount(userId);
+        return ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/{userId}/following-count")
+    public ResponseEntity<Long> getFollowingCount(@PathVariable Long userId) {
+        long count = followService.getFollowingCount(userId);
+        return ResponseEntity.ok(count);
     }
 }
