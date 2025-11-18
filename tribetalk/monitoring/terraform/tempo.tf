@@ -3,14 +3,16 @@
 resource "null_resource" "create_tempo_data_dir" {
   count = var.enable_tempo ? 1 : 0
   provisioner "local-exec" {
-    command = "mkdir -p /tmp/tempo-data"
+    command = "powershell -Command \"New-Item -ItemType Directory -Force -Path 'C:\\temp\\tempo-data'\""
   }
+
+
 }
 
 # Pull Tempo image
 resource "docker_image" "tempo" {
   count = var.enable_tempo ? 1 : 0
-  name = "grafana/tempo:2.4.1" # stable version
+  name  = "grafana/tempo:2.4.1" # stable version
 }
 
 # Run Tempo container
@@ -84,10 +86,10 @@ storage:
     wal:
       path: /tmp/tempo/wal
 EOF
-    file = "/etc/tempo/tempo.yaml"
+    file    = "/etc/tempo/tempo.yaml"
   }
 
-  restart = "unless-stopped"
+  restart    = "unless-stopped"
   depends_on = [null_resource.create_tempo_data_dir]
 }
 

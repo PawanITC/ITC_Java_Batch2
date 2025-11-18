@@ -77,6 +77,6 @@ resource "docker_container" "kafdrop_container" {
   restart = "unless-stopped"
 }
 
-output "kafka_web_url" {
-  value = "http://localhost:${docker_container.kafdrop_container[0].ports[0].external}"
-}
+# output "kafka_web_url" {
+#   value = "http://localhost:${docker_container.kafdrop_container[0].ports[0].external}"
+# }

@@ -28,14 +28,14 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
 
-  h2:
-    console:
-      enabled: false
-      path: /h2-console
+#  h2:
+#    console:
+#      enabled: false
+#      path: /h2-console
 
-  data:
-    mongodb:
-      uri: mongodb://admin:admin123@localhost:27017/tribetalknosqldb?authSource=admin
+#  data:
+#    mongodb:
+#      uri: mongodb://admin:admin123@localhost:27017/tribetalknosqldb?authSource=admin
 
   aws:
     accessKey: AKIAXPGTL45WIMP5MKJX
@@ -62,7 +62,6 @@ spring:
               - openid
               - profile
               - email
-            scope: read:user,user:email
         provider:
           github:
             authorization-uri: https://github.com/login/oauth/authorize
@@ -103,30 +102,32 @@ otel:
 
 management:
   tracing:
-    enabled: true
+    enabled: false
     sampling:
       probability: 1.0
   endpoints:
     web:
       exposure:
-        include: health, info, metrics, prometheus
+        include: health,info,metrics,prometheus
+  endpoint:
+    include: health, info, metrics, prometheus
     prometheus:
-      enabled: true
+      enabled: false
     health:
       show-details: always
   metrics:
     export:
       prometheus:
-        enabled: true
+        enabled: false
     distribution:
       percentiles-histogram:
-        http.server.requests: true
+        http.server.requests: false
     tags:
       application: ${spring.application.name}
   prometheus:
     metrics:
       export:
-        enabled: true
+        enabled: false
 
   kafka:
     producer:

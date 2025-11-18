@@ -78,6 +78,7 @@ public class AuthController {
     @GetMapping("/validateUser")
     public ResponseEntity<?> me(@AuthenticationPrincipal UserDetails user) {
         if (user == null) return ResponseEntity.status(401).build();
+
         Optional<UserResponse> userResponse=userService.findByUsername(user.getUsername());
         if (userResponse.isPresent()){
             return ResponseEntity.ok(Map.of("username",userResponse.get().username(),"userId",userResponse.get().id()));
