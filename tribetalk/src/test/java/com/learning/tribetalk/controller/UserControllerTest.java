@@ -2,6 +2,7 @@ package com.learning.tribetalk.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learning.tribetalk.dto.RegistrationRequest;
+import com.learning.tribetalk.service.FollowService;
 import com.learning.tribetalk.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ public class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private FollowService followService;
 
     private final ObjectMapper objectMapper=new ObjectMapper();
 

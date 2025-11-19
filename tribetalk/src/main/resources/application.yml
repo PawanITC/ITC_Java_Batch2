@@ -2,24 +2,46 @@ spring:
   application:
     name: tribetalk
 
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  cache:
+    type: simple
+
   datasource:
-    url: jdbc:h2:mem:tribetalkdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/tribetalk
+    driver-class-name: org.postgresql.Driver
+    username: admin
+    password: admin123
 
   sql:
     init:
-      mode: always
+      mode: never
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update        # or 'none' / 'validate' / 'create' depending on your setup
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+#  h2:
+#    console:
+#      enabled: false
+#      path: /h2-console
+
+#  data:
+#    mongodb:
+#      uri: mongodb://admin:admin123@localhost:27017/tribetalknosqldb?authSource=admin
+
+  aws:
+    accessKey: AKIAXPGTL45WIMP5MKJX
+    secretKey: 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
+    region: eu-north-1
+    bucket: tribetalk-bucket
 
   security:
     oauth2:
@@ -32,6 +54,20 @@ spring:
             scope:
               - read:user
               - user:email
+          google:
+            client-id: 634703536163-6tqkifb0cg96l302sabbgimf5t4r3qqk.apps.googleusercontent.com
+            client-secret: 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
+            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+            scope:
+              - openid
+              - profile
+              - email
+        provider:
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: login
 #existingclientsecret - 0dc9230ac778fe76c4c4645ed1fe685f1dc8d502
 #existingclientid     - Ov23liGm8fihan8YBuCU
 frontend:
@@ -43,37 +79,62 @@ server:
 
 logging:
   level:
-    org:
-      springframework:
-        security: DEBUG
+    root: INFO
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg [traceId=%X{trace_id}] [spanId=%X{span_id}] [requestId=%X{request_id}] [user=%X{user}]%n"
 
 jwt:
   secret: change_this_to_a_long_random_secret_with_min_256_bits
   expirationMillis: 3600000
 
+otel:
+  exporter:
+    otlp:
+      endpoint: http://localhost:4318
+      protocol: http/protobuf
+  logs:
+    exporter: none
+  traces:
+    exporter: otlp
+  service:
+    name: tribetalk
+
 management:
+  tracing:
+    enabled: false
+    sampling:
+      probability: 1.0
   endpoints:
     web:
       exposure:
         include: health,info,metrics,prometheus
   endpoint:
+    include: health, info, metrics, prometheus
     prometheus:
-      enabled: true
+      enabled: false
     health:
       show-details: always
   metrics:
     export:
       prometheus:
-        enabled: true
+        enabled: false
     distribution:
       percentiles-histogram:
-        http.server.requests: true
+        http.server.requests: false
     tags:
       application: ${spring.application.name}
   prometheus:
     metrics:
       export:
-        enabled: true
+        enabled: false
+
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
 
 app:
   url: http://localhost:5173

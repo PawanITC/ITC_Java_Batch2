@@ -15,7 +15,6 @@ import Message from "./pages/Message.jsx";
 function App() {
   return (
     
-      <AuthProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home></Home>}></Route>
@@ -23,7 +22,7 @@ function App() {
             <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler></OAuth2RedirectHandler>}></Route>    
             <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="/explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/bookmarks" element={<ProtectedRoute><Bookmarks /></ProtectedRoute>} />
             <Route path="/communities" element={<ProtectedRoute><Community /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Message /></ProtectedRoute>} />
@@ -32,8 +31,7 @@ function App() {
 
           <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="dark"></ToastContainer>
 
-        </BrowserRouter>  
-      </AuthProvider>
+        </BrowserRouter>
   );
 }
 

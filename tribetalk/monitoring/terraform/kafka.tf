@@ -19,21 +19,27 @@ resource "docker_container" "kafka_container" {
   }
 
   env = [
-    # Required to enable KRaft mode
-    "KAFKA_PROCESS_ROLES=broker,controller",
     "KAFKA_NODE_ID=1",
-
-    # Define listeners for both broker and controller
-    "KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093",
-    "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092",
-    "KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER",
+    "KAFKA_PROCESS_ROLES=broker,controller",
     "KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093",
+    "KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093",
+    "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092",
+    "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT",
+    "KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER",
+    "KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT",
+    "KAFKA_LOG_DIRS=/tmp/kraft-combined-logs",
 
-    # Auto-create topics for quick local testing
+    # Auto-create topics for dev/local testing
     "KAFKA_AUTO_CREATE_TOPICS_ENABLE=true",
 
-    # Required cluster ID (can be static for dev)
-    "KAFKA_CLUSTER_ID=abcdefghijklmnopqrstuv",
+    # Optional (cleaner startup)
+    "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1",
+    "KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1",
+    "KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1",
+    "KAFKA_MIN_INSYNC_REPLICAS=1",
+
+    # (Optional) Set cluster ID for KRaft mode
+    "CLUSTER_ID=abcd1234abcd1234abcd1234abcd1234",
 
     # Allow plaintext (no auth)
     "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
@@ -71,3 +77,6 @@ resource "docker_container" "kafdrop_container" {
   restart = "unless-stopped"
 }
 
+# output "kafka_web_url" {
+#   value = "http://localhost:${docker_container.kafdrop_container[0].ports[0].external}"
+# }

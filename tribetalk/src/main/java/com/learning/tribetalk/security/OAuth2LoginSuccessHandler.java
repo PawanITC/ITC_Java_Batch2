@@ -42,13 +42,13 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
     private final OAuth2AuthorizedClientService authorizedClientService;
 
 
-
     @Autowired  // Spring will call this constructor automatically
     public OAuth2LoginSuccessHandler(UserService userService, JwtUtil jwtUtils, OAuth2AuthorizedClientService authorizedClientService) {
         this.userService = userService;
         this.jwtUtils = jwtUtils;
         this.authorizedClientService = authorizedClientService;
     }
+
     @Autowired
     AuthorityRepository roleRepository;
 
@@ -73,15 +73,15 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
             );
 
             DefaultOAuth2User principal = (DefaultOAuth2User) authentication.getPrincipal();
-                String accessToken = client.getAccessToken().getTokenValue();
+            String accessToken = client.getAccessToken().getTokenValue();
 
             Map<String, Object> attributes = principal.getAttributes();
             String email = Optional.ofNullable(attributes.get("email"))
                     .map(Object::toString)
                     .orElseGet(() -> {
 
-                            String token = client.getAccessToken().getTokenValue();
-                            return gitHubEmailService.fetchPrimaryEmail(token);
+                        String token = client.getAccessToken().getTokenValue();
+                        return gitHubEmailService.fetchPrimaryEmail(token);
 
                     });
             String name = Optional.ofNullable(attributes.get("name")).map(Object::toString).orElse("");
@@ -122,7 +122,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
                         // Assign default authority
                         Authority roleUser = new Authority();
                         roleUser.setAuthority("ROLE_USER");
-                        RegistrationRequest newUser = new RegistrationRequest(username,username,email,"oauth2",roleUser);
+                        RegistrationRequest newUser = new RegistrationRequest(username, username, email, "oauth2", roleUser);
                         userService.registerUser(newUser);
 
                         var authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
@@ -156,9 +156,8 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
                 .collect(Collectors.toList());
 
 
-
         // Generate JWT
-        String jwtToken = jwtUtils.generateToken(email,authorities);
+        String jwtToken = jwtUtils.generateToken(email, authorities);
 
         ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
                 .httpOnly(true)
@@ -171,12 +170,13 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         // ✅ Add cookie to response header
         response.addHeader("Set-Cookie", cookie.toString());
         System.out.println(frontendUrl + "/oauth2/redirect");
+        response.sendRedirect("/oauth2/redirect");
         //  Redirect frontend with JWT
-        String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
+        /*String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
                 .queryParam("token", jwtToken)
                 .build().toUriString();
         //response.sendRedirect(targetUrl);
         this.setDefaultTargetUrl(targetUrl);
-        super.onAuthenticationSuccess(request, response, authentication);
+        super.onAuthenticationSuccess(request, response, authentication);*/
     }
 }

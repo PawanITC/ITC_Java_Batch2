@@ -16,8 +16,9 @@ import PostModal from "./Post/PostModal";
 import { toast } from "react-toastify";
 import { AuthContext } from "../auth/AuthContext";
 import axiosInstance from "../services/axiosInstance";
+import { GlobalContext } from "./GlobalContext";
 
-function Sidebar() {
+function  Sidebar() {
   const navItems = [
     { icon: <FiHome />, label: "Home" },
     { icon: <FiSearch />, label: "Explore" },
@@ -32,6 +33,7 @@ function Sidebar() {
   const [showPostModal, setShowPostModal] = useState(false);
   const navigate = useNavigate();
   const {isAuthenticated,setIsAuthenticated,user,setUser}=useContext(AuthContext);
+  const {unReadNotificationCount,setUnReadNotificationCount}=useContext(GlobalContext);
   const [userDetails,setUserDetails]=useState(null);
   useEffect(()=>{
     const fetchUserDetails=async(e)=>{
@@ -77,9 +79,19 @@ function Sidebar() {
               <Link
                 to={label === "Home" ? "/main" : `/${label.toLowerCase()}`}
                 key={idx}
-                className="flex flex-col md:flex-row items-center md:items-start gap-0 md:gap-4 px-2 py-2 rounded-md hover:bg-yellow-700 transition"
+                className="w-full flex flex-col md:flex-row items-center md:items-start gap-0 md:gap-4 px-2 py-2 rounded-md hover:bg-yellow-700 transition"
               >
-                <span className="text-xl">{icon}</span>
+                {label === "Notifications" && (
+                  <div className="relative">
+                    <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
+                      {unReadNotificationCount}
+                    </span>
+                    <span className="text-xl">{icon}</span>
+                  </div>
+                )}
+                {label !== "Notifications" && (
+                  <span className="text-xl">{icon}</span>
+                )}
                 <span className="hidden md:inline text-sm font-medium">
                   {label}
                 </span>
@@ -129,7 +141,7 @@ function Sidebar() {
           )}
         </div>
       </div>
-      {showPostModal && <PostModal onClose={() => setShowPostModal(false)} />}
+        {showPostModal && <PostModal onClose={() => setShowPostModal(false)} userDetails={userDetails}/>}
     </aside>
   );
 }

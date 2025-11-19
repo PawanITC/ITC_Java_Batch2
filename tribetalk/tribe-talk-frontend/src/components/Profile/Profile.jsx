@@ -1,9 +1,73 @@
 import { FiCalendar } from "react-icons/fi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PostCard from "../Post/PostCard";
+import { AuthContext } from "../../auth/AuthContext";
+import axiosInstance from "../../services/axiosInstance";
+import { toast } from "react-toastify";
 
 function Profile() {
   const [activeTab, setActiveTab] = useState("posts");
+  const [posts, setPosts] = useState([]);
+  const [userDetails, setUserDetails] = useState(null);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const { user } = useContext(AuthContext);
+
+  //console.log("The user who has logged In is "+user.data.displayname);
+  //const userId = user.data.id;
+  const userId = 25;
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const followersRes = await axiosInstance.get(
+          `/api/users/${userId}/followers-count`
+        );
+        const followingRes = await axiosInstance.get(
+          `/api/users/${userId}/following-count`
+        );
+        const followersCount = followersRes.data;
+        const followingCount = followingRes.data;
+
+        setFollowersCount(followersCount);
+        setFollowingCount(followingCount);
+      } catch (error) {
+        console.error("Error fetching user follow data:", error);
+      }
+    };
+
+    fetchCounts();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchUserDetails = async (e) => {
+      try {
+        const userResponse = await axiosInstance.get(`/api/users/loggedUser`);
+        setUserDetails(userResponse.data);
+      } catch (err) {
+        console.log(err);
+        toast.warn("Error in fetching user details");
+      }
+    };
+    fetchUserDetails();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserPosts = async (e) => {
+      try {
+        if (activeTab === "posts" && userDetails?.id) {
+          const res = await axiosInstance.get(
+            `/api/v1/posts/userPost?userId=${userDetails.id}`
+          );
+          setPosts(res.data);
+        }
+      } catch (err) {
+        console.log(err);
+        toast.warn("Failed to fetch the user posts");
+      }
+    };
+    fetchUserPosts();
+  }, [activeTab, userDetails]);
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-6 text-yellow-100">
@@ -32,8 +96,12 @@ function Profile() {
 
       {/* Name and Handle */}
       <div className="mb-2 px-2">
-        <h2 className="text-xl font-bold">User</h2>
-        <p className="text-yellow-400 text-sm">@user</p>
+        <h2 className="text-xl font-bold">
+          {userDetails?.displayname || "User"}
+        </h2>
+        <p className="text-yellow-400 text-sm">
+          @{userDetails?.username || "user"}
+        </p>
       </div>
 
       {/* Meta Info */}
@@ -42,13 +110,15 @@ function Profile() {
         <span>Joined October 2025</span>
       </div>
 
-      {/* Stats */}
+      {/* ⭐ Followers & Following Count */}
       <div className="flex gap-6 text-sm text-yellow-200 mb-6 px-2">
         <span>
-          <strong className="text-yellow-100">1</strong> Following
+          <strong className="text-yellow-100">{followingCount}</strong>{" "}
+          Following
         </span>
         <span>
-          <strong className="text-yellow-100">0</strong> Followers
+          <strong className="text-yellow-100">{followersCount}</strong>{" "}
+          Followers
         </span>
       </div>
 
@@ -71,24 +141,31 @@ function Profile() {
 
       {/* Tab Content */}
       <div className="space-y-4 px-2">
-        {activeTab === "posts" && (
-          <>
-            <PostCard />
-            <PostCard />
-          </>
-        )}
-        {activeTab === "replies" && (
-          <>
-            <PostCard />
-          </>
-        )}
-        {activeTab === "likes" && (
-          <>
-            <PostCard />
-            <PostCard />
-            <PostCard />
-          </>
-        )}
+        {activeTab === "posts" &&
+          (posts.length > 0 ? (
+            posts.map((post) => (
+              <PostCard key={post._id} post={post} userDetails={userDetails} />
+            ))
+          ) : (
+            <p className="text-yellow-400">No posts found</p>
+          ))}
+
+        {activeTab === "replies" &&
+          (posts.length > 0 ? (
+            posts.map((post) => (
+              <PostCard key={post._id} post={post} userDetails={userDetails} />
+            ))
+          ) : (
+            <p className="text-yellow-400">No posts found</p>
+          ))}
+        {activeTab === "likes" &&
+          (posts.length > 0 ? (
+            posts.map((post) => (
+              <PostCard key={post._id} post={post} userDetails={userDetails} />
+            ))
+          ) : (
+            <p className="text-yellow-400">No posts found</p>
+          ))}
       </div>
     </div>
   );
