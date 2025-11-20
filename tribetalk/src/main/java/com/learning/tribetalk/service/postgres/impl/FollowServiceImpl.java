@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -105,6 +107,41 @@ public class FollowServiceImpl implements FollowService {
     @Cacheable(value = "followingCount", key = "#userId")
     public long getFollowingCount(Long userId) {
         return followRepository.countByFollowerId(userId);
+    }
+
+
+    @Override
+    @Cacheable(value = "followers", key = "#userId")
+    public List<Long> getFollowersIds(Long userId) {
+
+        // Ensure user exists
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Fetch ALL followers from the follow table
+        List<Follow> followers = followRepository.findByFollowingId(userId);
+
+        // Extract only follower IDs
+        return followers.stream()
+                .map(f -> f.getFollower().getId())
+                .toList();
+    }
+
+    @Override
+    @Cacheable(value = "followings", key = "#userId")
+    public List<Long> getFollowingIds(Long userId) {
+
+        // Ensure user exists
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Fetch ALL followers from the follow table
+        List<Follow> followings = followRepository.findByFollowingId(userId);
+
+        // Extract only follower IDs
+        return followings.stream()
+                .map(f -> f.getFollowing().getId())
+                .toList();
     }
 
     // ===== helper methods to update cache after DB change =====
