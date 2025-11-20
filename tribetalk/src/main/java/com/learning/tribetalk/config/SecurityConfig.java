@@ -97,7 +97,8 @@ public class SecurityConfig {
         corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","PATCH","DELETE"));
         corsConfig.setAllowCredentials(true);
         corsConfig.setAllowedHeaders(Arrays.asList("*"));
-        corsConfig.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        // ✅ Expose Set-Cookie so frontend can receive JWT cookie
+        corsConfig.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "Set-Cookie"));
         UrlBasedCorsConfigurationSource source=new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**",corsConfig);
         return new CorsFilter(source);

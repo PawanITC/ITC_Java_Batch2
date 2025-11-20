@@ -1,14 +1,14 @@
 package com.learning.tribetalk.mapper;
 
-import com.learning.tribetalk.dto.PostCreateRequest;
-import com.learning.tribetalk.dto.PostResponse;
-import com.learning.tribetalk.entity.Post;
+import com.learning.tribetalk.dto.request.PostCreateRequest;
+import com.learning.tribetalk.dto.response.PostResponse;
+import com.learning.tribetalk.entity.mongo.Post;
 
 import java.util.List;
 
 public class PostMapper {
     // Entity -> DTO
-    public static PostResponse toResponse(Post post) {
+    public static PostResponse toResponse(Post post, String presignedUrl) {
         Integer totalVotes = null;
         List<PostResponse.PollOptionDTO> optionDTOs = null;
 
@@ -33,9 +33,9 @@ public class PostMapper {
                 post.getHashtags(),
                 post.getMentions(),
                 post.getUrls(),
-                post.getMedia() != null ? new PostResponse.MediaDTO(post.getMedia().url(), post.getMedia().type()) : null,
+                post.getMedia() != null ? new PostResponse.MediaDTO(presignedUrl, post.getMedia().type()) : null,
                 post.getPoll() != null ? new PostResponse.PollDTO(
-                        optionDTOs,post.getPoll().expiresAt(),totalVotes): null,
+                        optionDTOs, post.getPoll().expiresAt(), totalVotes) : null,
                 post.getLikeCount(),
                 post.getViewCount(),
                 post.getCreatedAt()

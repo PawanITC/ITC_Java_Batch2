@@ -1,8 +1,8 @@
 package com.learning.tribetalk.controller;
 
-import com.learning.tribetalk.dto.PostCreateRequest;
-import com.learning.tribetalk.dto.PostResponse;
-import com.learning.tribetalk.service.PostService;
+import com.learning.tribetalk.dto.request.PostCreateRequest;
+import com.learning.tribetalk.dto.response.PostResponse;
+import com.learning.tribetalk.service.mongo.PostService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +27,6 @@ class PostController {
     public ResponseEntity<PostResponse> createPost(
             @RequestPart("data") @Valid PostCreateRequest request,
             @RequestPart(value = "media", required = false) MultipartFile media) throws IOException {
-
         PostResponse saved = postService.save(request, media);
         return ResponseEntity.ok(saved);
     }

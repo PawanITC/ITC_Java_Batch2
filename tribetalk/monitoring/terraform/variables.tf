@@ -13,30 +13,20 @@ variable "enable_kafka" {
   default = true #set to true to enable kafka
 }
 
-# variable "enable_s3" {
-#   type    = bool
-#   default = true # set to true to enable S3 bucket creation
-# }
-#
-# variable "s3_bucket_name" {
-#   type    = string
-#   default = "tribetalk-media" # must be globally unique
-# }
-#
-# variable "s3_region" {
-#   type    = string
-#   default = "eu-west-2"
-# }
-#
-# variable "aws_access_key" {
-#   type    = string
-#   description = "AKIAXPGTL45WIMP5MKJX"
-# }
-#
-# variable "aws_secret_key" {
-#   type    = string
-#   description = "24lbVuHy9gj5b88phnV4ixVEouOigbm0WW73ToTW"
-# }
+variable "enable_s3" {
+  type    = bool
+  default = true # set to true to enable S3 bucket creation
+}
+
+variable "s3_bucket_name" {
+  type    = string
+  default = "tribetalk-media" # must be globally unique
+}
+
+variable "s3_region" {
+  type    = string
+  default = "eu-north-1"
+}
 
 variable "enable_postgres" {
   type = bool

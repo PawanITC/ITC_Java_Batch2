@@ -1,7 +1,7 @@
 package com.learning.tribetalk.controller;
 
-import com.learning.tribetalk.dto.MessageResponse;
-import com.learning.tribetalk.service.FollowService;
+import com.learning.tribetalk.dto.response.MessageResponse;
+import com.learning.tribetalk.service.postgres.FollowService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.Getter;
 import lombok.Setter;

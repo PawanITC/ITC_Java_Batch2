@@ -1,15 +1,14 @@
 package com.learning.tribetalk.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.learning.tribetalk.dto.PostCreateRequest;
-import com.learning.tribetalk.dto.PostResponse;
-import com.learning.tribetalk.service.PostService;
+import com.learning.tribetalk.dto.request.PostCreateRequest;
+import com.learning.tribetalk.dto.response.PostResponse;
+import com.learning.tribetalk.service.mongo.PostService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
