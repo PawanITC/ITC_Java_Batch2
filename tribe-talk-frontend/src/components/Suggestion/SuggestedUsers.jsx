@@ -2,29 +2,36 @@ import { useEffect, useState, useContext } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
 import { GlobalContext } from "../GlobalContext";
+import { AuthContext } from "../../auth/AuthContext";
+
 
 function SuggestedUsers() {
   const [users, setUsers] = useState([]);
   const [following, setFollowing] = useState({});
-  const [currentUser, setCurrentUser] = useState(null);
+//   const [currentUser, setCurrentUser] = useState(null);
+  const {followingCount,setFollowingCount} =useContext(GlobalContext);
+   const { user } = useContext(AuthContext);
+ 
+  const userId = user?.userId;
+
 
   const { setFollowEvent } = useContext(GlobalContext);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userRes = await axiosInstance.get("/api/users/loggedUser");
-        const loggedUser = userRes.data;
-        setCurrentUser(loggedUser);
+        // const userRes = await axiosInstance.get("/api/users/loggedUser");
+        // const loggedUser = userRes.data;
+        // setCurrentUser(loggedUser);
 
-        const suggestedRes = await axiosInstance.get(`/api/users/suggested-users/${loggedUser.id}`);
+        const suggestedRes = await axiosInstance.get(`/api/users/suggested-users/${userId}`);
         const suggestedUsers = suggestedRes.data;
         setUsers(suggestedUsers);
 
         // Initialize local following state
         const initialFollowing = {};
         suggestedUsers.forEach((user) => {
-          initialFollowing[user.id] = user.isFollowing || false; // assumes API provides this
+          initialFollowing[userId] = user.isFollowing || false; // assumes API provides this
         });
         setFollowing(initialFollowing);
       } catch (error) {
@@ -35,35 +42,44 @@ function SuggestedUsers() {
     fetchData();
   }, []);
 
-  const toggleFollow = async (userId) => {
-    if (!currentUser) {
+  const toggleFollow = async (followingUserId) => {
+    if (!followingUserId) {
       toast.error("User not loaded yet.");
       return;
     }
-
-    const isFollowing = following[userId];
+    console.log("Following is ",following);
+    let isFollowing = following[followingUserId] | false;
     const url = isFollowing
       ? `/api/follow/unfollow-user`
       : `/api/follow/follow-user`;
     const method = isFollowing ? "delete" : "post";
-
+    
     try {
+        
       await axiosInstance({
         method,
         url,
-        data: { followerId: currentUser.id, followingId: userId },
+        data: { followerId: userId, followingId: followingUserId },
       });
-
-      // Fire global follow event
-      setFollowEvent({
-        followerId: currentUser.id,
-        followingId: userId,
-        action: isFollowing ? "UNFOLLOW" : "FOLLOW",
-        timestamp: Date.now(),
-      });
+    //   // Fire global follow event
+    //   setFollowEvent({
+    //     followerId: currentUser.id,
+    //     followingId: userId,
+    //     action: isFollowing ? "UNFOLLOW" : "FOLLOW",
+    //     timestamp: Date.now(),
+    //   });
 
       // Update local button state instantly
-      setFollowing((prev) => ({ ...prev, [userId]: !isFollowing }));
+      
+      setFollowing((prev) => ({ ...prev, [followingUserId]: !isFollowing }));
+      isFollowing = following[followingUserId];
+      console.log("isFollowing",isFollowing);
+      if (!isFollowing){
+        console.log("you pressed follow ")
+        console.log("isFollowing",isFollowing);
+        setFollowingCount(prev => prev + 1);
+      }
+      else setFollowingCount(prev => prev - 1);
 
       toast.success(isFollowing ? "Unfollowed!" : "Followed!");
     } catch (error) {

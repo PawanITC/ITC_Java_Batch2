@@ -10,31 +10,17 @@ function Profile() {
   const [activeTab, setActiveTab] = useState("posts");
   const [posts, setPosts] = useState([]);
   const [userDetails, setUserDetails] = useState(null);
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
-
+  const { followersCount } = useContext(GlobalContext);
+  const { followingCount } = useContext(GlobalContext);
+  
   const { user } = useContext(AuthContext);
-  const { followEvent } = useContext(GlobalContext);
+  // const { followEvent } = useContext(GlobalContext);
 
+  
   const userId = user?.userId;
-
-  // Fetch initial counts once on mount
- useEffect(() => {
-  if (!userId) return;
-
-  const fetchCounts = async () => {
-    try {
-      const followersRes = await axiosInstance.get(`/api/users/${userId}/followers-count`);
-      const followingRes = await axiosInstance.get(`/api/users/${userId}/following-count`);
-      setFollowersCount(followersRes.data);
-      setFollowingCount(followingRes.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  fetchCounts();
-}, [userId]);
+  
+   console.log("Following Count = ",followingCount);
+   console.log("Followers Count = ",followersCount);
 
   // Fetch user details
   useEffect(() => {
@@ -63,22 +49,22 @@ function Profile() {
     fetchPosts();
   }, [activeTab, userDetails]);
 
-  // Handle real-time follow updates
-  useEffect(() => {
-    if (!followEvent?.timestamp) return;
+  // // Handle real-time follow updates
+  // useEffect(() => {
+  //   //if (!followEvent?.timestamp) return;
 
-    const { followerId, followingId, action } = followEvent;
+  //   //const { followerId, followingId, action } = followEvent;
 
-    // Update following count if current user is the follower
-    if (followerId === userId) {
-      setFollowingCount((prev) => (action === "FOLLOW" ? prev + 1 : prev - 1));
-    }
+  //   // Update following count if current user is the follower
+  //   if (followerId === userId) {
+  //     setFollowingCount((prev) => (action === "FOLLOW" ? prev + 1 : prev - 1));
+  //   }
 
-    // Update followers count if current user is being followed
-    if (followingId === userId) {
-      setFollowersCount((prev) => (action === "FOLLOW" ? prev + 1 : prev - 1));
-    }
-  }, [followEvent, userId]);
+  //   // Update followers count if current user is being followed
+  //   if (followingId === userId) {
+  //     setFollowersCount((prev) => (action === "FOLLOW" ? prev + 1 : prev - 1));
+  //   }
+  // }, [followEvent, userId]);
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-6 text-yellow-100">
