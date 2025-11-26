@@ -154,7 +154,7 @@ function Profile() {
           <div className="space-y-4">
             {posts.length > 0 ? (
               posts.map((p) => (
-                <PostCard key={p._id} post={p} userDetails={userDetails} />
+                <PostCard key={p._id} post={p}/>
               ))
             ) : (
               <p className="text-yellow-400">No posts found.</p>
