@@ -1,5 +1,6 @@
 package com.learning.tribetalk.service.postgres.impl;
 
+import com.learning.tribetalk.dto.response.UserResponse;
 import com.learning.tribetalk.entity.postgres.Follow;
 import com.learning.tribetalk.entity.postgres.User;
 import com.learning.tribetalk.exception.DuplicateResourceException;
@@ -110,39 +111,53 @@ public class FollowServiceImpl implements FollowService {
     }
 
 
+
+
     @Override
-    @Cacheable(value = "followers", key = "#userId")
-    public List<Long> getFollowersIds(Long userId) {
+    public List<UserResponse> getFollwersList(Long userId) {
 
         // Ensure user exists
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Fetch ALL followers from the follow table
+        // Fetch all followers (rows where userId is being followed)
         List<Follow> followers = followRepository.findByFollowingId(userId);
 
-        // Extract only follower IDs
+        // Map directly to UserResponse (NO helper method)
         return followers.stream()
-                .map(f -> f.getFollower().getId())
+                .map(f -> new UserResponse(
+                        f.getFollower().getId(),
+                        f.getFollower().getUsername(),
+                        f.getFollower().getEmail(),
+                        f.getFollower().getDisplayname()
+                ))
                 .toList();
     }
 
+
+
     @Override
-    @Cacheable(value = "followings", key = "#userId")
-    public List<Long> getFollowingIds(Long userId) {
+    public List<UserResponse> getFollwingList(Long userId) {
 
         // Ensure user exists
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Fetch ALL followers from the follow table
-        List<Follow> followings = followRepository.findByFollowingId(userId);
+        // Fetch all followings (rows where userId is the follower)
+        List<Follow> followings = followRepository.findByFollowerId(userId);
 
-        // Extract only follower IDs
+        // Map directly to UserResponse (NO helper method)
         return followings.stream()
-                .map(f -> f.getFollowing().getId())
+                .map(f -> new UserResponse(
+                        f.getFollowing().getId(),
+                        f.getFollowing().getUsername(),
+                        f.getFollowing().getEmail(),
+                        f.getFollowing().getDisplayname()
+                ))
                 .toList();
     }
+
+
 
     // ===== helper methods to update cache after DB change =====
     // Because @CachePut only applies when the annotated method is called,
@@ -169,6 +184,8 @@ public class FollowServiceImpl implements FollowService {
     private long safeLong(Long l) {
         return l == null ? 0L : l;
     }
+
+
 }
 
 

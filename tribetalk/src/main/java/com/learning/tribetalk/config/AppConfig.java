@@ -32,6 +32,7 @@ public class AppConfig {
                 "userPosts" );
         manager.setCaffeine(
                 Caffeine.newBuilder()
+                        .recordStats()
                         .expireAfterWrite(10, TimeUnit.MINUTES)
                         .maximumSize(10_000)
         );
