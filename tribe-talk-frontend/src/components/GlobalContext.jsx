@@ -2,18 +2,44 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import { notificationService } from "../services/notificationService";
 import { AuthContext } from "../auth/AuthContext";
 import { useNotificationWebSocket } from "../services/useWebSocket";
+import axiosInstance from "../services/axiosInstance";
 
 export const GlobalContext = createContext();
 
 export const GlobalProvider = ({ children }) => {
   const { user } = useContext(AuthContext) || {};
-
+  
   // Notifications
   const [unReadNotificationCount, setUnReadNotificationCount] = useState(0);
   const [liveNotifications, setLiveNotifications] = useState([]);
 
   // Real-time follow system
   const [followEvent, setFollowEvent] = useState(null);
+
+  //  GLOBAL POST MODAL STATE
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [replyContext, setReplyContext] = useState({
+    replyToPostId: null,
+    prefillText: ""
+  });
+
+  //  Open normal post modal
+  const openPostModal = () => {
+    setReplyContext({ replyToPostId: null, prefillText: "" });
+    setIsPostModalOpen(true);
+  };
+
+  //  Open reply modal
+  const openReplyModal = ({ replyToPostId, prefillText }) => {
+    setReplyContext({ replyToPostId, prefillText });
+    setIsPostModalOpen(true);
+  };
+
+  //  Close modal
+  const closePostModal = () => {
+    setIsPostModalOpen(false);
+    setReplyContext({ replyToPostId: null, prefillText: "" });
+  };
 
   const handleNewNotification = useCallback((notification) => {
     setUnReadNotificationCount((prev) => prev + 1);
@@ -46,6 +72,13 @@ export const GlobalProvider = ({ children }) => {
         // Real-time follow
         followEvent,
         setFollowEvent,
+
+        //  Global Post Modal
+        isPostModalOpen,
+        openPostModal,
+        openReplyModal,
+        closePostModal,
+        replyContext,
       }}
     >
       {children}

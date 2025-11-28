@@ -42,6 +42,7 @@ public class SecurityConfig {
 
         httpSecurity
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> {})   // ✅ enable CORS support here
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // ADD THIS
                 )
@@ -54,6 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("oauth2/**").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/actuator/prometheus").permitAll()  // allow Prometheus
+                    //    .requestMatchers("/api/v1/posts/**").permitAll()
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",

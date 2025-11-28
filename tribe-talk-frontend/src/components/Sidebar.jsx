@@ -18,7 +18,7 @@ import { AuthContext } from "../auth/AuthContext";
 import axiosInstance from "../services/axiosInstance";
 import { GlobalContext } from "./GlobalContext";
 
-function  Sidebar() {
+function Sidebar() {
   const navItems = [
     { icon: <FiHome />, label: "Home" },
     { icon: <FiSearch />, label: "Explore" },
@@ -30,37 +30,36 @@ function  Sidebar() {
   ];
 
   const [showAccountMenu, setShowAccountMenu] = useState(false);
-  const [showPostModal, setShowPostModal] = useState(false);
+  //const [showPostModal, setShowPostModal] = useState(false);
   const navigate = useNavigate();
-  const {isAuthenticated,setIsAuthenticated,user,setUser}=useContext(AuthContext);
-  const {unReadNotificationCount,setUnReadNotificationCount}=useContext(GlobalContext);
-  const [userDetails,setUserDetails]=useState(null);
-  useEffect(()=>{
-    const fetchUserDetails=async(e)=>{
-      try{
-        const userResponse=await axiosInstance.get(`/api/users/loggedUser`);
+  const { isAuthenticated, setIsAuthenticated, user, setUser } =
+    useContext(AuthContext);
+  const { unReadNotificationCount, openPostModal } = useContext(GlobalContext);
+  const [userDetails, setUserDetails] = useState(null);
+  useEffect(() => {
+    const fetchUserDetails = async (e) => {
+      try {
+        const userResponse = await axiosInstance.get(`/api/users/loggedUser`);
         setUserDetails(userResponse.data);
-      }
-      catch(err){
+      } catch (err) {
         console.log(err);
-        toast.warn('Error in fetching user details');
+        toast.warn("Error in fetching user details");
       }
     };
 
     fetchUserDetails();
-  },[])
-  const logoutHandler=async (e)=>{
-    try{
-      const response=await axiosInstance.post('auth/logout',{});
+  }, []);
+  const logoutHandler = async (e) => {
+    try {
+      const response = await axiosInstance.post("auth/logout", {});
       setIsAuthenticated(false);
       setUser(null);
-      toast.info('You have been logged out');
-      navigate("/",{replace:true});
+      toast.info("You have been logged out");
+      navigate("/", { replace: true });
+    } catch (err) {
+      toast.error(err.message);
     }
-    catch(err){
-      toast.error(err.message)
-    }
-  }
+  };
   return (
     <aside className="fixed top-0 left-0 h-screen w-20 md:w-64 bg-neutral-900 text-yellow-100 border-r border-yellow-800 px-2 md:px-6 py-4 z-50">
       <div className="flex flex-col h-full justify-between">
@@ -101,7 +100,8 @@ function  Sidebar() {
 
           <div className="flex justify-center md:justify-start mt-6">
             <button
-              onClick={() => setShowPostModal(true)}
+              // onClick={() => setShowPostModal(true)}
+              onClick={openPostModal}
               className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-yellow-500 text-neutral-900 font-semibold rounded-full hover:bg-yellow-400 transition"
             >
               <MdOutlinePostAdd className="text-xl" />
@@ -123,6 +123,13 @@ function  Sidebar() {
                 className="w-10 h-10 rounded-full object-cover"
               />
               <div className="hidden md:flex flex-col">
+                {/* <span className="text-sm font-semibold">
+                  {loggedUser?.displayname || ""}
+                </span>
+                <span className="text-xs text-yellow-400">
+                  @{loggedUser?.username || ""}
+                </span> */}
+
                 <span className="text-sm font-semibold">{userDetails?.displayname || ''}</span>
                 <span className="text-xs text-yellow-400">{'@'+userDetails?.username || ''}</span>
               </div>
@@ -135,13 +142,16 @@ function  Sidebar() {
                 className="w-full text-left px-4 py-3 hover:bg-neutral-800 transition"
                 onClick={logoutHandler}
               >
-                Log out <span className="text-yellow-400">{'@'+userDetails?.username || ''}</span>
+                Log out{" "}
+                <span className="text-yellow-400">
+                  {"@" + userDetails?.username || ""}
+                </span>
               </button>
             </div>
           )}
         </div>
       </div>
-        {showPostModal && <PostModal onClose={() => setShowPostModal(false)} userDetails={userDetails}/>}
+      {/* {showPostModal && <PostModal onClose={() => setShowPostModal(false)} userDetails={userDetails}/>} */}
     </aside>
   );
 }

@@ -12,7 +12,14 @@ import Notifications from "./pages/Notifications.jsx";
 import Bookmarks from "./pages/Bookmarks.jsx";
 import Community from "./pages/Community.jsx";
 import Message from "./pages/Message.jsx";
+import PostModal from "./components/Post/PostModal.jsx";
+import { useContext } from "react";
+import { GlobalContext } from "./components/GlobalContext.jsx";
+import { AuthContext } from "./auth/AuthContext.jsx";
+
 function App() {
+   const { isPostModalOpen, closePostModal, replyContext} = useContext(GlobalContext);
+  const { user } = useContext(AuthContext);
   return (
     
         <BrowserRouter>
@@ -28,6 +35,15 @@ function App() {
             <Route path="/messages" element={<ProtectedRoute><Message /></ProtectedRoute>} />
             <Route path="/news/:id" element={<ProtectedRoute><News /></ProtectedRoute>} />
           </Routes>
+
+          {/* GLOBAL POST MODAL (works everywhere) */}
+      {isPostModalOpen && (
+        <PostModal
+          onClose={closePostModal}
+          replyToPostId={replyContext.replyToPostId}
+          prefillText={replyContext.prefillText}
+        />
+      )}
 
           <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="dark"></ToastContainer>
 

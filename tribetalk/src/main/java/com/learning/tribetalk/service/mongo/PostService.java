@@ -16,4 +16,17 @@ public interface PostService {
     List<PostResponse> getAll();
 
     PostResponse vote(String postId, int optionIndex);
+    PostResponse likePost(String postId, Long userId);
+    PostResponse unlikePost(String postId, Long userId);
+
+    List<PostResponse> getLikedPostsByUser(Long userId);
+
+    PostResponse addBookmark(String postId, Long userId);
+
+    PostResponse removeBookmark(String postId, Long userId);
+
+    List<PostResponse> getBookmarkedByUser(Long userId);
+    List<PostResponse> getReplies(String postId);
+
+    void deletePost(String postId);
 }

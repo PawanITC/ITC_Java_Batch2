@@ -20,7 +20,7 @@ variable "enable_s3" {
 
 variable "s3_bucket_name" {
   type    = string
-  default = "tribetalk-media" # must be globally unique
+  default = "tribetalk-media-images" # must be globally unique
 }
 
 variable "s3_region" {

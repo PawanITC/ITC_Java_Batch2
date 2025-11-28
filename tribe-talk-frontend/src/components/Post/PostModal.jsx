@@ -1,19 +1,22 @@
 import {FiImage, FiSmile, FiBarChart2, FiCalendar, FiX} from "react-icons/fi";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import {useRef, useState} from "react";
+import {useRef, useState,useContext } from "react";
 import EmojiPopover from "./EmojiPopover";
 import axiosInstance from "../../services/axiosInstance";
 import {toast} from "react-toastify";
+import { AuthContext } from "../../auth/AuthContext";
 
-function PostModal({onClose, userDetails}) {
-    const userId = userDetails?.id;
+function PostModal({onClose, replyToPostId = null, prefillText = "" }) {
+    const { user } = useContext(AuthContext);
+    const userId = user?.userId;
+    console.log(user);
     const textRef = useRef(null);
     const fileInputRef = useRef(null);
 
     const [showEmojiPopover, setShowEmojiPopover] = useState(false);
 
-    const [text, setText] = useState("");
+    const [text, setText] = useState(prefillText);
     const [media, setMedia] = useState(null);
     const [pollOptions, setPollOptions] = useState([]);
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -114,6 +117,7 @@ function PostModal({onClose, userDetails}) {
             mentions: extractMentions(text),
             urls: extractUrls(text),
             poll: pollPayload,
+            replyToPostId,
         };
 
         const formData = new FormData();

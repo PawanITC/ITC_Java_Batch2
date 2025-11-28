@@ -41,7 +41,7 @@ spring:
 #    accessKey: AKIAXPGTL45WIMP5MKJX
 #    secretKey: 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
     region: eu-north-1
-    bucket: tribetalk-media
+    bucket: tribetalk-media-images
 
   security:
     oauth2:

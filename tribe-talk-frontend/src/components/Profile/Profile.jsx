@@ -8,7 +8,11 @@ import { FiCalendar } from "react-icons/fi";
 
 function Profile() {
   const [activeTab, setActiveTab] = useState("posts");
+  const [originalPosts, setOriginalPosts] = useState([]);
+const [replyPosts, setReplyPosts] = useState([]);
+
   const [posts, setPosts] = useState([]);
+   const [likedPosts, setlikedPosts] = useState([]);
   const [userDetails, setUserDetails] = useState(null);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -49,13 +53,30 @@ function Profile() {
     fetchUserDetails();
   }, []);
 
-  // Fetch posts
+  // Fetch user posts
   useEffect(() => {
     const fetchPosts = async () => {
-      if (!userDetails?.id || activeTab !== "posts") return;
+      if (!userDetails?.id || (activeTab !== "posts" && activeTab !== "replies")) return;
       try {
         const res = await axiosInstance.get(`/api/v1/posts/userPost?userId=${userDetails.id}`);
-        setPosts(res.data);
+        const allPosts = res.data;
+        setOriginalPosts(allPosts.filter(post => post.replyToPostId === null));
+      setReplyPosts(allPosts.filter(post => post.replyToPostId !== null));
+        //setPosts(res.data);
+      } catch (err) {
+        toast.warn("Failed to fetch posts");
+      }
+    };
+    fetchPosts();
+  }, [activeTab, userDetails]);
+
+  // Fetch user liked posts
+  useEffect(() => {
+    const fetchPosts = async () => {
+      if (!userDetails?.id || activeTab !== "likes") return;
+      try {
+        const res = await axiosInstance.get(`/api/v1/posts/liked?userId=${userDetails.id}`);
+        setlikedPosts(res.data);
       } catch (err) {
         toast.warn("Failed to fetch posts");
       }
@@ -138,8 +159,24 @@ function Profile() {
 
       <div className="space-y-4 px-2">
         {activeTab === "posts" &&
-          (posts.length > 0 ? (
-            posts.map((post) => <PostCard key={post._id} post={post} userDetails={userDetails} />)
+          (originalPosts.length > 0 ? (
+            originalPosts.map((post) => <PostCard key={post._id} post={post}  />)
+          ) : (
+            <p className="text-yellow-400">No posts found</p>
+          ))}
+      </div>
+      <div className="space-y-4 px-2">
+        {activeTab === "replies" &&
+          (replyPosts.length > 0 ? (
+            replyPosts.map((post) => <PostCard key={post._id} post={post} />)
+          ) : (
+            <p className="text-yellow-400">No posts found</p>
+          ))}
+      </div>
+      <div className="space-y-4 px-2">
+        {activeTab === "likes" &&
+          (likedPosts.length > 0 ? (
+            likedPosts.map((post) => <PostCard key={post._id} post={post} />)
           ) : (
             <p className="text-yellow-400">No posts found</p>
           ))}

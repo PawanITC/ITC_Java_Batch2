@@ -4,7 +4,10 @@ import com.learning.tribetalk.dto.request.PostCreateRequest;
 import com.learning.tribetalk.dto.response.PostResponse;
 import com.learning.tribetalk.entity.mongo.Post;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PostMapper {
     // Entity -> DTO
@@ -36,6 +39,11 @@ public class PostMapper {
                 post.getMedia() != null ? new PostResponse.MediaDTO(presignedUrl, post.getMedia().type()) : null,
                 post.getPoll() != null ? new PostResponse.PollDTO(
                         optionDTOs, post.getPoll().expiresAt(), totalVotes) : null,
+                post.getReplyToPostId(),
+                post.getReplyToUsername(),
+                post.getReplyCount(),
+                post.getLikedBy(),
+                post.getBookmarkedBy(),
                 post.getLikeCount(),
                 post.getViewCount(),
                 post.getCreatedAt()
@@ -55,6 +63,10 @@ public class PostMapper {
                 .urls(dto.urls())
                 .media(mapMedia(dto.media()))
                 .poll(mapPoll(dto.poll()))
+                .replyToPostId(dto.replyToPostId())
+                .replyToUsername(dto.replyToUsername())
+                .likedBy(dto.likedBy() != null ? new HashSet<>(dto.likedBy()) : new HashSet<>())
+                .bookmarkedBy(dto.bookmarkedBy() != null ? new HashSet<>(dto.bookmarkedBy()) : new HashSet<>())
                 .build();
     }
 

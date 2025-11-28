@@ -8,7 +8,10 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -33,7 +36,15 @@ public class Post {
     private List<String> urls;
     private Media media;
     private Poll poll;
-    private List<String> comments;
+    @Builder.Default
+    private String replyToPostId = null;
+    private String replyToUsername;
+    @Builder.Default
+    private int replyCount = 0;
+    @Builder.Default
+    private Set<Long> likedBy = new HashSet<>();
+    @Builder.Default
+    private Set<Long> bookmarkedBy = new HashSet<>();
     @Builder.Default
     private int likeCount = 0;
     @Builder.Default

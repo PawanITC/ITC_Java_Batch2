@@ -5,6 +5,7 @@ import jakarta.validation.constraints.*;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 public record PostCreateRequest(
         @NotNull(message = "User ID is required")
@@ -26,7 +27,11 @@ public record PostCreateRequest(
         @Valid
         MediaDTO media,
         @Valid
-        PollDTO poll) {
+        PollDTO poll,
+        String replyToPostId,
+        String replyToUsername,
+        Set<Long> likedBy,
+        Set<Long> bookmarkedBy) {
 
     public record MediaDTO(
             @NotBlank(message = "Media URL cannot be blank")
