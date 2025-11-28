@@ -1,6 +1,8 @@
 package com.learning.tribetalk.service.postgres;
 
 
+import com.learning.tribetalk.dto.response.UserResponse;
+
 import java.util.List;
 
 public interface FollowService {
@@ -12,8 +14,10 @@ public interface FollowService {
     long getFollowersCount(Long userId);
     long getFollowingCount(Long userId);
 
-    // get the list of follwers from userId
-    List<Long> getFollowersIds(Long userId);
-    List<Long> getFollowingIds(Long userId);
+
+
+    List<UserResponse> getFollwersList(Long userId);
+    List<UserResponse> getFollwingList(Long userId);
+
 
 }

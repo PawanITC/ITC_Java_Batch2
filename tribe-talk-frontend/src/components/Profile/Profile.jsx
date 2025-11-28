@@ -18,7 +18,7 @@ const [replyPosts, setReplyPosts] = useState([]);
   const [followingCount, setFollowingCount] = useState(0);
 
   const { user } = useContext(AuthContext);
-  const { followEvent } = useContext(GlobalContext);
+  const { followersCount, followingCount } = useContext(GlobalContext);
 
   const userId = user?.userId;
 
@@ -53,7 +53,7 @@ const [replyPosts, setReplyPosts] = useState([]);
     fetchUserDetails();
   }, []);
 
-  // Fetch user posts
+  // Fetch posts
   useEffect(() => {
     const fetchPosts = async () => {
       if (!userDetails?.id || (activeTab !== "posts" && activeTab !== "replies")) return;
