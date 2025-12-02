@@ -102,7 +102,7 @@ export const GlobalProvider = ({ children }) => {
         followersCount,
         setFollowersCount,
         followingCount,
-        setFollowingCount
+        setFollowingCount,
 
 
         //  Global Post Modal

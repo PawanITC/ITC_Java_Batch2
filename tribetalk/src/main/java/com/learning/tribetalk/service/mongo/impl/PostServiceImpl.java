@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 @Slf4j
@@ -100,7 +99,7 @@ public class PostServiceImpl implements PostService {
     public List<PostResponse> findByUserId(Long userId) {
         Instant now = Instant.now();
         return postRepository
-                .findByUserIdAndScheduledAtBeforeOrScheduledAtIsNullOrderByCreatedAtDesc(userId, now)
+                .findByUserIdAndScheduledAtBeforeOrScheduledAtIsNull(userId, now)
                 .stream()
                 .map(post -> {
                     String presignedUrl = post.getMedia() != null

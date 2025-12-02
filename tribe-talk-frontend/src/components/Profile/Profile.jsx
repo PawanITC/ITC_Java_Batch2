@@ -14,8 +14,7 @@ const [replyPosts, setReplyPosts] = useState([]);
   const [posts, setPosts] = useState([]);
    const [likedPosts, setlikedPosts] = useState([]);
   const [userDetails, setUserDetails] = useState(null);
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
+  
 
   const { user } = useContext(AuthContext);
   const { followersCount, followingCount } = useContext(GlobalContext);
@@ -85,21 +84,21 @@ const [replyPosts, setReplyPosts] = useState([]);
   }, [activeTab, userDetails]);
 
   // Handle real-time follow updates
-  useEffect(() => {
-    if (!followEvent?.timestamp) return;
+  // useEffect(() => {
+  //   if (!followEvent?.timestamp) return;
 
-    const { followerId, followingId, action } = followEvent;
+  //   const { followerId, followingId, action } = followEvent;
 
-    // Update following count if current user is the follower
-    if (followerId === userId) {
-      setFollowingCount((prev) => (action === "FOLLOW" ? prev + 1 : prev - 1));
-    }
+  //   // Update following count if current user is the follower
+  //   if (followerId === userId) {
+  //     setFollowingCount((prev) => (action === "FOLLOW" ? prev + 1 : prev - 1));
+  //   }
 
-    // Update followers count if current user is being followed
-    if (followingId === userId) {
-      setFollowersCount((prev) => (action === "FOLLOW" ? prev + 1 : prev - 1));
-    }
-  }, [followEvent, userId]);
+  //   // Update followers count if current user is being followed
+  //   if (followingId === userId) {
+  //     setFollowersCount((prev) => (action === "FOLLOW" ? prev + 1 : prev - 1));
+  //   }
+  // }, [followEvent, userId]);
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-6 text-yellow-100">
