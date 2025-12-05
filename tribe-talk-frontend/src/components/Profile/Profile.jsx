@@ -7,31 +7,39 @@ import PostCard from "../Post/PostCard";
 import { FiCalendar } from "react-icons/fi";
 
 function Profile() {
-  const [activeTab, setActiveTab] = useState("posts"); // posts | replies | likes
-  const [originalPosts, setOriginalPosts] = useState([]);
-  const [replyPosts, setReplyPosts] = useState([]);
-  const [likedPosts, setLikedPosts] = useState([]);
-  const [followersList, setFollowersList] = useState([]);
-  const [followingList, setFollowingList] = useState([]);
-  const [userDetails, setUserDetails] = useState(null);
-
   const { user } = useContext(AuthContext);
-  const { followersCount, followingCount, setFollowersCount, setFollowingCount } = useContext(GlobalContext);
+  const {
+    followersCount,
+    setFollowersCount,
+    followingCount,
+    setFollowingCount,
+  } = useContext(GlobalContext);
 
   const userId = user?.userId;
-  const [showFollowersSection, setShowFollowersSection] = useState(false);
-  const [showFollowingSection, setShowFollowingSection] = useState(false);
 
-  // Fetch user details
+  const [userDetails, setUserDetails] = useState(null);
+
+  // Current view → POSTS | FOLLOWERS | FOLLOWING
+  const [view, setView] = useState("POSTS");
+
+  // Posts
+  const [posts, setPosts] = useState([]);
+
+  // Follow lists
+  const [followersList, setFollowersList] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
+
+  // Fetch logged user data
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
         const res = await axiosInstance.get(`/api/users/loggedUser`);
         setUserDetails(res.data);
       } catch (err) {
-        toast.warn("Error fetching user details");
+        toast.error("Error fetching user details");
       }
     };
+
     fetchUserDetails();
   }, []);
 
@@ -39,184 +47,165 @@ function Profile() {
   useEffect(() => {
     if (!userDetails?.id) return;
 
-    const fetchPosts = async () => {
+    const getPosts = async () => {
       try {
-        const res = await axiosInstance.get(`/api/v1/posts/userPost?userId=${userDetails.id}`);
-        const allPosts = res.data;
-        setOriginalPosts(allPosts.filter(post => post.replyToPostId === null));
-        setReplyPosts(allPosts.filter(post => post.replyToPostId !== null));
+        const res = await axiosInstance.get(
+          `/api/v1/posts/userPost?userId=${userDetails.id}`
+        );
+
+        const originals = res.data.filter((p) => p.replyToPostId === null);
+        setPosts(originals);
       } catch (err) {
-        toast.warn("Failed to fetch posts");
+        toast.error("Failed to load posts");
       }
     };
-    fetchPosts();
+
+    getPosts();
   }, [userDetails]);
 
-  // Fetch liked posts
-  useEffect(() => {
-    if (!userDetails?.id) return;
-
-    const fetchLikedPosts = async () => {
-      try {
-        const res = await axiosInstance.get(`/api/v1/posts/liked?userId=${userDetails.id}`);
-        setLikedPosts(res.data);
-      } catch (err) {
-        toast.warn("Failed to fetch liked posts");
-      }
-    };
-    fetchLikedPosts();
-  }, [userDetails]);
-
-  // Fetch followers
-  const fetchFollowersList = async () => {
+  // Load followers
+  const loadFollowers = async () => {
     try {
       const res = await axiosInstance.get(`/api/follow/followers-list/${userId}`);
       setFollowersList(res.data);
-    } catch (err) {
-      toast.warn("Failed to fetch followers");
+    } catch {
+      toast.error("Failed to load followers");
     }
   };
 
-  // Fetch following
-  const fetchFollowingList = async () => {
+  // Load following
+  const loadFollowing = async () => {
     try {
       const res = await axiosInstance.get(`/api/follow/following-list/${userId}`);
       setFollowingList(res.data);
-    } catch (err) {
-      toast.warn("Failed to fetch following");
+    } catch {
+      toast.error("Failed to load following");
     }
   };
 
-  // Handle showing followers section
-  const handleShowFollowers = () => {
-    setShowFollowersSection(true);
-    setShowFollowingSection(false);
-    fetchFollowersList();
-  };
-
-  // Handle showing following section
-  const handleShowFollowing = () => {
-    setShowFollowingSection(true);
-    setShowFollowersSection(false);
-    fetchFollowingList();
-  };
-
-  // Follow/Unfollow user
-  const handleFollowToggle = async (targetUserId, isFollowing) => {
+  // Follow / Unfollow
+  const toggleFollow = async (targetUserId, isCurrentlyFollowing) => {
     try {
-      if (isFollowing) {
-        await axiosInstance.delete(`/api/follow/unfollow-user`, { data: { followerId: userId, followingId: targetUserId } });
+      if (isCurrentlyFollowing) {
+        await axiosInstance.delete(`/api/follow/unfollow-user`, {
+          data: { followerId: userId, followingId: targetUserId },
+        });
+
+        setFollowingCount((prev) => prev - 1);
+        toast.success("Unfollowed");
       } else {
-        await axiosInstance.post(`/api/follow/follow-user`, { followerId: userId, followingId: targetUserId });
+        await axiosInstance.post(`/api/follow/follow-user`, {
+          followerId: userId,
+          followingId: targetUserId,
+        });
+
+        setFollowingCount((prev) => prev + 1);
+        toast.success("Followed");
       }
-      // Refresh lists and counts
-      fetchFollowersList();
-      fetchFollowingList();
-    } catch (err) {
-      toast.error("Failed to update follow status");
+
+      loadFollowers();
+      loadFollowing();
+    } catch {
+      toast.error("Action failed");
     }
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 py-6 text-yellow-100">
+    <div className="w-full max-w-2xl mx-auto px-4 py-6 text-yellow-100">
+
       {/* Cover */}
-      <div className="relative h-40 rounded-md overflow-hidden mb-20">
+      <div className="relative h-40 rounded-md overflow-hidden mb-16">
         <img
-          src="https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&q=80&w=1200"
-          alt="Cover"
+          src="https://images.unsplash.com/photo-1503264116251-35a269479413"
+          alt="cover"
           className="w-full h-full object-cover"
         />
       </div>
 
-      {/* Avatar */}
-      <div className="relative flex items-center gap-4 -mt-28 mb-6 px-2">
+      {/* Avatar + Edit */}
+      <div className="relative flex items-center gap-4 -mt-20 mb-4 px-2">
         <img
-          src="https://images.unsplash.com/photo-1536164261511-3a17e671d380?auto=format&fit=crop&q=80&w=682"
-          alt="User Avatar"
-          className="w-24 h-24 rounded-full border-4 border-neutral-900 object-cover"
+          src="https://images.unsplash.com/photo-1536164261511-3a17e671d380"
+          className="w-24 h-24 rounded-full border-4 border-neutral-900"
         />
-        <div className="ml-auto mt-6">
-          <button className="px-4 py-2 bg-yellow-500 text-neutral-900 font-semibold rounded-full hover:bg-yellow-400 transition">
-            Set up profile
-          </button>
-        </div>
+        <button className="ml-auto px-4 py-2 bg-yellow-500 text-neutral-900 font-semibold rounded-full">
+          Edit profile
+        </button>
       </div>
 
-      {/* Username */}
-      <div className="mb-2 px-2">
-        <h2 className="text-xl font-bold">{userDetails?.displayname}</h2>
-        <p className="text-yellow-400 text-sm">@{userDetails?.username}</p>
+      {/* Name + Username */}
+      <div className="px-2 mb-2">
+        <h1 className="text-xl font-bold">{userDetails?.displayname}</h1>
+        <p className="text-yellow-400">@{userDetails?.username}</p>
       </div>
 
-      {/* Join date */}
-      <div className="flex items-center gap-2 text-sm text-yellow-100 mb-4 px-2">
+      {/* Join Date */}
+      <div className="px-2 flex items-center gap-2 text-sm mb-4">
         <FiCalendar />
-        <span>Joined October 2025</span>
+        Joined October 2025
       </div>
 
-      {/* Counts */}
-      <div className="flex gap-6 text-sm text-yellow-200 mb-6 px-2">
-        <button onClick={handleShowFollowing}>
-          <strong className="text-yellow-100">{followingCount}</strong> Following
+      {/* FOLLOWERS & FOLLOWING with ACTIVE underline */}
+      <div className="px-2 flex gap-6 text-sm mb-6">
+
+        {/* Following */}
+        <button
+          onClick={() => {
+            setView("FOLLOWING");
+            loadFollowing();
+          }}
+          className={`pb-1 ${
+            view === "FOLLOWING"
+              ? "border-b-2 border-yellow-400 text-yellow-100 font-semibold"
+              : "text-yellow-400"
+          }`}
+        >
+          <strong>{followingCount}</strong> Following
         </button>
-        <button onClick={handleShowFollowers}>
-          <strong className="text-yellow-100">{followersCount}</strong> Followers
+
+        {/* Followers */}
+        <button
+          onClick={() => {
+            setView("FOLLOWERS");
+            loadFollowers();
+          }}
+          className={`pb-1 ${
+            view === "FOLLOWERS"
+              ? "border-b-2 border-yellow-400 text-yellow-100 font-semibold"
+              : "text-yellow-400"
+          }`}
+        >
+          <strong>{followersCount}</strong> Followers
         </button>
       </div>
 
-      {/* Tabs for posts/replies/likes */}
-      <div className="flex gap-6 border-b border-yellow-800 px-2 mb-4">
-        {["posts", "replies", "likes"].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-2 font-semibold capitalize ${
-              activeTab === tab ? "border-b-2 border-yellow-400 text-yellow-100" : "text-yellow-400"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {/* CONTENT AREA */}
+      <div className="px-2 space-y-4">
 
-      {/* CONTENT SECTION */}
-      <div className="space-y-4 px-2">
         {/* POSTS */}
-        {activeTab === "posts" &&
-          (originalPosts.length > 0 ? (
-            originalPosts.map(post => <PostCard key={post._id} post={post} />)
+        {view === "POSTS" &&
+          (posts.length > 0 ? (
+            posts.map((p) => <PostCard key={p._id} post={p} />)
           ) : (
-            <p className="text-yellow-400">No posts found</p>
-          ))}
-
-        {/* REPLIES */}
-        {activeTab === "replies" &&
-          (replyPosts.length > 0 ? (
-            replyPosts.map(post => <PostCard key={post._id} post={post} />)
-          ) : (
-            <p className="text-yellow-400">No replies found</p>
-          ))}
-
-        {/* LIKES */}
-        {activeTab === "likes" &&
-          (likedPosts.length > 0 ? (
-            likedPosts.map(post => <PostCard key={post._id} post={post} />)
-          ) : (
-            <p className="text-yellow-400">No liked posts</p>
+            <p className="text-yellow-400">No posts yet</p>
           ))}
 
         {/* FOLLOWERS LIST */}
-        {showFollowersSection &&
+        {view === "FOLLOWERS" &&
           (followersList.length > 0 ? (
-            followersList.map(f => (
-              <div key={f.id} className="flex justify-between items-center p-2 border-b border-yellow-800">
+            followersList.map((u) => (
+              <div
+                key={u.id}
+                className="flex justify-between items-center p-2 border-b border-yellow-800"
+              >
                 <div>
-                  <span className="font-semibold">{f.displayname}</span>
-                  <span className="text-yellow-400 ml-2">@{f.username}</span>
+                  <p className="font-semibold">{u.displayname}</p>
+                  <p className="text-yellow-400">@{u.username}</p>
                 </div>
+
                 <button
-                  onClick={() => handleFollowToggle(f.id, true)}
-                  className="px-3 py-1 bg-yellow-500 text-neutral-900 rounded-full hover:bg-yellow-400"
+                  onClick={() => toggleFollow(u.id, true)}
+                  className="px-3 py-1 bg-neutral-700 border border-yellow-400 text-yellow-400 rounded-full"
                 >
                   Unfollow
                 </button>
@@ -227,17 +216,21 @@ function Profile() {
           ))}
 
         {/* FOLLOWING LIST */}
-        {showFollowingSection &&
+        {view === "FOLLOWING" &&
           (followingList.length > 0 ? (
-            followingList.map(f => (
-              <div key={f.id} className="flex justify-between items-center p-2 border-b border-yellow-800">
+            followingList.map((u) => (
+              <div
+                key={u.id}
+                className="flex justify-between items-center p-2 border-b border-yellow-800"
+              >
                 <div>
-                  <span className="font-semibold">{f.displayname}</span>
-                  <span className="text-yellow-400 ml-2">@{f.username}</span>
+                  <p className="font-semibold">{u.displayname}</p>
+                  <p className="text-yellow-400">@{u.username}</p>
                 </div>
+
                 <button
-                  onClick={() => handleFollowToggle(f.id, true)}
-                  className="px-3 py-1 bg-yellow-500 text-neutral-900 rounded-full hover:bg-yellow-400"
+                  onClick={() => toggleFollow(u.id, true)}
+                  className="px-3 py-1 bg-neutral-700 border border-yellow-400 text-yellow-400 rounded-full"
                 >
                   Unfollow
                 </button>
