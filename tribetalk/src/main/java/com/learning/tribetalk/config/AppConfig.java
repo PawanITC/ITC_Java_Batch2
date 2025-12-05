@@ -26,18 +26,18 @@ import java.util.Map;
 @Configuration
 public class AppConfig {
 
-    @Bean
-    public CacheManager cacheManager() {
-        CaffeineCacheManager manager = new CaffeineCacheManager("followersCount", "followingCount","posts",
-                "userPosts" );
-        manager.setCaffeine(
-                Caffeine.newBuilder()
-                        .recordStats()
-                        .expireAfterWrite(10, TimeUnit.MINUTES)
-                        .maximumSize(10_000)
-        );
-        return manager;
-    }
+//    @Bean
+//    public CacheManager cacheManager() {
+//        CaffeineCacheManager manager = new CaffeineCacheManager("followersCount", "followingCount","posts",
+//                "userPosts" );
+//        manager.setCaffeine(
+//                Caffeine.newBuilder()
+//                        .recordStats()
+//                        .expireAfterWrite(10, TimeUnit.MINUTES)
+//                        .maximumSize(10_000)
+//        );
+//        return manager;
+//    }
 
     @Bean
     public ProducerFactory<String, NotificationDTO> producerFactory() {
