@@ -7,8 +7,12 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
 
+  redis:
+    host: redis
+    port: 6379
+
   cache:
-    type: simple
+    type: redis
 
   datasource:
     url: jdbc:postgresql://localhost:5432/tribetalk
