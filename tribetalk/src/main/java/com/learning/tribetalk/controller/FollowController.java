@@ -4,7 +4,9 @@ import com.learning.tribetalk.dto.response.MessageResponse;
 import com.learning.tribetalk.dto.response.UserResponse;
 import com.learning.tribetalk.service.postgres.FollowService;
 import io.swagger.v3.oas.annotations.Operation;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -57,8 +59,12 @@ public class FollowController {
 
     @Getter
     @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class FollowRequest {
         private Long followerId;
         private Long followingId;
+
+
     }
 }

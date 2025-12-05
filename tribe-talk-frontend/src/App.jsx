@@ -17,6 +17,8 @@ import { useContext } from "react";
 import { GlobalContext } from "./components/GlobalContext.jsx";
 import { AuthContext } from "./auth/AuthContext.jsx";
 
+
+
 function App() {
    const { isPostModalOpen, closePostModal, replyContext} = useContext(GlobalContext);
   const { user } = useContext(AuthContext);
