@@ -7,24 +7,27 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 
 @Configuration
 public class S3Config {
-    @Value("${spring.aws.accessKey}")
-    private String accessKey;
-    @Value("${spring.aws.secretKey}")
-    private String secretKey;
+
     @Value("${spring.aws.region}")
     private String region;
 
 
     @Bean
     public S3Client s3Client() {
-        AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(accessKey, secretKey);
         return S3Client.builder()
                 .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
+                .build(); // credentials auto-resolved from IAM role
+    }
+
+    @Bean
+    public S3Presigner s3Presigner() {
+        return S3Presigner.builder()
+                .region(Region.of(region))
                 .build();
     }
 }

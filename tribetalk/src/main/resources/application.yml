@@ -7,8 +7,12 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
 
+  redis:
+    host: redis
+    port: 6379
+
   cache:
-    type: simple
+    type: redis
 
   datasource:
     url: jdbc:postgresql://localhost:5432/tribetalk
@@ -33,15 +37,15 @@ spring:
 #      enabled: false
 #      path: /h2-console
 
-#  data:
-#    mongodb:
-#      uri: mongodb://admin:admin123@localhost:27017/tribetalknosqldb?authSource=admin
+  data:
+    mongodb:
+      uri: mongodb://admin:admin123@localhost:27017/tribetalknosqldb?authSource=admin
 
   aws:
-    accessKey: AKIAXPGTL45WIMP5MKJX
-    secretKey: 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
+#    accessKey: AKIAXPGTL45WIMP5MKJX
+#    secretKey: 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
     region: eu-north-1
-    bucket: tribetalk-bucket
+    bucket: tribetalk-media-images
 
   security:
     oauth2:
@@ -71,7 +75,7 @@ spring:
 #existingclientsecret - 0dc9230ac778fe76c4c4645ed1fe685f1dc8d502
 #existingclientid     - Ov23liGm8fihan8YBuCU
 frontend:
-  url: http://localhost:8080
+  url: http://localhost:5173
 
 
 server:

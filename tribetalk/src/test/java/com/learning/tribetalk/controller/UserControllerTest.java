@@ -1,9 +1,9 @@
 package com.learning.tribetalk.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.learning.tribetalk.dto.RegistrationRequest;
-import com.learning.tribetalk.service.FollowService;
-import com.learning.tribetalk.service.UserService;
+import com.learning.tribetalk.dto.request.RegistrationRequest;
+import com.learning.tribetalk.service.postgres.FollowService;
+import com.learning.tribetalk.service.postgres.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

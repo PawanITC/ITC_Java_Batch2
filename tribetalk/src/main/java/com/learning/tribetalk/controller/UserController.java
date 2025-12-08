@@ -1,10 +1,10 @@
 package com.learning.tribetalk.controller;
 
-import com.learning.tribetalk.dto.MessageResponse;
-import com.learning.tribetalk.dto.RegistrationRequest;
-import com.learning.tribetalk.dto.UserResponse;
-import com.learning.tribetalk.service.FollowService;
-import com.learning.tribetalk.service.UserService;
+import com.learning.tribetalk.dto.response.MessageResponse;
+import com.learning.tribetalk.dto.request.RegistrationRequest;
+import com.learning.tribetalk.dto.response.UserResponse;
+import com.learning.tribetalk.service.postgres.FollowService;
+import com.learning.tribetalk.service.postgres.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

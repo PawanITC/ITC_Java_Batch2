@@ -1,10 +1,8 @@
 package com.learning.tribetalk.controller;
 
-import com.learning.tribetalk.dto.RegistrationRequest;
-import com.learning.tribetalk.dto.UserResponse;
+import com.learning.tribetalk.dto.response.UserResponse;
 import com.learning.tribetalk.security.JwtUtil;
-import com.learning.tribetalk.service.UserService;
-import jakarta.servlet.http.Cookie;
+import com.learning.tribetalk.service.postgres.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +17,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseCookie;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -75,17 +72,38 @@ public class AuthController {
 
     }
 
-    @GetMapping("/validateUser")
-    public ResponseEntity<?> me(@AuthenticationPrincipal UserDetails user) {
-        if (user == null) return ResponseEntity.status(401).build();
+//    @GetMapping("/validateUser")
+//    public ResponseEntity<?> me(@AuthenticationPrincipal UserDetails user) {
+//        if (user == null) return ResponseEntity.status(401).build();
+//
+//        Optional<UserResponse> userResponse=userService.findByUsername(user.getUsername());
+//        if (userResponse.isPresent()){
+//            return ResponseEntity.ok(Map.of("username",userResponse.get().username(),"userId",userResponse.get().id()));
+//        }
+//        else {
+//            return ResponseEntity.badRequest().build();
+//        }
+//    }
 
-        Optional<UserResponse> userResponse=userService.findByUsername(user.getUsername());
-        if (userResponse.isPresent()){
-            return ResponseEntity.ok(Map.of("username",userResponse.get().username(),"userId",userResponse.get().id()));
+    @GetMapping("/validateUser")
+    public ResponseEntity<?> me(@CookieValue(name = "jwt",required = false) String token) {
+        if (token == null || token.isBlank()) return ResponseEntity.status(401).build();
+
+        String username= jwtUtil.extractUsername(token);
+        boolean isTokenValid=jwtUtil.isTokenValid(token,username);
+        if(isTokenValid){
+            Optional<UserResponse> userResponse=userService.findByUsername(username);
+            if (userResponse.isPresent()){
+                return ResponseEntity.ok(Map.of("username",userResponse.get().username(),"userId",userResponse.get().id()));
+            }
+            else {
+                return ResponseEntity.badRequest().build();
+            }
         }
-        else {
+        else{
             return ResponseEntity.badRequest().build();
         }
+
     }
 
     @PostMapping("/logout")

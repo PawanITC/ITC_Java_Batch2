@@ -1,12 +1,17 @@
 package com.learning.tribetalk.controller;
 
-import com.learning.tribetalk.dto.MessageResponse;
-import com.learning.tribetalk.service.FollowService;
+import com.learning.tribetalk.dto.response.MessageResponse;
+import com.learning.tribetalk.dto.response.UserResponse;
+import com.learning.tribetalk.service.postgres.FollowService;
 import io.swagger.v3.oas.annotations.Operation;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -35,10 +40,31 @@ public class FollowController {
 
     }
 
+    @Operation(summary = "Give a list of Followers for the particular userID", description = "checks the user id in following ids list in the follow table , gets the list of followers ids and gets their user details")
+    @GetMapping("/followers-list/{userId}")
+    public ResponseEntity<List<UserResponse>> getFollowersList(@PathVariable Long userId) {
+
+        return ResponseEntity.ok(followService.getFollwersList(userId));
+
+    }
+
+    @Operation(summary = "Give a list of Followers for the particular userID", description = "checks the user id in the followers ids follow table , gets the list of corresponding following ids and gets their user details")
+    @GetMapping("/following-list/{userId}")
+    public ResponseEntity<List<UserResponse>> getFollowingList(@PathVariable Long userId) {
+
+        return ResponseEntity.ok(followService.getFollwingList(userId));
+
+    }
+
+
     @Getter
     @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class FollowRequest {
         private Long followerId;
         private Long followingId;
+
+
     }
 }

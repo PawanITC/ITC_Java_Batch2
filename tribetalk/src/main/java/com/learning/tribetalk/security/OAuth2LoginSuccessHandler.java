@@ -1,12 +1,10 @@
 package com.learning.tribetalk.security;
 
-import com.learning.tribetalk.dto.RegistrationRequest;
-import com.learning.tribetalk.entity.Authority;
-import com.learning.tribetalk.entity.User;
-import com.learning.tribetalk.repository.AuthorityRepository;
+import com.learning.tribetalk.dto.request.RegistrationRequest;
+import com.learning.tribetalk.entity.postgres.Authority;
+import com.learning.tribetalk.repository.postgres.AuthorityRepository;
 import com.learning.tribetalk.service.GitHubEmailService;
-import com.learning.tribetalk.service.UserService;
-import com.learning.tribetalk.service.impl.UserServiceImpl;
+import com.learning.tribetalk.service.postgres.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,7 +18,6 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -157,7 +154,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 
 
         // Generate JWT
-        String jwtToken = jwtUtils.generateToken(email, authorities);
+        String jwtToken = jwtUtils.generateToken(username, authorities);
 
         ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
                 .httpOnly(true)
@@ -169,14 +166,17 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 
         // ✅ Add cookie to response header
         response.addHeader("Set-Cookie", cookie.toString());
-        System.out.println(frontendUrl + "/oauth2/redirect");
-        response.sendRedirect("/oauth2/redirect");
+//        System.out.println(frontendUrl + "/oauth2/redirect");
+//        response.sendRedirect("/oauth2/redirect");
         //  Redirect frontend with JWT
-        /*String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
-                .queryParam("token", jwtToken)
+//        String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
+//                .queryParam("token", jwtToken)
+//                .build().toUriString();
+        String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
                 .build().toUriString();
-        //response.sendRedirect(targetUrl);
-        this.setDefaultTargetUrl(targetUrl);
-        super.onAuthenticationSuccess(request, response, authentication);*/
+        System.out.println("Redirecting to: " + targetUrl);
+        response.sendRedirect(targetUrl);
+//        this.setDefaultTargetUrl(targetUrl);
+//        super.onAuthenticationSuccess(request, response, authentication);
     }
 }

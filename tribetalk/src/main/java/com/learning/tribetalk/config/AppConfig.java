@@ -26,17 +26,19 @@ import java.util.Map;
 @Configuration
 public class AppConfig {
 
-    @Bean
-    public CacheManager cacheManager() {
-        CaffeineCacheManager manager = new CaffeineCacheManager("followersCount", "followingCount");
-        manager.setCaffeine(
-                Caffeine.newBuilder()
-                        .expireAfterWrite(10, TimeUnit.MINUTES)
-                        .maximumSize(10_000)
-        );
-        return manager; 
-    }
-  
+//    @Bean
+//    public CacheManager cacheManager() {
+//        CaffeineCacheManager manager = new CaffeineCacheManager("followersCount", "followingCount","posts",
+//                "userPosts" );
+//        manager.setCaffeine(
+//                Caffeine.newBuilder()
+//                        .recordStats()
+//                        .expireAfterWrite(10, TimeUnit.MINUTES)
+//                        .maximumSize(10_000)
+//        );
+//        return manager;
+//    }
+
     @Bean
     public ProducerFactory<String, NotificationDTO> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
@@ -60,7 +62,7 @@ public class AppConfig {
 
     @Bean
     public KafkaTemplate<String, NotificationDTO> kafkaTemplate() {
-        KafkaTemplate<String,NotificationDTO> kafkaTemplate=new KafkaTemplate<>(producerFactory());
+        KafkaTemplate<String, NotificationDTO> kafkaTemplate = new KafkaTemplate<>(producerFactory());
         //kafkaTemplate.setTransactionIdPrefix("notification-producer-tx");
         return kafkaTemplate;
         //return new KafkaTemplate<>(producerFactory());
@@ -76,7 +78,6 @@ public class AppConfig {
         //return org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
         return new BCryptPasswordEncoder();
     }
-
 
 
 }
