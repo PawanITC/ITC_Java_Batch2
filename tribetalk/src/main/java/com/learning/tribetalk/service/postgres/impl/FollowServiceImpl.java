@@ -11,8 +11,10 @@ import com.learning.tribetalk.repository.postgres.FollowRepository;
 import com.learning.tribetalk.repository.postgres.UserRepository;
 import com.learning.tribetalk.service.NotificationProducer;
 import com.learning.tribetalk.service.postgres.FollowService;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@EnableCaching
 @Service
 public class FollowServiceImpl implements FollowService {
 
@@ -40,6 +43,8 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"followingList_Cache", "followersList_Cache", "followingCount_Cache", "followersCount_Cache"},
+            key = "#followerId", allEntries = true)
     public void follow(Long followerId, Long followingId) {
         Optional<Follow> existing = followRepository.findByFollowerIdAndFollowingId(followerId, followingId);
         if (existing.isPresent()) {
@@ -63,7 +68,6 @@ public class FollowServiceImpl implements FollowService {
         userRepository.save(follower);
         userRepository.save(following);
 
-        // AFTER TRANSACTION COMMIT → Send Kafka Notification
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
@@ -74,6 +78,8 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"followingList_Cache", "followersList_Cache", "followingCount_Cache", "followersCount_Cache"},
+            key = "#followerId", allEntries = true)
     public void unFollow(Long followerId, Long followingId) {
         Optional<Follow> follow = followRepository.findByFollowerIdAndFollowingId(followerId, followingId);
         if (follow.isEmpty()) {
@@ -92,9 +98,6 @@ public class FollowServiceImpl implements FollowService {
         userRepository.save(following);
 
         followRepository.delete(follow.get());
-
-        updateFollowingCountCache(followerId, follower.getFollowingCount());
-        updateFollowersCountCache(followingId, following.getFollowersCount());
     }
 
     @Override
@@ -143,33 +146,12 @@ public class FollowServiceImpl implements FollowService {
                 .toList();
     }
 
-    // Cache Updates
-    @CachePut(value = "followersCount_Cache", key = "#userId")
-    public long updateFollowersCountCache(Long userId, long newCount) {
-        return newCount;
-    }
-
-    @CachePut(value = "followingCount_Cache", key = "#userId")
-    public long updateFollowingCountCache(Long userId, long newCount) {
-        return newCount;
-    }
-
-    private void updateFollowersCountCache(Long userId, Long count) {
-        updateFollowersCountCache(userId, count == null ? 0L : count);
-    }
-
-    private void updateFollowingCountCache(Long userId, Long count) {
-        updateFollowingCountCache(userId, count == null ? 0L : count);
-    }
-
-    // Notification Builder
     private void sendFollowNotification(User follower, User following) {
         NotificationDTO notification = NotificationDTO.builder()
                 .id(UUID.randomUUID().toString())
                 .actorId(follower.getId().toString())
                 .recipientId(following.getId().toString())
                 .actorUsername(follower.getUsername())
-                //.actorProfileImage(follower.getProfileImage())
                 .type(NotificationType.FOLLOW)
                 .resourceId(follower.getId().toString())
                 .createdAt(Instant.now())

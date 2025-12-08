@@ -4,32 +4,29 @@ import { toast } from "react-toastify";
 import { AuthContext } from "../../auth/AuthContext";
 import { GlobalContext } from "../GlobalContext";
 
-function SuggestedUsers() {
+function FollowingPage() {
   const { user } = useContext(AuthContext);
   const { followingCount, setFollowingCount } = useContext(GlobalContext);
 
-  const [users, setUsers] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
   const [followingMap, setFollowingMap] = useState({});
   const userId = user?.userId;
 
-  const fetchSuggestedUsers = async () => {
+  const fetchFollowingList = async () => {
     if (!userId) return;
     try {
-      const res = await axiosInstance.get(`/api/users/suggested-users/${userId}`);
-      setUsers(res.data);
-
+      const res = await axiosInstance.get(`/api/follow/following-list/${userId}`);
+      setFollowingList(res.data);
       const map = {};
-      res.data.forEach((u) => {
-        map[u.id] = u.isFollowing || false;
-      });
+      res.data.forEach((u) => (map[u.id] = true));
       setFollowingMap(map);
     } catch {
-      toast.error("Failed to load suggested users.");
+      toast.error("Failed to load following list.");
     }
   };
 
   useEffect(() => {
-    fetchSuggestedUsers();
+    fetchFollowingList();
   }, [userId]);
 
   const toggleFollow = async (targetId) => {
@@ -39,27 +36,32 @@ function SuggestedUsers() {
 
     try {
       await axiosInstance({ method, url, data: { followerId: userId, followingId: targetId } });
+      if (isFollowing) {
+        setFollowingList((prev) => prev.filter((u) => u.id !== targetId));
+        setFollowingCount((prev) => prev - 1);
+        toast.success("Unfollowed!");
+      } else {
+        setFollowingCount((prev) => prev + 1);
+        toast.success("Followed!");
+      }
       setFollowingMap((prev) => ({ ...prev, [targetId]: !isFollowing }));
-
-      setFollowingCount((prev) => (isFollowing ? prev - 1 : prev + 1));
-      toast.success(isFollowing ? "Unfollowed!" : "Followed!");
     } catch {
-      toast.error("Could not update follow status.");
+      toast.error("Failed to update follow status.");
     }
   };
 
   return (
-    <div className="bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
-      <h2 className="text-lg font-semibold mb-4">You Might Like</h2>
-      <ul className="space-y-4">
-        {users.length === 0 ? (
-          <p className="text-yellow-400 text-sm">No users to suggest.</p>
-        ) : (
-          users.map((u) => (
-            <li key={u.id} className="flex items-center justify-between">
+    <div className="p-4 bg-neutral-900 rounded-xl">
+      <h1 className="text-2xl font-bold text-yellow-300 mb-4">Following</h1>
+      {followingList.length === 0 ? (
+        <p className="text-yellow-400">You are not following anyone yet.</p>
+      ) : (
+        <ul className="space-y-4">
+          {followingList.map((u) => (
+            <li key={u.id} className="flex items-center justify-between border-b border-yellow-700/40 py-2">
               <div>
-                <p className="font-semibold text-yellow-100">{u.displayname}</p>
-                <p className="text-sm text-yellow-400">@{u.username}</p>
+                <p className="text-yellow-100 font-semibold">{u.displayname}</p>
+                <p className="text-yellow-400 text-sm">@{u.username}</p>
               </div>
               <button
                 onClick={() => toggleFollow(u.id)}
@@ -70,11 +72,11 @@ function SuggestedUsers() {
                 {followingMap[u.id] ? "Following" : "Follow"}
               </button>
             </li>
-          ))
-        )}
-      </ul>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
 
-export default SuggestedUsers;
+export default FollowingPage;
