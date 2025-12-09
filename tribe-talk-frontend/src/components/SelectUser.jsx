@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from "../services/axiosInstance";
 import React, { useEffect, useState } from 'react'
 import { FiSearch, FiX } from 'react-icons/fi';
 
@@ -12,8 +12,8 @@ const SelectUser = ({ onClose, onUserSelect }) => {
     const fetchData = async () => {
       try {
         const [loggedUserRes, allUsersRes] = await Promise.all([
-          axios.get(`/api/users/loggedUser`),
-          axios.get(`api/users/all`),
+          axiosInstance.get(`/api/users/loggedUser`),
+          axiosInstance.get(`api/users/all`),
         ]);
 
         setCurrentUser(loggedUserRes.data);
@@ -27,7 +27,7 @@ const SelectUser = ({ onClose, onUserSelect }) => {
   }, []);
 
   const filtered =
-    searchQuery.trim().length === 0
+  searchQuery.trim().length === 0 || !Array.isArray(users) || users.length === 0
       ? []
       : users
           .filter((u) => currentUser && u.id !== currentUser.id)

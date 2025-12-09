@@ -1,8 +1,14 @@
 package com.tribetalk.chatservice.DTO;
 
+import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
+@Builder
+@Getter
+@Setter
 public class ChatMessageResponse {
     private String senderId;
     private String receiverId;
