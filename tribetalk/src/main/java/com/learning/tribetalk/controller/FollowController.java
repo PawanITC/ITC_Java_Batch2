@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api/follow")// adjust for your React dev server
 public class FollowController {
@@ -48,7 +47,7 @@ public class FollowController {
 
     }
 
-    @Operation(summary = "Give a list of Followers for the particular userID", description = "checks the user id in the followers ids follow table , gets the list of corresponding following ids and gets their user details")
+    @Operation(summary = "Give a list of Following for the particular userID", description = "checks the user id in the followers ids follow table , gets the list of corresponding following ids and gets their user details")
     @GetMapping("/following-list/{userId}")
     public ResponseEntity<List<UserResponse>> getFollowingList(@PathVariable Long userId) {
 
