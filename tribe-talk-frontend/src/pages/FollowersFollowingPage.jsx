@@ -1,83 +1,98 @@
-import { useContext, useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
-import SuggestionSidebar from "../components/Suggestion/SuggestionSibebar";
-import MainHeader from "../components/MainHeader";
-import FollowersListComponent from "../components/Profile/FollowersListComponent";
-import FollowingListComponent from "../components/Profile/FollowingListComponent";
-import { AuthContext } from "../auth/AuthContext";
+import { useEffect, useState, useContext } from "react";
+import axiosInstance from "../../services/axiosInstance";
+import { toast } from "react-toastify";
+import { AuthContext } from "../../auth/AuthContext";
 
-function FollowersFollowingPage() {
+function FollowersListComponent() {
   const { user } = useContext(AuthContext);
   const userId = user?.userId;
 
-  const [activeTab, setActiveTab] = useState("followers"); // default tab
-  const [searchParams] = useSearchParams();
+  const [followers, setFollowers] = useState([]);
+  const [followingMap, setFollowingMap] = useState({});
 
-  // Read ?tab=followers or ?tab=following from URL
-  useEffect(() => {
-    const tabFromUrl = searchParams.get("tab");
-    if (tabFromUrl === "followers" || tabFromUrl === "following") {
-      setActiveTab(tabFromUrl);
+  const fetchFollowers = async () => {
+    try {
+      const res = await axiosInstance.get(`/api/follow/followers-list/${userId}`);
+      setFollowers(res.data);
+    } catch {
+      toast.error("Failed to load followers list");
     }
-  }, [searchParams]);
+  };
+
+  const fetchMyFollowing = async () => {
+    try {
+      const res = await axiosInstance.get(`/api/follow/following-list/${userId}`);
+      const map = {};
+      res.data.forEach((u) => (map[u.id] = true));
+      setFollowingMap(map);
+    } catch {
+      toast.error("Failed to load follow status");
+    }
+  };
+
+  useEffect(() => {
+    if (!userId) return;
+    fetchFollowers();
+    fetchMyFollowing();
+  }, [userId]);
+
+  const toggleFollow = async (targetId) => {
+    const isFollowing = followingMap[targetId];
+    const method = isFollowing ? "delete" : "post";
+    const url = isFollowing ? "/api/follow/unfollow-user" : "/api/follow/follow-user";
+
+    try {
+      await axiosInstance({
+        method,
+        url,
+        data: { followerId: userId, followingId: targetId },
+      });
+
+      setFollowingMap((prev) => ({
+        ...prev,
+        [targetId]: !isFollowing,
+      }));
+
+      toast.success(isFollowing ? "Unfollowed!" : "Followed!");
+    } catch {
+      toast.error("Operation failed");
+    }
+  };
 
   return (
-    <div className="flex bg-neutral-900 text-yellow-200 min-h-screen">
-      <Sidebar />
+    <div className="p-4 text-yellow-200">
+      <h1 className="text-xl font-semibold mb-4">Followers</h1>
 
-      {/* Main content area */}
-      <div className="flex flex-col md:flex-row grow md:ml-64 ml-20">
-        {/* Main center feed */}
-        <main className="w-full md:w-2/3 max-w-2xl mx-auto">
-          <MainHeader />
+      {followers.length === 0 && (
+        <p className="text-yellow-400">No followers found.</p>
+      )}
 
-          {/* User Header */}
-          <div className="px-4 pt-6 pb-2">
-            <h2 className="text-xl font-bold text-yellow-100">{user?.displayname}</h2>
-            <p className="text-yellow-400 text-sm">@{user?.username}</p>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex space-x-4 mt-2 border-b border-yellow-700/30">
-            <button
-              className={`relative py-3 text-sm font-semibold text-center transition ${
-                activeTab === "followers"
-                  ? "text-yellow-300 after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:border-b-2 after:border-yellow-400"
-                  : "text-yellow-500 hover:text-yellow-300"
-              }`}
-              onClick={() => setActiveTab("followers")}
-            >
-              Followers
-            </button>
+      <ul className="space-y-4">
+        {followers.map((u) => (
+          <li
+            key={u.id}
+            className="flex items-center justify-between bg-neutral-800 border border-yellow-700/40 p-3 rounded-xl"
+          >
+            <div>
+              <p className="font-semibold text-yellow-100">{u.displayname}</p>
+              <p className="text-sm text-yellow-400">@{u.username}</p>
+            </div>
 
             <button
-              className={`relative py-3 text-sm font-semibold text-center transition ${
-                activeTab === "following"
-                  ? "text-yellow-300 after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:border-b-2 after:border-yellow-400"
-                  : "text-yellow-500 hover:text-yellow-300"
+              onClick={() => toggleFollow(u.id)}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition ${
+                followingMap[u.id]
+                  ? "bg-neutral-700 text-yellow-400 border border-yellow-400"
+                  : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
               }`}
-              onClick={() => setActiveTab("following")}
             >
-              Following
+              {followingMap[u.id] ? "Following" : "Follow"}
             </button>
-          </div>
-
-          {/* Content Section */}
-          <div className="px-4 py-6 space-y-4">
-            {activeTab === "followers" ? (
-              <FollowersListComponent />
-            ) : (
-              <FollowingListComponent />
-            )}
-          </div>
-        </main>
-
-        {/* Suggestions Sidebar */}
-        <SuggestionSidebar />
-      </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
-export default FollowersFollowingPage;
+export default FollowersListComponent;
