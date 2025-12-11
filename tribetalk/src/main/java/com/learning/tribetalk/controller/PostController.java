@@ -27,7 +27,7 @@ class PostController {
     @PostMapping("/create")
     public ResponseEntity<PostResponse> createPost(
             @RequestPart("data") @Valid PostCreateRequest request,
-            @RequestPart(value = "media", required = false) MultipartFile media) throws IOException {
+            @RequestPart(value = "media", required = false) List<MultipartFile> media) throws IOException {
         PostResponse saved = postService.save(request, media);
         return ResponseEntity.ok(saved);
     }
@@ -46,8 +46,8 @@ class PostController {
     }
 
     @PostMapping("/{postId}/vote")
-    public ResponseEntity<PostResponse> vote(@PathVariable String postId, @RequestParam int optionIndex) {
-        PostResponse response = postService.vote(postId, optionIndex);
+    public ResponseEntity<PostResponse> vote(@PathVariable String postId, @RequestParam int optionIndex, @RequestParam Long userId) {
+        PostResponse response = postService.vote(postId, optionIndex, userId);
         return ResponseEntity.ok(response);
     }
 
@@ -90,6 +90,11 @@ class PostController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/{postId}")
+    public PostResponse getPost(@PathVariable String postId) {
+        return postService.findByPostId(postId);
+    }
+
     @GetMapping("/{postId}/replies")
     public List<PostResponse> getReplies(@PathVariable String postId) {
         return postService.getReplies(postId);
@@ -100,7 +105,6 @@ class PostController {
         postService.deletePost(postId);
         return ResponseEntity.noContent().build();
     }
-
 
 }
 

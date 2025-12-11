@@ -15,9 +15,9 @@ public record PostCreateRequest(
         @FutureOrPresent(message = "Scheduled time must be in the future or present")
         Instant scheduledAt,
         @NotBlank(message = "Visibility is required")
-        String visibility,         // Maps to Post.Visibility enum
+        String visibility,
         @NotBlank(message = "Reply permission is required")
-        String replyPermission,    // Maps to Post.ReplyPermission enum
+        String replyPermission,
         @Valid
         List<@NotBlank(message = "Hashtag cannot be blank") String> hashtags,
         @Valid
@@ -25,7 +25,7 @@ public record PostCreateRequest(
         @Valid
         List<@NotBlank(message = "URL cannot be blank") String> urls,
         @Valid
-        MediaDTO media,
+        List<MediaDTO> mediaList,
         @Valid
         PollDTO poll,
         String replyToPostId,

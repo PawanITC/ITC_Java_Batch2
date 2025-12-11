@@ -1,91 +1,100 @@
 import { FiSearch } from "react-icons/fi";
-import { useState } from "react";
 import NewsItemCard from "../News/NewsItemCard";
+import { useEffect, useState, useMemo } from "react";
+import { fetchNews } from "../../api/newsApi";
 
 function ExploreTabs() {
+  const [forYou, setForYou] = useState([]);
+  const [trending, setTrending] = useState([]);
+  const [news, setNews] = useState([]);
+  const [sports, setSports] = useState([]);
+  const [entertainment, setEntertainment] = useState([]);
+
   const [activeTab, setActiveTab] = useState("forYou");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const forYouFeed = [
-    {
-      id: 1,
-      headline: "Your personalized feed starts here",
-      timestamp: "Just now",
-      category: "ForYou",
-      posts: "1K posts",
-      image: "https://via.placeholder.com/60x60",
-    },
-  ];
+  useEffect(() => {
+    const loadCategory = async () => {
+      try {
+        if (activeTab === "forYou" && forYou.length === 0) {
+          const data = await fetchNews({ category: "top" });
+          setForYou(mapArticles(data));
+        }
 
-  const trendingFeed = [
-    {
-      id: 2,
-      headline: "Henry Cavill trends after surprise Comic-Con appearance",
-      timestamp: "2 hours ago",
-      category: "Trending",
-      posts: "12K posts",
-      image: "https://via.placeholder.com/60x60",
-    },
-  ];
+        if (activeTab === "trending" && trending.length === 0) {
+          const data = await fetchNews({ q: "breaking", sort: "relevancy" });
+          setTrending(mapArticles(data));
+        }
 
-  const newsFeed = [
-    {
-      id: 3,
-      headline: "Jeremy Corbyn Hosts NYC-DSA Phone Bank for Zohran Mamdani",
-      timestamp: "15 hours ago",
-      category: "News",
-      posts: "32K posts",
-      image: "https://via.placeholder.com/60x60",
-    },
-  ];
+        if (activeTab === "news" && news.length === 0) {
+          const data = await fetchNews({ category: "top" });
+          setNews(mapArticles(data));
+        }
 
-  const sportsFeed = [
-    {
-      id: 4,
-      headline:
-        "Dodgers Clinch Repeat World Series Title in 11-Inning Game 7 Thriller",
-      timestamp: "1 day ago",
-      category: "Sports",
-      posts: "1.4M posts",
-      image: "https://via.placeholder.com/60x60",
-    },
-    {
-      id: 5,
-      headline:
-        "India Clinches Maiden Women's Cricket World Cup with 52-Run Win Over South Africa",
-      timestamp: "1 day ago",
-      category: "Sports",
-      posts: "579K posts",
-      image: "https://via.placeholder.com/60x60",
-    },
-  ];
+        if (activeTab === "sports" && sports.length === 0) {
+          const data = await fetchNews({ category: "sports" });
+          setSports(mapArticles(data));
+        }
 
-  const entertainmentFeed = [
-    {
-      id: 6,
-      headline:
-        "BTS Jin Concludes Solo Tour Encore with Jimin and Taehyung Surprise Reunions",
-      timestamp: "1 day ago",
-      category: "Entertainment",
-      posts: "381K posts",
-      image: "https://via.placeholder.com/60x60",
-    },
-    {
-      id: 7,
-      headline: "X Users Spark Viral Emoji Trend for Fandom Self-Ships",
-      timestamp: "12 hours ago",
-      category: "Entertainment",
-      posts: "272K posts",
-      image: "https://via.placeholder.com/60x60",
-    },
-  ];
+        if (activeTab === "entertainment" && entertainment.length === 0) {
+          const data = await fetchNews({ category: "entertainment" });
+          setEntertainment(mapArticles(data));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    loadCategory();
+  }, [activeTab]);
+
+  function formatTimestamp(timestamp) {
+  if (!timestamp) return "";
+
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now - date;
+
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+  // Less than 1 hour → minutes
+  if (diffMinutes < 60) {
+    return `${diffMinutes}m ago`;
+  }
+
+  // Less than 24 hours → hours
+  if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  }
+
+  //  More than 24 hours → Month + Day
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+
+  function mapArticles(articles) {
+    return articles.map((a, index) => ({
+      id: a.article_id || `news-${index}`,
+      headline: a.title,
+      timestamp: formatTimestamp(a.pubDate),
+      category: a.category || "News",
+      posts: "",
+      image: a.image_url || "https://via.placeholder.com/60x60",
+      summary: a.description,
+      url: a.link,
+    }));
+  }
 
   const feeds = {
-    forYou: forYouFeed,
-    trending: trendingFeed,
-    news: newsFeed,
-    sports: sportsFeed,
-    entertainment: entertainmentFeed,
+    forYou,
+    trending,
+    news,
+    sports,
+    entertainment,
   };
 
   return (
@@ -123,6 +132,9 @@ function ExploreTabs() {
 
       {/* Tab Content */}
       <div className="space-y-4 px-2">
+        {feeds[activeTab].length === 0 && (
+          <p className="text-yellow-400">Loading...</p>
+        )}
         {feeds[activeTab].map((item) => (
           <NewsItemCard key={item.id} {...item} />
         ))}

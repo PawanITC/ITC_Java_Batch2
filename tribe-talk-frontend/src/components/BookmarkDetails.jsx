@@ -52,22 +52,22 @@ function BookmarkDetails() {
       </div> */}
 
       {/* Content */}
-      <div className="min-h-[200px] flex flex-col items-center justify-center text-center">
-        {isEmpty ? (
-          <>
-            <h2 className="text-lg font-semibold text-yellow-100 mb-2">
-              Save posts for later
-            </h2>
-            <p className="text-sm text-yellow-400 max-w-sm">
-              Bookmark posts to easily find them again in the future.
-            </p>
-          </>
-        ) : (
-          bookmarks.map((post) => (
+      {isEmpty ? (
+        <div className="min-h-[200px] flex flex-col items-center justify-center text-center">
+          <h2 className="text-lg font-semibold text-yellow-100 mb-2">
+            Save posts for later
+          </h2>
+          <p className="text-sm text-yellow-400 max-w-sm">
+            Bookmark posts to easily find them again in the future.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {filteredBookmarks.map((post) => (
             <PostCard key={post.id} post={post} />
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

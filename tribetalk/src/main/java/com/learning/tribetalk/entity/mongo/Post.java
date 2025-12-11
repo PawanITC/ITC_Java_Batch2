@@ -8,10 +8,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Data
 @Builder
@@ -34,8 +31,12 @@ public class Post {
     @Indexed
     private List<String> mentions;
     private List<String> urls;
-    private Media media;
+    private List<Media> mediaList;
     private Poll poll;
+    @Builder.Default
+    private Set<Long> votedBy = new HashSet<>();
+    @Builder.Default
+    private Map<Long, Integer> userVotes = new HashMap<>();
     @Builder.Default
     private String replyToPostId = null;
     private String replyToUsername;

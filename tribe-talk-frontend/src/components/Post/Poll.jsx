@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance.js";
 
-function Poll({ post }) {
+function Poll({ post, user }) {
     const [localPost, setLocalPost] = useState(post);
     const poll = localPost.poll;
     const isExpired = poll?.expiresAt ? new Date(poll.expiresAt) < new Date() : false;
@@ -11,8 +11,9 @@ function Poll({ post }) {
     const handleVote = async (optionIndex) => {
         if (isExpired) return;
         try {
+            console.log(user);
             const res = await axiosInstance.post(`/api/v1/posts/${localPost.id}/vote`, null, {
-                params: { optionIndex },
+                params: { optionIndex, userId: user.userId },
             });
             setLocalPost(res.data); // updated votes/percentages from backend
         } catch (e) {

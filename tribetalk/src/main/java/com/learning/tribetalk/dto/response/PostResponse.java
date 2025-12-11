@@ -13,7 +13,7 @@ public record PostResponse(String id,
                            List<String> hashtags,
                            List<String> mentions,
                            List<String> urls,
-                           MediaDTO media,
+                           List<MediaDTO> media,
                            PollDTO poll,
                            String replyToPostId,
                            String replyToUsername,
@@ -26,12 +26,13 @@ public record PostResponse(String id,
     public record MediaDTO(String url, String type) {
     }
 
-    public record PollDTO(List<PollOptionDTO> options, Instant expiresAt, Integer totalVotes) {
+    public record PollDTO(List<PollOptionDTO> options, Instant expiresAt, Integer totalVotes,
+                          Set<Long> votedBy,
+                          Integer userSelectedOption) {
     }
 
     public record PollOptionDTO(String option, int votes, double percentage) {
     }
-
 
 
 }
