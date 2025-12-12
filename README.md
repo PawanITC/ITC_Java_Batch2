@@ -174,13 +174,13 @@ Ansible configures the EC2 database instance with all required services.
 
 1. **PostgreSQL 15**
    - Database: `tribetalk`
-   - User: `admin` / Password: `admin123`
+   - User: `admin` / Password: `<CONFIGURED_VIA_ANSIBLE>`
    - Port: 5432
    - Configured for remote connections
 
 2. **MongoDB 7.0**
    - Database: `tribetalknosqldb`
-   - User: `admin` / Password: `admin123`
+   - User: `admin` / Password: `<CONFIGURED_VIA_ANSIBLE>`
    - Port: 27017
    - Authentication enabled
 
@@ -382,10 +382,10 @@ kubectl get ingress tribetalk-ingress -o jsonpath='{.status.loadBalancer.ingress
 aws secretsmanager create-secret \
     --name tribetalk/database/credentials \
     --secret-string '{
-        "postgres_url":"jdbc:postgresql://10.0.10.95:5432/tribetalk",
-        "postgres_username":"admin",
-        "postgres_password":"admin123",
-        "mongodb_uri":"mongodb://admin:admin123@10.0.10.95:27017/tribetalknosqldb?authSource=admin"
+        "postgres_url":"jdbc:postgresql://<DB_HOST>:5432/tribetalk",
+        "postgres_username":"<DB_USERNAME>",
+        "postgres_password":"<DB_PASSWORD>",
+        "mongodb_uri":"mongodb://<MONGO_USER>:<MONGO_PASSWORD>@<DB_HOST>:27017/tribetalknosqldb?authSource=admin"
     }' \
     --region eu-north-1
 
@@ -393,14 +393,16 @@ aws secretsmanager create-secret \
 aws secretsmanager create-secret \
     --name tribetalk/app/config \
     --secret-string '{
-        "github_client_id":"Ov23lizJ8kpXKzpZZi2P",
-        "github_client_secret":"<YOUR_SECRET>",
+        "github_client_id":"<YOUR_GITHUB_CLIENT_ID>",
+        "github_client_secret":"<YOUR_GITHUB_CLIENT_SECRET>",
         "jwt_secret":"<RANDOM_256_BIT_SECRET>",
-        "kafka_bootstrap_servers":"10.0.10.95:9092",
-        "redis_host":"10.0.10.95"
+        "kafka_bootstrap_servers":"<KAFKA_HOST>:9092",
+        "redis_host":"<REDIS_HOST>"
     }' \
     --region eu-north-1
 ```
+
+> **Security Note:** Never commit actual credentials to Git. Use AWS Secrets Manager or environment variables.
 
 ---
 
@@ -433,7 +435,7 @@ ssh -i <your-key.pem> ubuntu@<DATABASE_INSTANCE_IP>
 psql -U admin -d tribetalk -h localhost
 
 # Test MongoDB
-mongosh mongodb://admin:admin123@localhost:27017/tribetalknosqldb?authSource=admin
+mongosh mongodb://<USERNAME>:<PASSWORD>@localhost:27017/tribetalknosqldb?authSource=admin
 
 # Test Redis
 redis-cli ping
