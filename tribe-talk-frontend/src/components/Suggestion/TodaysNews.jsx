@@ -1,51 +1,99 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { FiMoreHorizontal } from "react-icons/fi";
+import { fetchNews } from "../../api/newsApi";
+
+
+function formatTimestamp(timestamp) {
+  if (!timestamp) return "";
+
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now - date;
+
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (diffMs < 0) return "Just now";
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
 
 function TodaysNews() {
-  const newsItems = [
-    {
-      headline:
-        "India Claims Maiden Women's Cricket World Cup with 52-Run Win Over South Africa",
-      timestamp: "1 day ago",
-      category: "Sports",
-      posts: "480.3K posts",
-    },
-    {
-      headline:
-        "Jeremy Corbyn Hosts NYC-DSA Phone Bank for Zohran Mamdani's Mayoral Campaign",
-      timestamp: "15 hours ago",
-      category: "News",
-      posts: "32K posts",
-    },
-    {
-      headline:
-        "Southampton Sack Manager Will Still After Five Months in Relegation Fight",
-      timestamp: "14 hours ago",
-      category: "Sports",
-      posts: "9,963 posts",
-    },
-  ];
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadNews = async () => {
+      try {
+        const articles = await fetchNews({
+          country: "gb",
+          category: "top",
+          size: 10,
+        });
+
+        const mapped = articles.map((a, index) => ({
+          id: a.article_id || `today-${index}`,
+          headline: a.title,
+          timestamp: formatTimestamp(a.pubDate),   
+          category: a.category || "News",
+          image: a.image_url,
+          summary: a.description,
+          url: a.link,
+        }));
+
+        setItems(mapped.slice(0, 3));
+      } catch (err) {
+        console.error("Failed to load today's news", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNews();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
+        <h2 className="text-lg font-semibold mb-4">Today's News</h2>
+        <p className="text-yellow-400 text-sm">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
       <h2 className="text-lg font-semibold mb-4">Today's News</h2>
+
       <ul className="space-y-4">
-        {newsItems.map((item, i) => (
-          <li key={i} className="flex justify-between items-start">
-            <div>
+        {items.map((item) => (
+          <li key={item.id} className="flex justify-between items-start">
+            <Link
+              to={`/news/${item.id}`}
+              state={item}
+              className="flex-1 hover:underline"
+            >
               <p className="text-sm font-semibold text-yellow-100 leading-snug">
                 {item.headline}
               </p>
               <p className="text-xs text-yellow-400 mt-1">
-                {item.timestamp} · {item.category} · {item.posts}
+                {item.timestamp} · {item.category}
               </p>
-            </div>
-            <FiMoreHorizontal className="text-yellow-400 hover:text-yellow-200 cursor-pointer mt-1" />
+            </Link>
+            
           </li>
         ))}
       </ul>
-      <button className="mt-4 text-sm text-sky-400 hover:underline">
+
+      <Link to="/explore" className="mt-4 text-sm text-sky-400 hover:underline">
         Show more
-      </button>
+      </Link>
     </div>
   );
 }

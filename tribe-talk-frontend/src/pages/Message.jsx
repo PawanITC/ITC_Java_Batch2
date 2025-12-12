@@ -4,7 +4,7 @@ import MessageDetails from "../components/MessageDetails";
 import MessagePreivewPlaceHolder from "../components/MessagePreivewPlaceHolder";
 import ChatScreen from "../components/ChatScreen";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../services/axiosInstance";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 
@@ -14,7 +14,7 @@ function Message() {
     const [stompClient, setStompClient] = useState(null);
 
     useEffect(() => {
-        axios.get(`/api/users/loggedUser`).then((res) => {
+        axiosInstance.get(`/api/users/loggedUser`).then((res) => {
             setCurrentUser(res.data);
         });
 

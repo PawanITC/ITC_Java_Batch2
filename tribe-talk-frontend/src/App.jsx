@@ -13,9 +13,11 @@ import Bookmarks from "./pages/Bookmarks.jsx";
 import Community from "./pages/Community.jsx";
 import Message from "./pages/Message.jsx";
 import PostModal from "./components/Post/PostModal.jsx";
+import PostMain from "./pages/PostMain.jsx";
 import { useContext } from "react";
 import { GlobalContext } from "./components/GlobalContext.jsx";
 import { AuthContext } from "./auth/AuthContext.jsx";
+import FollowersFollowingPage from "./pages/FollowersFollowingPage.jsx";
 
 
 
@@ -35,7 +37,9 @@ function App() {
             <Route path="/bookmarks" element={<ProtectedRoute><Bookmarks /></ProtectedRoute>} />
             <Route path="/communities" element={<ProtectedRoute><Community /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Message /></ProtectedRoute>} />
+            <Route path="/connections" element={<ProtectedRoute><FollowersFollowingPage /></ProtectedRoute>} />
             <Route path="/news/:id" element={<ProtectedRoute><News /></ProtectedRoute>} />
+            <Route path="/post/:postId" element={<ProtectedRoute><PostMain  /></ProtectedRoute>} />
           </Routes>
 
           {/* GLOBAL POST MODAL (works everywhere) */}

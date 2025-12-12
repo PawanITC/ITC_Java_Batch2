@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FiImage, FiSend } from "react-icons/fi";
 import { FaRegSmile } from "react-icons/fa";
 import axios from "axios";
+import EmojiPicker from "emoji-picker-react";
 
 /**
  * ChatScreen component
@@ -14,6 +15,7 @@ import axios from "axios";
 function ChatScreen({ user, currentUser, stompClient }) {
     const [messageInput, setMessageInput] = useState("");
     const [messages, setMessages] = useState([]);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     const roomId =
         currentUser.id < user.id
@@ -97,6 +99,9 @@ function ChatScreen({ user, currentUser, stompClient }) {
         }
         }, [user, currentUser]);
 
+        const handleEmojiClick = (emojiData) => {
+        setMessageInput((prev) => prev + emojiData.emoji);
+        };
 
     return (
             <div className="flex flex-col w-full max-w-[600px] h-[90vh] bg-black text-yellow-100 border border-yellow-700 rounded-xl shadow-lg">
@@ -133,7 +138,17 @@ function ChatScreen({ user, currentUser, stompClient }) {
                 )}
             </div>
 
-            <div className="flex items-center gap-2 px-4 py-3 border-t border-yellow-700">
+                <div className="flex items-center gap-2 px-4 py-3 border-t border-yellow-700 relative">
+                <button onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
+                    <FaRegSmile className="text-yellow-400 text-xl cursor-pointer" />
+                </button>
+
+                {showEmojiPicker && (
+                    <div className="absolute bottom-12 left-4 z-50">
+                    <EmojiPicker onEmojiClick={handleEmojiClick} />
+                    </div>
+                )}
+
                 <input
                     type="text"
                     placeholder="Start a new message"
@@ -144,7 +159,7 @@ function ChatScreen({ user, currentUser, stompClient }) {
                 <button onClick={handleSend}>
                     <FiSend className="text-yellow-400 text-xl cursor-pointer" />
                 </button>
-            </div>
+                </div>
         </div>
     );
 }

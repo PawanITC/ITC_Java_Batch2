@@ -84,6 +84,7 @@ public class NotificationServiceImpl implements NotificationService {
             case FOLLOW -> "started following you";
             case MENTION -> "mentioned you";
             case RETWEET -> "re-tweeted your post";
+            case POST -> "added new post";
         };
     }
 

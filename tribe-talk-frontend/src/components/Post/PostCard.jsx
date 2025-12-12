@@ -4,17 +4,21 @@ import {
   FiBookmark,
   FiHeart,
   FiEye,
-  FiRepeat, FiMoreHorizontal,
+  FiRepeat,
+  FiMoreHorizontal,
 } from "react-icons/fi";
 import { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../services/axiosInstance";
 import Poll from "./Poll.jsx";
+import MediaCollage from "./MediaCollage.jsx";
 import { GlobalContext } from "../GlobalContext.jsx";
 import { AuthContext } from "../../auth/AuthContext";
 
 import { toast } from "react-toastify";
 
 function PostCard({ post }) {
+  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const [userDetails, setUserDetails] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -26,12 +30,13 @@ function PostCard({ post }) {
   const [showMenu, setShowMenu] = useState(false);
 
   const { openReplyModal } = useContext(GlobalContext);
+  const [now, setNow] = useState(new Date());
 
-  const isOwner = user?.userId === post.userId; // only owner sees menu
+  const isOwner = user?.userId === post.userId; // only owner sees the delete menu
 
   const handleDelete = async () => {
     try {
-      await axiosInstance.delete(`/v1/posts/${post.id}`);
+      await axiosInstance.delete(`/api/v1/posts/${post.id}`);
       toast.success("Post deleted successfully");
       setShowMenu(false);
     } catch (err) {
@@ -40,14 +45,12 @@ function PostCard({ post }) {
     }
   };
 
-
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const [userRes, authorRes] = await Promise.all([
-          axiosInstance.get("/users/loggedUser"),
-          axiosInstance.get(`/users/${post.userId}`),
+          axiosInstance.get("/api/users/loggedUser"),
+          axiosInstance.get(`/api/users/${post.userId}`),
         ]);
         setCurrentUser(userRes.data);
         setUserDetails(authorRes.data);
@@ -73,18 +76,26 @@ function PostCard({ post }) {
     }
   }, [currentUser, post.bookmarkedBy]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 60000); // update every 1 minute
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleLikeToggle = async () => {
     if (loading) return;
     setLoading(true);
     try {
       if (liked) {
-        await axiosInstance.delete(`/v1/posts/${post.id}/unlike`, {
+        await axiosInstance.delete(`/api/v1/posts/${post.id}/unlike`, {
           params: { userId: currentUser.id },
         });
         setLiked(false);
         setLikeCount((prev) => prev - 1);
       } else {
-        await axiosInstance.post(`/v1/posts/${post.id}/like`, null, {
+        await axiosInstance.post(`/api/v1/posts/${post.id}/like`, null, {
           params: { userId: currentUser.id },
         });
         setLiked(true);
@@ -103,12 +114,12 @@ function PostCard({ post }) {
 
     try {
       if (bookmarked) {
-        await axiosInstance.delete(`/v1/posts/${post.id}/removeBookmark`, {
+        await axiosInstance.delete(`/api/v1/posts/${post.id}/removeBookmark`, {
           params: { userId: currentUser.id },
         });
         setBookmarked(false);
       } else {
-        await axiosInstance.post(`/v1/posts/${post.id}/bookmark`, null, {
+        await axiosInstance.post(`/api/v1/posts/${post.id}/bookmark`, null, {
           params: { userId: currentUser.id },
         });
         setBookmarked(true);
@@ -129,13 +140,48 @@ function PostCard({ post }) {
     });
   };
 
+  const handleOpenPost = () => {
+    navigate(`/post/${post.id}`);
+  };
+
+  const formatPostTime = (timestamp) => {
+    if (!timestamp) return "";
+
+    const created = new Date(timestamp);
+    const diffMs = now - created;
+
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+    if (diffMinutes < 1) return "just now";
+    if (diffMinutes < 60) return `${diffMinutes}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+
+    return created.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const formatFullDate = (timestamp) => {
+    if (!timestamp) return "";
+    return new Date(timestamp).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
   return (
-    // <div className="bg-neutral-800 p-4 rounded-md border border-yellow-700/30 hover:border-yellow-500 shadow-sm hover:shadow-md transition">
     <div
-      className={`bg-neutral-800 p-4 rounded-md border shadow-sm hover:shadow-md transition ${post.replyToPostId
-          ? "border-blue-500/50" // ✅ reply posts get blue border
-          : "border-yellow-700/30 hover:border-yellow-500" // ✅ normal posts keep yellow styling
-        }`}
+      onClick={handleOpenPost}
+      className={` bg-neutral-800 p-4 rounded-md border shadow-sm hover:shadow-md transition ${
+        post.replyToPostId
+          ? "border-blue-500/50"
+          : "border-yellow-700/30 hover:border-yellow-500"
+      }`}
     >
       {/* Header: User Info */}
       <div className="flex flex-col gap-1 mb-2">
@@ -160,6 +206,12 @@ function PostCard({ post }) {
                 {" "}
                 @{userDetails?.username || "user"}
               </span>
+              <span
+                className="text-yellow-500 text-xs cursor-default"
+                title={formatFullDate(post.createdAt)}
+              >
+                • {formatPostTime(post.createdAt)}
+              </span>
             </div>
             <p className="text-yellow-200 text-sm mt-1">{post.text}</p>
           </div>
@@ -168,7 +220,10 @@ function PostCard({ post }) {
           {isOwner && (
             <div className="ml-auto relative">
               <button
-                onClick={() => setShowMenu((prev) => !prev)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMenu((prev) => !prev);
+                }}
                 className="p-2 rounded-full hover:bg-neutral-700"
               >
                 <FiMoreHorizontal />
@@ -176,7 +231,10 @@ function PostCard({ post }) {
               {showMenu && (
                 <div className="absolute right-0 mt-2 w-32 bg-neutral-900 border border-yellow-700 rounded-md shadow-lg">
                   <button
-                    onClick={handleDelete}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete();
+                    }}
                     className="w-full text-left px-4 py-2 hover:bg-neutral-800 transition"
                   >
                     Delete
@@ -188,33 +246,21 @@ function PostCard({ post }) {
         </div>
       </div>
 
-      {/* Post image or video */}
-      {post.media?.url && (
-        <div className="mt-2 rounded-md overflow-hidden border border-yellow-700/30 bg-black">
-          {post.media.type?.startsWith("video") ? (
-            <video
-              src={post.media.url}
-              controls
-              className="w-full max-h-[400px] object-contain"
-            />
-          ) : (
-            <img
-              src={post.media.url}
-              alt="Post preview"
-              className="w-full max-h-[400px] object-contain"
-            />
-          )}
-        </div>
+      {post.media && post.media.length > 0 && (
+        <MediaCollage media={post.media} />
       )}
 
       {/* Poll */}
-      <Poll post={post} />
+      <Poll post={post} user={user} />
 
       {/* Actions */}
       <div className="flex justify-between mt-4 text-yellow-400 text-sm flex-wrap">
         <button
           title="Reply"
-          onClick={handleOpenReply}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpenReply();
+          }}
           className="flex items-center gap-1 hover:text-yellow-200 transition"
         >
           <FiMessageCircle />
@@ -222,6 +268,7 @@ function PostCard({ post }) {
         </button>
         <button
           title="Repost"
+          onClick={(e) => e.stopPropagation()}
           className="flex items-center gap-1 hover:text-yellow-200 transition"
         >
           <FiRepeat />
@@ -229,6 +276,7 @@ function PostCard({ post }) {
         </button>
         <button
           title="Share"
+          onClick={(e) => e.stopPropagation()}
           className="flex items-center gap-1 hover:text-yellow-200 transition"
         >
           <FiShare />
@@ -236,23 +284,32 @@ function PostCard({ post }) {
         </button>
         <button
           title="Bookmark"
-          onClick={handleBookmarkToggle}
-          className={`flex items-center gap-1 transition ${bookmarked ? "text-yellow-900" : "hover:text-yellow-200"
-            }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleBookmarkToggle();
+          }}
+          className={`flex items-center gap-1 transition ${
+            bookmarked ? "text-yellow-900" : "hover:text-yellow-200"
+          }`}
         >
           <FiBookmark />
         </button>
         <button
           title="Like"
-          onClick={handleLikeToggle}
-          className={`flex items-center gap-1 transition ${liked ? "text-red-500" : "hover:text-yellow-200"
-            }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleLikeToggle();
+          }}
+          className={`flex items-center gap-1 transition ${
+            liked ? "text-red-500" : "hover:text-yellow-200"
+          }`}
         >
           <FiHeart />
           <span>{likeCount}</span>
         </button>
         <button
           title="Views"
+          onClick={(e) => e.stopPropagation()}
           className="flex items-center gap-1 hover:text-yellow-200 transition"
         >
           <FiEye />

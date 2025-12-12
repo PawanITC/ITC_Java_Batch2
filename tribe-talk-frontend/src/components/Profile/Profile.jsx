@@ -33,7 +33,7 @@ function Profile() {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const res = await axiosInstance.get(`/users/loggedUser`);
+        const res = await axiosInstance.get(`/api/users/loggedUser`);
         setUserDetails(res.data);
       } catch (err) {
         toast.warn("Error fetching user details");
@@ -49,7 +49,7 @@ function Profile() {
     const fetchPosts = async () => {
       try {
         const res = await axiosInstance.get(
-          `/v1/posts/userPost?userId=${userDetails.id}`
+          `/api/v1/posts/userPost?userId=${userDetails.id}`
         );
         const all = res.data;
         setOriginalPosts(all.filter((p) => p.replyToPostId === null));
@@ -68,7 +68,7 @@ function Profile() {
     const fetchLikedPosts = async () => {
       try {
         const res = await axiosInstance.get(
-          `/v1/posts/liked?userId=${userDetails.id}`
+          `/api/v1/posts/liked?userId=${userDetails.id}`
         );
         setLikedPosts(res.data);
       } catch (err) {
@@ -82,7 +82,7 @@ function Profile() {
   const fetchFollowersList = async () => {
     try {
       const res = await axiosInstance.get(
-        `/follow/followers-list/${userId}`
+        `/api/follow/followers-list/${userId}`
       );
       setFollowersList(res.data);
 
@@ -99,7 +99,7 @@ function Profile() {
   const fetchFollowingList = async () => {
     try {
       const res = await axiosInstance.get(
-        `/follow/following-list/${userId}`
+        `/api/follow/following-list/${userId}`
       );
       setFollowingList(res.data);
 
@@ -131,8 +131,8 @@ function Profile() {
       await axiosInstance({
         method: isFollowing ? "delete" : "post",
         url: isFollowing
-          ? "/follow/unfollow-user"
-          : "/follow/follow-user",
+          ? "/api/follow/unfollow-user"
+          : "/api/follow/follow-user",
         data: { followerId: userId, followingId: targetId },
       });
 
@@ -156,9 +156,9 @@ function Profile() {
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-end">
         <div
           className="
-            w-full max-w-md bg-neutral-800 border border-yellow-700
-            rounded-t-2xl p-6
-            animate-slideUp
+            w-full max-w-md bg-neutral-800 border border-yellow-700 
+            rounded-t-2xl p-6 
+            animate-slideUp 
             shadow-xl
           "
         >
@@ -193,9 +193,10 @@ function Profile() {
                 onClick={() => toggleFollow(u.id)}
                 className={`
                   px-3 py-1 rounded-full text-sm font-medium transition
-                  ${followingState[u.id]
-                    ? "bg-neutral-700 text-yellow-400 border border-yellow-500"
-                    : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
+                  ${
+                    followingState[u.id]
+                      ? "bg-neutral-700 text-yellow-400 border border-yellow-500"
+                      : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
                   }
                 `}
               >
@@ -264,10 +265,11 @@ function Profile() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`pb-2 font-semibold capitalize ${activeTab === tab
+            className={`pb-2 font-semibold capitalize ${
+              activeTab === tab
                 ? "border-b-2 border-yellow-400 text-yellow-100"
                 : "text-yellow-400"
-              }`}
+            }`}
           >
             {tab}
           </button>
@@ -302,4 +304,3 @@ function Profile() {
 }
 
 export default Profile;
-

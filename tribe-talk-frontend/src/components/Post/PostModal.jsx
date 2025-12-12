@@ -17,7 +17,8 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
     const [showEmojiPopover, setShowEmojiPopover] = useState(false);
 
     const [text, setText] = useState(prefillText);
-    const [media, setMedia] = useState(null);
+    // const [media, setMedia] = useState(null);
+    const [mediaFiles, setMediaFiles] = useState([]);
     const [pollOptions, setPollOptions] = useState([]);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [scheduledAt, setScheduledAt] = useState(null);
@@ -47,15 +48,19 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
     ];
 
     const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (
-            file &&
-            (file.type.startsWith("image") || file.type.startsWith("video"))
-        ) {
-            setMedia(file);
-        } else {
-            toast.error("Only image or video files are allowed.");
+        const files = Array.from(e.target.files);
+
+        const validFiles = files.filter(
+            (file) => file.type.startsWith("image") || file.type.startsWith("video")
+        );
+
+        const oversized = validFiles.find((file) => file.size > MAX_FILE_SIZE);
+        if (oversized) {
+            toast.error("Each file must be less than 50 MB.");
+            return;
         }
+
+        setMediaFiles(validFiles);
     };
 
     const extractHashtags = (text) =>
@@ -73,7 +78,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
 
     const handlePost = async () => {
         const hasText = text.trim().length > 0;
-        const hasMedia = !!media;
+        const hasMedia = mediaFiles.length > 0;
         const hasPoll =
             showPoll && pollOptions.some((opt) => opt.trim().length > 0);
 
@@ -83,19 +88,17 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
             return;
         }
 
-        // Validate media size before upload
-        if (media && media.size > MAX_FILE_SIZE) {
-            toast.error("File size must be less than 50 MB.");
-            return;
-        }
-
         let pollPayload = null;
         if (hasPoll) {
-            const cleanedPollOptions = pollOptions.map((opt) => opt.trim()).filter((opt) => opt.length > 0);
+            const cleanedPollOptions = pollOptions
+                .map((opt) => opt.trim())
+                .filter((opt) => opt.length > 0);
+
             if (cleanedPollOptions.length < 2) {
                 toast.error("Poll must have at least 2 options.");
                 return;
             }
+
             const expiresAt = new Date();
             expiresAt.setDate(expiresAt.getDate() + pollDuration.days);
             expiresAt.setHours(expiresAt.getHours() + pollDuration.hours);
@@ -121,20 +124,27 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
         };
 
         const formData = new FormData();
-        formData.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+        formData.append(
+            "data",
+            new Blob([JSON.stringify(payload)], { type: "application/json" })
+        );
 
-        if (media) {
-            formData.append("media", media);
-        }
+        mediaFiles.forEach((file) => {
+            formData.append("media", file);
+        });
 
         try {
-            const res = await axiosInstance.post("/v1/posts/create", formData, {
+            const res = await axiosInstance.post("/api/v1/posts/create", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
-                withCredentials: true  // Ensure cookies are sent
+                withCredentials: true,  // Ensure cookies are sent
             });
+
             console.log("Post created:", res.data);
+
             if (scheduledAt) {
-                toast.success("Post scheduled at " + new Date(scheduledAt).toLocaleString());
+                toast.success(
+                    "Post scheduled at " + new Date(scheduledAt).toLocaleString()
+                );
             } else {
                 toast.success("Post published!");
             }
@@ -280,30 +290,39 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                 )}
 
                 {/* Inline Media Preview */}
-                {media && (
-                    <div className="mt-3 relative flex gap-3 flex-wrap">
-                        <span
-                            onClick={() => setMedia(null)}
-                            className="absolute top-1 right-1 bg-black/60 text-yellow-100 rounded-full p-1 cursor-pointer hover:bg-yellow-700"
-                        >
-                            <FiX size={14} />
-                        </span>
-                        {media.type.startsWith("image") ? (
-                            <img
-                                src={URL.createObjectURL(media)}
-                                alt="preview"
-                                className="w-32 h-32 object-cover rounded-md border border-yellow-700"
-                            />
-                        ) : (
-                            <video
-                                src={URL.createObjectURL(media)}
-                                controls
-                                className="w-32 h-32 rounded-md border border-yellow-700"
-                            />
-                        )}
-                        <div className="mt-2 text-xs text-yellow-400">
-                            {media.name} ({(media.size / 1024).toFixed(1)} KB)
-                        </div>
+
+                {mediaFiles.length > 0 && (
+                    <div className="mt-3 flex gap-3 flex-wrap">
+                        {mediaFiles.map((file, idx) => (
+                            <div key={idx} className="relative">
+                                <span
+                                    onClick={() =>
+                                        setMediaFiles(mediaFiles.filter((_, i) => i !== idx))
+                                    }
+                                    className="absolute top-1 right-1 bg-black/60 text-yellow-100 rounded-full p-1 cursor-pointer hover:bg-yellow-700"
+                                >
+                                    <FiX size={14} />
+                                </span>
+
+                                {file.type.startsWith("image") ? (
+                                    <img
+                                        src={URL.createObjectURL(file)}
+                                        alt="preview"
+                                        className="w-32 h-32 object-cover rounded-md border border-yellow-700"
+                                    />
+                                ) : (
+                                    <video
+                                        src={URL.createObjectURL(file)}
+                                        controls
+                                        className="w-32 h-32 rounded-md border border-yellow-700"
+                                    />
+                                )}
+
+                                <div className="mt-1 text-xs text-yellow-400">
+                                    {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
 
@@ -317,8 +336,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                         {visibilityOptions.find((opt) => opt.value === visibility)?.label}
                     </button>
                     {showVisibilityDropdown && (
-                        <div
-                            className="absolute bg-neutral-800 border border-yellow-700 rounded shadow-md mt-2 z-10 w-64">
+                        <div className="absolute bg-neutral-800 border border-yellow-700 rounded shadow-md mt-2 z-10 w-64">
                             {visibilityOptions.map((opt) => (
                                 <div
                                     key={opt.value}
@@ -345,8 +363,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                         {replyOptions.find((opt) => opt.value === replyPermission)?.label}
                     </button>
                     {showReplyDropdown && (
-                        <div
-                            className="absolute bg-neutral-800 border border-yellow-700 rounded shadow-md mt-2 z-10 w-64">
+                        <div className="absolute bg-neutral-800 border border-yellow-700 rounded shadow-md mt-2 z-10 w-64">
                             {replyOptions.map((opt) => (
                                 <div
                                     key={opt.value}
@@ -413,7 +430,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                     <input
                         type="file"
                         accept="image/*,video/*"
-                        multiple={false}
+                        multiple
                         hidden
                         ref={fileInputRef}
                         onChange={handleFileChange}
