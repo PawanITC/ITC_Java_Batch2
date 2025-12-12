@@ -25,7 +25,7 @@ function MessageDetails({ currentUser, setSelectedUser }) {
         const handleFetchGroupedChats = async () => {
         if (!currentUser) return;
         try {
-            const res = await axiosInstance.get(`http://localhost:8081/api/chat/conversations/user/${currentUser.id}`);
+            const res = await axiosInstance.get(`http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/api/chat/conversations/user/${currentUser.id}`);
             setGroupedChats(res.data);
             console.log("Grouped chats:", res.data);
         } catch (err) {
@@ -43,7 +43,7 @@ function MessageDetails({ currentUser, setSelectedUser }) {
         const handleFetchUnreadChats = async () => {
             if (!currentUser) return;
             try {
-                const res = await axiosInstance.get(`http://localhost:8081/api/chat/conversations/unread/${currentUser.id}`);
+                const res = await axiosInstance.get(`http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/api/chat/conversations/unread/${currentUser.id}`);
                 setGroupedChats(res.data);
                 console.log("Unread chats:", res.data);
             } catch (err) {

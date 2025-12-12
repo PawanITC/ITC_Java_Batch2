@@ -18,7 +18,7 @@ function Message() {
             setCurrentUser(res.data);
         });
 
-        const socket = new SockJS("http://localhost:8081/ws");
+        const socket = new SockJS("http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/ws");
         const client = new Client({ webSocketFactory: () => socket });
         client.activate();
         setStompClient(client);

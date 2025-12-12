@@ -27,7 +27,7 @@ function ChatScreen({ user, currentUser, stompClient }) {
         if (!roomId) return;
 
         // Fetch messages from backend
-        fetch(`http://localhost:8081/api/chat/messages/${roomId}`)
+        fetch(`http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/api/chat/messages/${roomId}`)
             .then((res) => res.json())
             .then((data) => setMessages(data))
             .catch((err) => console.error("Error fetching messages:", err));
@@ -42,7 +42,7 @@ function ChatScreen({ user, currentUser, stompClient }) {
             const markAsRead = async () => {
                 if (Number(newMessage.receiverId) === currentUser.id && !newMessage.isRead) {
                 try {
-                    await axios.put("http://localhost:8081/api/chat/mark-as-read", {
+                    await axios.put("http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/api/chat/mark-as-read", {
                     senderId: newMessage.senderId,
                     receiverId: newMessage.receiverId,
                     });
@@ -84,7 +84,7 @@ function ChatScreen({ user, currentUser, stompClient }) {
     useEffect(() => {
         const markMessagesAsRead = async () => {
             try {
-            await axios.put(`http://localhost:8081/api/chat/mark-as-read`, {
+            await axios.put(`http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/api/chat/mark-as-read`, {
                 senderId: user.id,
                 receiverId: currentUser.id,
             });
