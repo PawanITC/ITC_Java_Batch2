@@ -11,7 +11,7 @@ function MessageDetails({ currentUser, setSelectedUser }) {
             useEffect(() => {
             const fetchData = async () => {
                 try {
-                const allUsersRes = await axiosInstance.get(`/api/users/all`);
+                const allUsersRes = await axiosInstance.get(`/users/all`);
                 setUsers(allUsersRes.data);
                 } catch (err) {
                 console.error("Error fetching users", err);

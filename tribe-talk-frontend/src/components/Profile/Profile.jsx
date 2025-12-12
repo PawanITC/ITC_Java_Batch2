@@ -33,7 +33,7 @@ function Profile() {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const res = await axiosInstance.get(`/api/users/loggedUser`);
+        const res = await axiosInstance.get(`/users/loggedUser`);
         setUserDetails(res.data);
       } catch (err) {
         toast.warn("Error fetching user details");

@@ -36,7 +36,7 @@ function PostCard({ post }) {
 
   const handleDelete = async () => {
     try {
-      await axiosInstance.delete(`/api/v1/posts/${post.id}`);
+      await axiosInstance.delete(`/v1/posts/${post.id}`);
       toast.success("Post deleted successfully");
       setShowMenu(false);
     } catch (err) {
@@ -49,8 +49,8 @@ function PostCard({ post }) {
     const fetchUser = async () => {
       try {
         const [userRes, authorRes] = await Promise.all([
-          axiosInstance.get("/api/users/loggedUser"),
-          axiosInstance.get(`/api/users/${post.userId}`),
+          axiosInstance.get("/users/loggedUser"),
+          axiosInstance.get(`/users/${post.userId}`),
         ]);
         setCurrentUser(userRes.data);
         setUserDetails(authorRes.data);
@@ -89,13 +89,13 @@ function PostCard({ post }) {
     setLoading(true);
     try {
       if (liked) {
-        await axiosInstance.delete(`/api/v1/posts/${post.id}/unlike`, {
+        await axiosInstance.delete(`/v1/posts/${post.id}/unlike`, {
           params: { userId: currentUser.id },
         });
         setLiked(false);
         setLikeCount((prev) => prev - 1);
       } else {
-        await axiosInstance.post(`/api/v1/posts/${post.id}/like`, null, {
+        await axiosInstance.post(`/v1/posts/${post.id}/like`, null, {
           params: { userId: currentUser.id },
         });
         setLiked(true);
@@ -114,12 +114,12 @@ function PostCard({ post }) {
 
     try {
       if (bookmarked) {
-        await axiosInstance.delete(`/api/v1/posts/${post.id}/removeBookmark`, {
+        await axiosInstance.delete(`/v1/posts/${post.id}/removeBookmark`, {
           params: { userId: currentUser.id },
         });
         setBookmarked(false);
       } else {
-        await axiosInstance.post(`/api/v1/posts/${post.id}/bookmark`, null, {
+        await axiosInstance.post(`/v1/posts/${post.id}/bookmark`, null, {
           params: { userId: currentUser.id },
         });
         setBookmarked(true);

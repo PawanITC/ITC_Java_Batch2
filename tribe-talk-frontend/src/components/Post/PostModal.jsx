@@ -134,7 +134,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
         });
 
         try {
-            const res = await axiosInstance.post("/api/v1/posts/create", formData, {
+            const res = await axiosInstance.post("/v1/posts/create", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
                 withCredentials: true,  // Ensure cookies are sent
             });

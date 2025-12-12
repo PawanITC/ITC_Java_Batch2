@@ -15,7 +15,7 @@ function SuggestedUsers() {
   const fetchSuggestedUsers = async () => {
     if (!userId) return;
     try {
-      const res = await axiosInstance.get(`/api/users/suggested-users/${userId}`);
+      const res = await axiosInstance.get(`/users/suggested-users/${userId}`);
       setUsers(res.data);
 
       const map = {};

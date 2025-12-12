@@ -13,7 +13,7 @@ function FollowersListComponent() {
   // 1️⃣ Load followers list from backend
   const fetchFollowers = async () => {
     try {
-      const res = await axiosInstance.get(`/api/follow/followers-list/${userId}`);
+      const res = await axiosInstance.get(`/follow/followers-list/${userId}`);
       console.log(" Followers List is ",res.data);
       setFollowers(res.data);
     } catch (err) {
@@ -24,7 +24,7 @@ function FollowersListComponent() {
   // 2️⃣ Load my following list to determine follow status
   const fetchMyFollowing = async () => {
     try {
-      const res = await axiosInstance.get(`/api/follow/following-list/${userId}`);
+      const res = await axiosInstance.get(`/follow/following-list/${userId}`);
       const list = res.data;
 
       const map = {};

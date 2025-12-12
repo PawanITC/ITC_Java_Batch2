@@ -14,7 +14,7 @@ function Message() {
     const [stompClient, setStompClient] = useState(null);
 
     useEffect(() => {
-        axiosInstance.get(`/api/users/loggedUser`).then((res) => {
+        axiosInstance.get(`/users/loggedUser`).then((res) => {
             setCurrentUser(res.data);
         });
 

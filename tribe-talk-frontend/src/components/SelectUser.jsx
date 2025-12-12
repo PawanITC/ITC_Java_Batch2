@@ -12,7 +12,7 @@ const SelectUser = ({ onClose, onUserSelect }) => {
     const fetchData = async () => {
       try {
         const [loggedUserRes, allUsersRes] = await Promise.all([
-          axiosInstance.get(`/api/users/loggedUser`),
+          axiosInstance.get(`/users/loggedUser`),
           axiosInstance.get(`api/users/all`),
         ]);
 

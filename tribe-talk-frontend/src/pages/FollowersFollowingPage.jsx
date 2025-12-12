@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
-import axiosInstance from "../../services/axiosInstance";
+import axiosInstance from "../services/axiosInstance";
 import { toast } from "react-toastify";
-import { AuthContext } from "../../auth/AuthContext";
+import { AuthContext } from "../auth/AuthContext";
 
 function FollowersListComponent() {
   const { user } = useContext(AuthContext);
@@ -12,7 +12,7 @@ function FollowersListComponent() {
 
   const fetchFollowers = async () => {
     try {
-      const res = await axiosInstance.get(`/api/follow/followers-list/${userId}`);
+      const res = await axiosInstance.get(`/follow/followers-list/${userId}`);
       setFollowers(res.data);
     } catch {
       toast.error("Failed to load followers list");
@@ -21,7 +21,7 @@ function FollowersListComponent() {
 
   const fetchMyFollowing = async () => {
     try {
-      const res = await axiosInstance.get(`/api/follow/following-list/${userId}`);
+      const res = await axiosInstance.get(`/follow/following-list/${userId}`);
       const map = {};
       res.data.forEach((u) => (map[u.id] = true));
       setFollowingMap(map);
@@ -80,11 +80,10 @@ function FollowersListComponent() {
 
             <button
               onClick={() => toggleFollow(u.id)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition ${
-                followingMap[u.id]
-                  ? "bg-neutral-700 text-yellow-400 border border-yellow-400"
-                  : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
-              }`}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition ${followingMap[u.id]
+                ? "bg-neutral-700 text-yellow-400 border border-yellow-400"
+                : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
+                }`}
             >
               {followingMap[u.id] ? "Following" : "Follow"}
             </button>

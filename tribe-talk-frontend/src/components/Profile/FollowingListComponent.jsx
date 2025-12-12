@@ -15,7 +15,7 @@ function FollowingListComponent() {
   const fetchFollowingList = async () => {
     if (!userId) return;
     try {
-      const res = await axiosInstance.get(`/api/follow/following-list/${userId}`);
+      const res = await axiosInstance.get(`/follow/following-list/${userId}`);
       setFollowingList(res.data);
 
       const map = {};
