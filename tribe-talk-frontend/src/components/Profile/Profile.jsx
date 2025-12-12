@@ -49,7 +49,7 @@ function Profile() {
     const fetchPosts = async () => {
       try {
         const res = await axiosInstance.get(
-          `/api/v1/posts/userPost?userId=${userDetails.id}`
+          `/v1/posts/userPost?userId=${userDetails.id}`
         );
         const all = res.data;
         setOriginalPosts(all.filter((p) => p.replyToPostId === null));
