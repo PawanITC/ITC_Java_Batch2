@@ -10,6 +10,7 @@ function FollowingListComponent() {
 
   const [followingList, setFollowingList] = useState([]);
   const [followingMap, setFollowingMap] = useState({});
+  const [hoverMap, setHoverMap] = useState({});   // NEW
   const userId = user?.userId;
 
   const fetchFollowingList = async () => {
@@ -43,6 +44,7 @@ function FollowingListComponent() {
       });
 
       if (isFollowing) {
+        // Remove from list
         setFollowingList(prev => prev.filter((u) => u.id !== targetId));
         setFollowingCount(prev => prev - 1);
         toast.success("Unfollowed!");
@@ -65,30 +67,53 @@ function FollowingListComponent() {
         <p className="text-yellow-400">You are not following anyone yet.</p>
       ) : (
         <ul className="space-y-4">
-          {followingList.map((u) => (
-            <li
-              key={u.id}
-              className="flex items-center justify-between 
-                         bg-neutral-800 border border-yellow-700/40 
-                         p-3 rounded-xl"
-            >
-              <div>
-                <p className="text-yellow-100 font-semibold">{u.displayname}</p>
-                <p className="text-yellow-400 text-sm">@{u.username}</p>
-              </div>
+          {followingList.map((u) => {
+            const isFollowing = followingMap[u.id];
+            const isHovering = hoverMap[u.id];
 
-              <button
-                onClick={() => toggleFollow(u.id)}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition ${
-                  followingMap[u.id]
-                    ? "bg-neutral-700 text-yellow-400 border border-yellow-400"
-                    : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
-                }`}
+            return (
+              <li
+                key={u.id}
+                className="flex items-center justify-between 
+                           bg-neutral-800 border border-yellow-700/40 
+                           p-3 rounded-xl"
               >
-                {followingMap[u.id] ? "Following" : "Follow"}
-              </button>
-            </li>
-          ))}
+                <div>
+                  <p className="text-yellow-100 font-semibold">{u.displayname}</p>
+                  <p className="text-yellow-400 text-sm">@{u.username}</p>
+                </div>
+
+                <button
+                  onClick={() => toggleFollow(u.id)}
+                  onMouseEnter={() => {
+                    if (isFollowing) {
+                      setHoverMap((prev) => ({ ...prev, [u.id]: true }));
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (isFollowing) {
+                      setHoverMap((prev) => ({ ...prev, [u.id]: false }));
+                    }
+                  }}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200
+                    ${
+                      isFollowing
+                        ? isHovering
+                          ? "bg-black border border-red-500 text-red-500"
+                          : "bg-neutral-700 border border-yellow-400 text-yellow-400"
+                        : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
+                    }
+                  `}
+                >
+                  {isFollowing
+                    ? isHovering
+                      ? "Unfollow"
+                      : "Following"
+                    : "Follow"}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

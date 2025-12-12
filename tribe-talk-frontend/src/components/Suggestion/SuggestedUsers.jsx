@@ -10,6 +10,7 @@ function SuggestedUsers() {
 
   const [users, setUsers] = useState([]);
   const [followingMap, setFollowingMap] = useState({});
+  const [hoverMap, setHoverMap] = useState({}); // NEW
   const userId = user?.userId;
 
   const fetchSuggestedUsers = async () => {
@@ -52,26 +53,54 @@ function SuggestedUsers() {
     <div className="bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
       <h2 className="text-lg font-semibold mb-4">You Might Like</h2>
       <ul className="space-y-4">
+
         {users.length === 0 ? (
           <p className="text-yellow-400 text-sm">No users to suggest.</p>
         ) : (
-          users.map((u) => (
-            <li key={u.id} className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-yellow-100">{u.displayname}</p>
-                <p className="text-sm text-yellow-400">@{u.username}</p>
-              </div>
-              <button
-                onClick={() => toggleFollow(u.id)}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition ${
-                  followingMap[u.id] ? "bg-neutral-700 text-yellow-400 border border-yellow-400" : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
-                }`}
-              >
-                {followingMap[u.id] ? "Following" : "Follow"}
-              </button>
-            </li>
-          ))
+          users.map((u) => {
+            const isFollowing = followingMap[u.id];
+            const isHovering = hoverMap[u.id];
+
+            return (
+              <li key={u.id} className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-yellow-100">{u.displayname}</p>
+                  <p className="text-sm text-yellow-400">@{u.username}</p>
+                </div>
+
+                <button
+                  onClick={() => toggleFollow(u.id)}
+                  onMouseEnter={() => {
+                    if (isFollowing) {
+                      setHoverMap((prev) => ({ ...prev, [u.id]: true }));
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (isFollowing) {
+                      setHoverMap((prev) => ({ ...prev, [u.id]: false }));
+                    }
+                  }}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200
+                    ${
+                      isFollowing
+                        ? isHovering
+                          ? "bg-black border border-red-500 text-red-500"
+                          : "bg-neutral-700 border border-yellow-400 text-yellow-400"
+                        : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
+                    }
+                  `}
+                >
+                  {isFollowing
+                    ? isHovering
+                      ? "Unfollow"
+                      : "Following"
+                    : "Follow"}
+                </button>
+              </li>
+            );
+          })
         )}
+
       </ul>
     </div>
   );

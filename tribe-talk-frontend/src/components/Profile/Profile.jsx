@@ -15,15 +15,11 @@ function Profile() {
   const [userDetails, setUserDetails] = useState(null);
 
   const { user } = useContext(AuthContext);
-  const {
-    followersCount,
-    followingCount,
-  } = useContext(GlobalContext);
+  const { followersCount, followingCount } = useContext(GlobalContext);
 
   const navigate = useNavigate();
   const userId = user?.userId;
 
-  // Fetch logged-in user details
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
@@ -36,7 +32,6 @@ function Profile() {
     fetchUserDetails();
   }, []);
 
-  // Fetch user's posts & replies
   useEffect(() => {
     if (!userDetails?.id) return;
 
@@ -55,7 +50,6 @@ function Profile() {
     fetchPosts();
   }, [userDetails]);
 
-  // Fetch liked posts
   useEffect(() => {
     if (!userDetails?.id) return;
 
@@ -112,12 +106,23 @@ function Profile() {
 
       {/* Followers / Following Counts */}
       <div className="flex gap-6 text-sm text-yellow-200 mb-6 px-2">
-        <button onClick={() => navigate("/connections?tab=following")}>
+
+        {/* Go to Following tab */}
+        <button
+          onClick={() => navigate("/connections?tab=following")}
+          className="hover:text-yellow-300"
+        >
           <strong className="text-yellow-100">{followingCount}</strong> Following
         </button>
-        <button onClick={() => navigate("/connections?tab=followers")}>
+
+        {/* Go to Followers tab */}
+        <button
+          onClick={() => navigate("/connections?tab=followers")}
+          className="hover:text-yellow-300"
+        >
           <strong className="text-yellow-100">{followersCount}</strong> Followers
         </button>
+
       </div>
 
       {/* Tabs */}
@@ -157,7 +162,7 @@ function Profile() {
           (likedPosts.length > 0 ? (
             likedPosts.map((post) => <PostCard key={post._id} post={post} />)
           ) : (
-            <p className="text-yellow-400">No liked posts</p>
+            <p className="text-yellow-400">No liked posts found</p>
           ))}
       </div>
     </div>
