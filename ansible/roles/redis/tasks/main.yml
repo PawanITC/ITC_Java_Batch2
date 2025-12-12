@@ -1,0 +1,92 @@
+---
+- name: Setup Redis Cache
+  hosts: ansible_redis
+  become: yes
+  vars:
+    redis_version: "7:7.0.*"
+    redis_bind_address: "0.0.0.0"
+    redis_port: 6379
+    redis_maxmemory: "512mb"
+    redis_maxmemory_policy: "allkeys-lru"
+    
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Redis
+      apt:
+        name:
+          - redis-server
+          - redis-tools
+        state: present
+
+    - name: Configure Redis bind address
+      lineinfile:
+        path: /etc/redis/redis.conf
+        regexp: '^bind '
+        line: "bind {{ redis_bind_address }}"
+      notify: restart redis
+
+    - name: Configure Redis protected mode
+      lineinfile:
+        path: /etc/redis/redis.conf
+        regexp: '^protected-mode '
+        line: "protected-mode no"
+      notify: restart redis
+
+    - name: Configure Redis max memory
+      lineinfile:
+        path: /etc/redis/redis.conf
+        regexp: '^# maxmemory '
+        line: "maxmemory {{ redis_maxmemory }}"
+      notify: restart redis
+
+    - name: Configure Redis maxmemory policy
+      lineinfile:
+        path: /etc/redis/redis.conf
+        regexp: '^# maxmemory-policy '
+        line: "maxmemory-policy {{ redis_maxmemory_policy }}"
+      notify: restart redis
+
+    - name: Enable Redis persistence (AOF)
+      lineinfile:
+        path: /etc/redis/redis.conf
+        regexp: '^appendonly '
+        line: "appendonly yes"
+      notify: restart redis
+
+    - name: Configure supervised systemd
+      lineinfile:
+        path: /etc/redis/redis.conf
+        regexp: '^supervised '
+        line: "supervised systemd"
+      notify: restart redis
+
+    - name: Start and enable Redis
+      systemd:
+        name: redis-server
+        state: started
+        enabled: yes
+
+    - name: Wait for Redis to start
+      wait_for:
+        port: "{{ redis_port }}"
+        delay: 2
+        timeout: 30
+
+    - name: Test Redis connection
+      shell: redis-cli ping
+      register: redis_ping
+      changed_when: false
+
+    - name: Display Redis status
+      debug:
+        msg: "Redis is running: {{ redis_ping.stdout }}"
+
+  handlers:
+    - name: restart redis
+      systemd:
+        name: redis-server
+        state: restarted

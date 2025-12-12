@@ -17,7 +17,7 @@ function BookmarkDetails() {
     const fetchBookmarks = async () => {
       try {
         const res = await axiosInstance.get(
-          `/api/v1/posts/bookmarked?userId=${userId}`
+          `/v1/posts/bookmarked?userId=${userId}`
         );
         setBookmarks(res.data);
       } catch (err) {

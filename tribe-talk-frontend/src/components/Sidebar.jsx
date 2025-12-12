@@ -39,7 +39,7 @@ function Sidebar() {
   useEffect(() => {
     const fetchUserDetails = async (e) => {
       try {
-        const userResponse = await axiosInstance.get(`/api/users/loggedUser`);
+        const userResponse = await axiosInstance.get(`/users/loggedUser`);
         setUserDetails(userResponse.data);
       } catch (err) {
         console.log(err);
@@ -131,7 +131,7 @@ function Sidebar() {
                 </span> */}
 
                 <span className="text-sm font-semibold">{userDetails?.displayname || ''}</span>
-                <span className="text-xs text-yellow-400">{'@'+userDetails?.username || ''}</span>
+                <span className="text-xs text-yellow-400">{'@' + userDetails?.username || ''}</span>
               </div>
             </div>
           </button>

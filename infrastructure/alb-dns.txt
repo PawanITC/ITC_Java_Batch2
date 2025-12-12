@@ -1,0 +1,1 @@
+k8s-default-tribetal-089de13287-2004909155.eu-north-1.elb.amazonaws.com

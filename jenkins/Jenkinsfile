@@ -1,0 +1,156 @@
+// Jenkinsfile for TribeTalk Microservices
+// This pipeline builds, tests, dockerizes, and deploys to EKS
+
+@Library('tribetalk-shared-library') _
+
+pipeline {
+    agent any
+    
+    parameters {
+        choice(name: 'SERVICE', choices: ['tribetalk', 'chatservice', 'notification-service'], description: 'Select service to build')
+        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag')
+        booleanParam(name: 'DEPLOY_TO_EKS', defaultValue: true, description: 'Deploy to EKS after build')
+    }
+    
+    environment {
+        AWS_REGION = 'eu-north-1'
+        AWS_ACCOUNT_ID = sh(script: 'aws sts get-caller-identity --query Account --output text', returnStdout: true).trim()
+        ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        EKS_CLUSTER_NAME = 'tribetalk-eks'
+        
+        // Service-specific configurations
+        SERVICE_NAME = "${params.SERVICE}"
+        ECR_REPO = "${params.SERVICE == 'tribetalk' ? 'tribetalk-service' : params.SERVICE}"
+        SERVICE_PORT = "${params.SERVICE == 'tribetalk' ? '8080' : (params.SERVICE == 'chatservice' ? '8081' : '8082')}"
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build JAR') {
+            steps {
+                script {
+                    dir("${SERVICE_NAME}") {
+                        echo "Building ${SERVICE_NAME}..."
+                        sh './mvnw clean package -DskipTests'
+                    }
+                }
+            }
+        }
+        
+        stage('Run Tests') {
+            steps {
+                script {
+                    dir("${SERVICE_NAME}") {
+                        echo "Running tests for ${SERVICE_NAME}..."
+                        sh './mvnw test'
+                    }
+                }
+            }
+            post {
+                always {
+                    junit "**/target/surefire-reports/*.xml"
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dir("${SERVICE_NAME}") {
+                        echo "Building Docker image for ${SERVICE_NAME}..."
+                        sh """
+                            docker build -t ${ECR_REPO}:${params.IMAGE_TAG} .
+                            docker tag ${ECR_REPO}:${params.IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPO}:${params.IMAGE_TAG}
+                            docker tag ${ECR_REPO}:${params.IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPO}:build-${BUILD_NUMBER}
+                        """
+                    }
+                }
+            }
+        }
+        
+        stage('Push to ECR') {
+            steps {
+                script {
+                    echo "Logging in to ECR..."
+                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+                    
+                    echo "Pushing image to ECR..."
+                    sh """
+                        docker push ${ECR_REGISTRY}/${ECR_REPO}:${params.IMAGE_TAG}
+                        docker push ${ECR_REGISTRY}/${ECR_REPO}:build-${BUILD_NUMBER}
+                    """
+                }
+            }
+        }
+        
+        stage('Deploy to EKS') {
+            when {
+                expression { params.DEPLOY_TO_EKS == true }
+            }
+            steps {
+                script {
+                    echo "Updating kubeconfig for EKS..."
+                    sh "aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME} --region ${AWS_REGION}"
+                    
+                    echo "Deploying ${SERVICE_NAME} to EKS..."
+                    sh """
+                        # Update image in deployment
+                        kubectl set image deployment/${SERVICE_NAME} ${SERVICE_NAME}=${ECR_REGISTRY}/${ECR_REPO}:${params.IMAGE_TAG} -n default
+                        
+                        # Wait for rollout to complete
+                        kubectl rollout status deployment/${SERVICE_NAME} -n default --timeout=5m
+                        
+                        # Verify deployment
+                        kubectl get pods -l app=${SERVICE_NAME} -n default
+                    """
+                }
+            }
+        }
+        
+        stage('Verify Deployment') {
+            when {
+                expression { params.DEPLOY_TO_EKS == true }
+            }
+            steps {
+                script {
+                    echo "Verifying deployment health..."
+                    sh """
+                        # Get pod status
+                        kubectl get pods -l app=${SERVICE_NAME} -n default
+                        
+                        # Check if pods are ready
+                        kubectl wait --for=condition=ready pod -l app=${SERVICE_NAME} -n default --timeout=3m
+                        
+                        echo "Deployment successful!"
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "Pipeline completed successfully for ${SERVICE_NAME}!"
+            // Optional: Send Slack notification
+            // slackSend color: 'good', message: "Build #${BUILD_NUMBER} for ${SERVICE_NAME} succeeded!"
+        }
+        failure {
+            echo "Pipeline failed for ${SERVICE_NAME}!"
+            // Optional: Send Slack notification
+            // slackSend color: 'danger', message: "Build #${BUILD_NUMBER} for ${SERVICE_NAME} failed!"
+        }
+        always {
+            // Clean up Docker images
+            sh """
+                docker rmi ${ECR_REPO}:${params.IMAGE_TAG} || true
+                docker rmi ${ECR_REGISTRY}/${ECR_REPO}:${params.IMAGE_TAG} || true
+                docker rmi ${ECR_REGISTRY}/${ECR_REPO}:build-${BUILD_NUMBER} || true
+            """
+        }
+    }
+}

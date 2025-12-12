@@ -21,3 +21,19 @@ spring:
       auto-create: true
 server:
   port: 8082
+  servlet:
+    context-path: /notification
+
+# Spring Boot Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    defaults:
+      enabled: true

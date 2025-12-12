@@ -11,9 +11,51 @@ terraform.tfstate.d/
 *.tfplan
 
 # =============================================
+# Security & Credentials
+# =============================================
+# SSH Keys
+*.pem
+*.key
+*.pub
+id_rsa*
+id_ed25519*
+*.ppk
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+*.env.local
+*.env.production
+*.env.development
+
+# AWS Credentials
+.aws/
+credentials
+config
+
+# Secrets
+secrets/
+**/secrets/
+*.secret
+secret.yaml
+secret.yml
+
+# Kubernetes Secrets (local copies)
+k8s-secrets/
+*.kubeconfig
+
+# =============================================
 # Database and Application Data
 # =============================================
 monitoring/terraform/data/  # PostgreSQL data directory
+
+# Database Backups
+*.sql
+*.dump
+*.backup
+backups/
+
 # =============================================
 # Data Directory
 # =============================================
@@ -79,3 +121,31 @@ build/
 hs_err_pid*
 replay_pid*
 
+# =============================================
+# OS Files
+# =============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =============================================
+# Temporary Files
+# =============================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# =============================================
+# Large Binary Files
+# =============================================
+# Docker images (should be in registry)
+*.tar
+
+# Node modules (should use package.json)
+node_modules/

@@ -1,0 +1,88 @@
+app_config_secret_arn = "arn:aws:secretsmanager:eu-north-1:430006376054:secret:tribetalk/app/config-xmrxOy"
+bastion_public_ip = "51.20.93.11"
+bastion_ssh_command = "ssh -i ~/.ssh/k8-SecurityKey.pem ubuntu@51.20.93.11"
+database_credentials_secret_arn = "arn:aws:secretsmanager:eu-north-1:430006376054:secret:tribetalk/database/credentials-NpHCBA"
+deployment_summary = <<EOT
+    
+========================================
+TribeTalk Infrastructure Deployment
+========================================
+    
+Bastion Host:
+  - Public IP: 51.20.93.11
+  - SSH: ssh -i ~/.ssh/k8-SecurityKey.pem ubuntu@51.20.93.11
+    
+Database Services:
+  - PostgreSQL: 10.0.10.109:5432
+  - MongoDB: 10.0.10.220:27017
+  - Redis: 10.0.10.135:6379
+    
+Kafka Cluster:
+  - Brokers: 10.0.10.95
+  - Bootstrap: 10.0.10.95:9092
+    
+EKS Cluster:
+  - Name: tribetalk-eks
+  - Endpoint: https://EB1E9610D8EAB6759C2D8292179C6412.gr7.eu-north-1.eks.amazonaws.com
+  - Update kubeconfig: aws eks update-kubeconfig --name tribetalk-eks --region eu-north-1
+    
+Jenkins:
+  - Public IP: 13.62.109.54
+  - URL: http://13.62.109.54:8080
+    
+ECR Repositories:
+  - TribeTalk: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service
+  - ChatService: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/chatservice
+  - Notification: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/notification-service
+    
+Secrets Manager:
+  - Database Credentials: tribetalk/database/credentials
+  - App Config: tribetalk/app/config
+  - IAM Role for IRSA: arn:aws:iam::430006376054:role/tribetalk-secrets-access-role
+    
+Next Steps:
+  1. Install External Secrets Operator: helm install external-secrets external-secrets/external-secrets
+  2. Update kubeconfig: aws eks update-kubeconfig --name tribetalk-eks
+  3. Apply External Secrets: kubectl apply -f k8s/external-secrets.yaml
+  4. Deploy microservices: kubectl apply -f k8s/deployments/
+  5. Access Jenkins: http://13.62.109.54:8080
+    
+========================================
+
+EOT
+ecr_chatservice_url = "430006376054.dkr.ecr.eu-north-1.amazonaws.com/chatservice"
+ecr_frontend_url = "430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend"
+ecr_notification_url = "430006376054.dkr.ecr.eu-north-1.amazonaws.com/notification-service"
+ecr_tribetalk_url = "430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service"
+eks_cluster_endpoint = "https://EB1E9610D8EAB6759C2D8292179C6412.gr7.eu-north-1.eks.amazonaws.com"
+eks_cluster_name = "tribetalk-eks"
+eks_cluster_security_group_id = "sg-024979b92d57684f7"
+eks_node_group_id = "tribetalk-eks:tribetalk-node-group"
+jenkins_public_ip = "13.62.109.54"
+jenkins_url = "http://13.62.109.54:8080"
+kafka_bootstrap_servers = "10.0.10.95:9092"
+kafka_broker_ips = [
+  "10.0.10.95",
+]
+kafka_instance_ids = [
+  "i-04fc729aad7400216",
+]
+mongodb_connection_string = <sensitive>
+mongodb_instance_id = "i-04e38cc8b8b88c86a"
+mongodb_private_ip = "10.0.10.220"
+postgresql_connection_string = <sensitive>
+postgresql_instance_id = "i-0ae740d492ea16aec"
+postgresql_private_ip = "10.0.10.109"
+private_subnet_ids = [
+  "subnet-0a654d0ac6a28a793",
+  "subnet-038ce65c285377c73",
+]
+public_subnet_ids = [
+  "subnet-0d4f69b8dc0fcf915",
+  "subnet-08553c64b2d9e6157",
+]
+redis_endpoint = "10.0.10.135:6379"
+redis_instance_id = "i-0f49d43c33b299c05"
+redis_private_ip = "10.0.10.135"
+secrets_access_role_arn = "arn:aws:iam::430006376054:role/tribetalk-secrets-access-role"
+vpc_id = "vpc-08994e566c90846d6"

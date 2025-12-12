@@ -1,0 +1,27 @@
+plugin: amazon.aws.aws_ec2
+regions:
+  - eu-north-1
+
+filters:
+  tag:Project: TribeTalk
+  instance-state-name: running
+
+keyed_groups:
+  # Group by service type
+  - key: tags.Service
+    prefix: service
+  # Group by Ansible role
+  - key: tags.Ansible
+    prefix: ansible
+
+hostnames:
+  - private-ip-address
+
+compose:
+  ansible_host: private_ip_address
+  ansible_user: "'ubuntu'"
+  ansible_ssh_private_key_file: "'~/.ssh/k8-SecurityKey.pem'"
+  ansible_ssh_common_args: "'-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'"
+
+# Use bastion host for private instances
+# You'll need to configure SSH ProxyJump or use Ansible's ssh_args
