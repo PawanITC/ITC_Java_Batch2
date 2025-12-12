@@ -7,6 +7,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
@@ -26,23 +27,33 @@ import java.util.Map;
 @Configuration
 public class AppConfig {
 
-//    @Bean
-//    public CacheManager cacheManager() {
-//        CaffeineCacheManager manager = new CaffeineCacheManager("followersCount", "followingCount","posts",
-//                "userPosts" );
-//        manager.setCaffeine(
-//                Caffeine.newBuilder()
-//                        .recordStats()
-//                        .expireAfterWrite(10, TimeUnit.MINUTES)
-//                        .maximumSize(10_000)
-//        );
-//        return manager;
-//    }
+    private final Environment env; // Added field
+
+    public AppConfig(Environment env) { // Added constructor
+        this.env = env;
+    }
+
+    // @Bean
+    // public CacheManager cacheManager() {
+    // CaffeineCacheManager manager = new CaffeineCacheManager("followersCount",
+    // "followingCount","posts",
+    // "userPosts" );
+    // manager.setCaffeine(
+    // Caffeine.newBuilder()
+    // .recordStats()
+    // .expireAfterWrite(10, TimeUnit.MINUTES)
+    // .maximumSize(10_000)
+    // );
+    // return manager;
+    // }
 
     @Bean
     public ProducerFactory<String, NotificationDTO> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        // Get bootstrap servers from Spring configuration (application.yml or
+        // environment variable)
+        String bootstrapServers = env.getProperty("spring.kafka.producer.bootstrap-servers", "localhost:9092");
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers); // Added this line
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         // Optional: prevent type headers (useful if consumer is plain Kafka)
@@ -52,9 +63,9 @@ public class AppConfig {
         configProps.put(ProducerConfig.RETRIES_CONFIG, 5);
         configProps.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 1);
         configProps.put(ProducerConfig.LINGER_MS_CONFIG, 20);
-        configProps.put(ProducerConfig.BATCH_SIZE_CONFIG, 131072); //128 KB
+        configProps.put(ProducerConfig.BATCH_SIZE_CONFIG, 131072); // 128 KB
         configProps.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
-        configProps.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 67108864); //64 MB
+        configProps.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 67108864); // 64 MB
         configProps.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "notification-producer-tx"); // ✅
 
         return new DefaultKafkaProducerFactory<>(configProps);
@@ -63,9 +74,9 @@ public class AppConfig {
     @Bean
     public KafkaTemplate<String, NotificationDTO> kafkaTemplate() {
         KafkaTemplate<String, NotificationDTO> kafkaTemplate = new KafkaTemplate<>(producerFactory());
-        //kafkaTemplate.setTransactionIdPrefix("notification-producer-tx");
+        // kafkaTemplate.setTransactionIdPrefix("notification-producer-tx");
         return kafkaTemplate;
-        //return new KafkaTemplate<>(producerFactory());
+        // return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
@@ -75,9 +86,9 @@ public class AppConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        //return org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
+        // return
+        // org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
         return new BCryptPasswordEncoder();
     }
-
 
 }

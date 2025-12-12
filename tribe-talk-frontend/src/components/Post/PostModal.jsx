@@ -1,13 +1,13 @@
-import {FiImage, FiSmile, FiBarChart2, FiCalendar, FiX} from "react-icons/fi";
+import { FiImage, FiSmile, FiBarChart2, FiCalendar, FiX } from "react-icons/fi";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import {useRef, useState,useContext } from "react";
+import { useRef, useState, useContext } from "react";
 import EmojiPopover from "./EmojiPopover";
 import axiosInstance from "../../services/axiosInstance";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 import { AuthContext } from "../../auth/AuthContext";
 
-function PostModal({onClose, replyToPostId = null, prefillText = "" }) {
+function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
     const { user } = useContext(AuthContext);
     const userId = user?.userId;
     console.log(user);
@@ -35,15 +35,15 @@ function PostModal({onClose, replyToPostId = null, prefillText = "" }) {
     const [showReplyDropdown, setShowReplyDropdown] = useState(false);
 
     const visibilityOptions = [
-        {label: "Everyone", value: "EVERYONE"},
-        {label: "Followers", value: "FOLLOWERS"},
-        {label: "Mentioned", value: "MENTIONED"},
+        { label: "Everyone", value: "EVERYONE" },
+        { label: "Followers", value: "FOLLOWERS" },
+        { label: "Mentioned", value: "MENTIONED" },
     ];
 
     const replyOptions = [
-        {label: "Everyone", value: "EVERYONE"},
-        {label: "Followed", value: "FOLLOWED"},
-        {label: "Mentioned", value: "MENTIONED"},
+        { label: "Everyone", value: "EVERYONE" },
+        { label: "Followed", value: "FOLLOWED" },
+        { label: "Mentioned", value: "MENTIONED" },
     ];
 
     const handleFileChange = (e) => {
@@ -128,13 +128,16 @@ function PostModal({onClose, replyToPostId = null, prefillText = "" }) {
         }
 
         try {
-            const res = await axiosInstance.post("/api/v1/posts/create", formData,
-                {headers: {"Content-Type": "multipart/form-data"},});
+            const res = await axiosInstance.post("/v1/posts/create", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+                withCredentials: true  // Ensure cookies are sent
+            });
             console.log("Post created:", res.data);
-            if(scheduledAt){
+            if (scheduledAt) {
                 toast.success("Post scheduled at " + new Date(scheduledAt).toLocaleString());
-            }else{
-            toast.success("Post published!");}
+            } else {
+                toast.success("Post published!");
+            }
             onClose();
         } catch (error) {
             console.error("Post failed:", error);
@@ -150,7 +153,7 @@ function PostModal({onClose, replyToPostId = null, prefillText = "" }) {
                     onClick={onClose}
                     className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-200"
                 >
-                    <FiX size={20}/>
+                    <FiX size={20} />
                 </button>
 
                 {/* Header */}
@@ -267,7 +270,7 @@ function PostModal({onClose, replyToPostId = null, prefillText = "" }) {
                             onClick={() => {
                                 setShowPoll(false);
                                 setPollOptions([]);
-                                setPollDuration({days: 1, hours: 0, minutes: 0});
+                                setPollDuration({ days: 1, hours: 0, minutes: 0 });
                             }}
                             className="text-red-400 text-sm hover:text-red-300"
                         >
@@ -279,12 +282,12 @@ function PostModal({onClose, replyToPostId = null, prefillText = "" }) {
                 {/* Inline Media Preview */}
                 {media && (
                     <div className="mt-3 relative flex gap-3 flex-wrap">
-            <span
-                onClick={() => setMedia(null)}
-                className="absolute top-1 right-1 bg-black/60 text-yellow-100 rounded-full p-1 cursor-pointer hover:bg-yellow-700"
-            >
-              <FiX size={14}/>
-            </span>
+                        <span
+                            onClick={() => setMedia(null)}
+                            className="absolute top-1 right-1 bg-black/60 text-yellow-100 rounded-full p-1 cursor-pointer hover:bg-yellow-700"
+                        >
+                            <FiX size={14} />
+                        </span>
                         {media.type.startsWith("image") ? (
                             <img
                                 src={URL.createObjectURL(media)}
@@ -405,7 +408,7 @@ function PostModal({onClose, replyToPostId = null, prefillText = "" }) {
                         onClick={() => fileInputRef.current.click()}
                         className="hover:text-yellow-200 transition"
                     >
-                        <FiImage size={20}/>
+                        <FiImage size={20} />
                     </button>
                     <input
                         type="file"
@@ -421,7 +424,7 @@ function PostModal({onClose, replyToPostId = null, prefillText = "" }) {
                         onClick={() => setShowEmojiPopover((prev) => !prev)}
                         className="hover:text-yellow-200 transition"
                     >
-                        <FiSmile size={20}/>
+                        <FiSmile size={20} />
                     </button>
 
                     <button
@@ -432,7 +435,7 @@ function PostModal({onClose, replyToPostId = null, prefillText = "" }) {
                         }}
                         className="hover:text-yellow-200 transition"
                     >
-                        <FiBarChart2 size={20}/>
+                        <FiBarChart2 size={20} />
                     </button>
 
                     <button
@@ -440,7 +443,7 @@ function PostModal({onClose, replyToPostId = null, prefillText = "" }) {
                         onClick={() => setShowDatePicker((prev) => !prev)}
                         className="hover:text-yellow-200 transition"
                     >
-                        <FiCalendar size={20}/>
+                        <FiCalendar size={20} />
                     </button>
                 </div>
 

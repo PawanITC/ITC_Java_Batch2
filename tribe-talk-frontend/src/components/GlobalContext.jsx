@@ -14,12 +14,12 @@ export const GlobalProvider = ({ children }) => {
   // Notifications
   const [unReadNotificationCount, setUnReadNotificationCount] = useState(0);
   const [liveNotifications, setLiveNotifications] = useState([]);
-   const [followersCount, setFollowersCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
- const userId = user?.userId;
+  const userId = user?.userId;
 
-//   // Real-time follow system
-//   const [followEvent, setFollowEvent] = useState(null);
+  //   // Real-time follow system
+  //   const [followEvent, setFollowEvent] = useState(null);
 
   //  GLOBAL POST MODAL STATE
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
@@ -54,24 +54,24 @@ export const GlobalProvider = ({ children }) => {
   const isConnected = useNotificationWebSocket(user?.userId, handleNewNotification);
 
   // Fetch initial counts once on mount
- useEffect(() => {
-  if (!userId) return;
+  useEffect(() => {
+    if (!userId) return;
 
-  const fetchCounts = async () => {
-    try {
-      const followersRes = await axiosInstance.get(`/api/users/${userId}/followers-count`);
-      const followingRes = await axiosInstance.get(`/api/users/${userId}/following-count`);
-      setFollowersCount(followersRes.data);
-      setFollowingCount(followingRes.data);
-      console.log("Following Count = ",followingCount);
-      console.log("Followers Count = ",followersCount);
-    } catch (err) {
-      console.error(" Error fetching follow counts from Global Context "+err);
-    }
-  };
+    const fetchCounts = async () => {
+      try {
+        const followersRes = await axiosInstance.get(`/users/${userId}/followers-count`);
+        const followingRes = await axiosInstance.get(`/users/${userId}/following-count`);
+        setFollowersCount(followersRes.data);
+        setFollowingCount(followingRes.data);
+        console.log("Following Count = ", followingCount);
+        console.log("Followers Count = ", followersCount);
+      } catch (err) {
+        console.error(" Error fetching follow counts from Global Context " + err);
+      }
+    };
 
-  fetchCounts();
-}, [userId]);
+    fetchCounts();
+  }, [userId]);
 
 
   // Fetch unread notifications on mount

@@ -4,7 +4,7 @@ import axiosInstance from "../services/axiosInstance";
 import { toast } from "react-toastify";
 
 function CreateAccountModal({ onClose }) {
-  const navigate=useNavigate();
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     displayname: "",
     username: "",
@@ -17,28 +17,28 @@ function CreateAccountModal({ onClose }) {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRegister=async (e)=>{
+  const handleRegister = async (e) => {
     e.preventDefault();
 
-    const {displayname,username,email,password}=form;
+    const { displayname, username, email, password } = form;
 
-    if(!username || !email || !password || !displayname){
+    if (!username || !email || !password || !displayname) {
       toast.warn('Please fill in all fields');
       return false;
     }
-    try{
-      await axiosInstance.post('/api/users/save',{
-        username:username,
-        displayname:displayname,
-        password:password,
-        email:email
+    try {
+      await axiosInstance.post('/users/save', {
+        username: username,
+        displayname: displayname,
+        password: password,
+        email: email
       });
       toast.success('Successfully Registered');
       navigate('/main');
     }
-    catch(error){
+    catch (error) {
       console.log(error);
-      const errorMessage=error.response?.data?.message || 'Unexpected Error, Please try again';
+      const errorMessage = error.response?.data?.message || 'Unexpected Error, Please try again';
       toast.warn(errorMessage);
     }
   }
@@ -107,7 +107,7 @@ function CreateAccountModal({ onClose }) {
         </div>
       </div>
     </form>
-    
+
   );
 }
 

@@ -1,10 +1,10 @@
-import {useState} from "react";
+import { useState } from "react";
 import axios from "axios";
-import {toast} from "react-toastify";
-import {FiUser, FiMail, FiLock, FiEye, FiEyeOff} from "react-icons/fi";
+import { toast } from "react-toastify";
+import { FiUser, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import "react-toastify/dist/ReactToastify.css";
 
-function CreateAccountModal({onClose}) {
+function CreateAccountModal({ onClose }) {
     const [form, setForm] = useState({
         username: "",
         email: "",
@@ -16,14 +16,14 @@ function CreateAccountModal({onClose}) {
     const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     const handleChange = (e) => {
-        const {name, value} = e.target;
-        setForm((prev) => ({...prev, [name]: value}));
+        const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const {username, email, password, confirmPassword} = form;
+        const { username, email, password, confirmPassword } = form;
 
         // Basic validation
         if (
@@ -55,10 +55,8 @@ function CreateAccountModal({onClose}) {
 
 
             const response = await axios.post(
-                `${BASE_URL}/api/users/save`,
-                username,
-                email,
-                password
+                `${BASE_URL}/api/users/save`,  // Keep /api here since this uses axios directly, not axiosInstance
+                { username, email, password }  // Fixed: send as object
             );
 
             if (response?.status === 201 || response?.status === 200) {
@@ -101,7 +99,7 @@ function CreateAccountModal({onClose}) {
 
                 {/* Username */}
                 <div className="flex items-center border border-yellow-500 rounded-md bg-neutral-900 px-3 py-2">
-                    <FiUser className="text-yellow-400 mr-2"/>
+                    <FiUser className="text-yellow-400 mr-2" />
                     <input
                         type="text"
                         name="username"
@@ -114,7 +112,7 @@ function CreateAccountModal({onClose}) {
 
                 {/* Email */}
                 <div className="flex items-center border border-yellow-500 rounded-md bg-neutral-900 px-3 py-2">
-                    <FiMail className="text-yellow-400 mr-2"/>
+                    <FiMail className="text-yellow-400 mr-2" />
                     <input
                         type="email"
                         name="email"
@@ -128,7 +126,7 @@ function CreateAccountModal({onClose}) {
                 {/* Password */}
                 <div
                     className="relative flex items-center border border-yellow-500 rounded-md bg-neutral-900 px-3 py-2">
-                    <FiLock className="text-yellow-400 mr-2"/>
+                    <FiLock className="text-yellow-400 mr-2" />
                     <input
                         type={showPassword ? "text" : "password"}
                         name="password"
@@ -142,14 +140,14 @@ function CreateAccountModal({onClose}) {
                         onClick={() => setShowPassword((prev) => !prev)}
                         className="absolute right-3 text-yellow-400"
                     >
-                        {showPassword ? <FiEyeOff/> : <FiEye/>}
+                        {showPassword ? <FiEyeOff /> : <FiEye />}
                     </button>
                 </div>
 
                 {/* Confirm Password */}
                 <div
                     className="relative flex items-center border border-yellow-500 rounded-md bg-neutral-900 px-3 py-2">
-                    <FiLock className="text-yellow-400 mr-2"/>
+                    <FiLock className="text-yellow-400 mr-2" />
                     <input
                         type={showPassword ? "text" : "password"}
                         name="confirmPassword"
@@ -163,7 +161,7 @@ function CreateAccountModal({onClose}) {
                         onClick={() => setShowPassword((prev) => !prev)}
                         className="absolute right-3 text-yellow-400"
                     >
-                        {showPassword ? <FiEyeOff/> : <FiEye/>}
+                        {showPassword ? <FiEyeOff /> : <FiEye />}
                     </button>
                 </div>
 

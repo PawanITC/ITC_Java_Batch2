@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tribe-talk-frontend
+  labels:
+    app: tribe-talk-frontend
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tribe-talk-frontend
+  template:
+    metadata:
+      labels:
+        app: tribe-talk-frontend
+        version: v1
+    spec:
+      containers:
+      - name: tribe-talk-frontend
+        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend:v1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: http
+        env:
+        # API URL will point to the backend through Ingress
+        - name: VITE_API_BASE_URL
+          value: "http://k8s-default-tribetal-089de13287-1370767621.eu-north-1.elb.amazonaws.com"
+        - name: VITE_GITHUB_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: tribetalk-app-secrets
+              key: github_client_id
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tribe-talk-frontend
+  labels:
+    app: tribe-talk-frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: tribe-talk-frontend

@@ -21,9 +21,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -34,25 +33,27 @@ public class AuthController {
     private final UserService userService;
 
     public AuthController(AuthenticationManager authenticationManager,
-                          UserDetailsService userDetailsService,
-                          JwtUtil jwtUtil,
-                          UserService userService) {
+            UserDetailsService userDetailsService,
+            JwtUtil jwtUtil,
+            UserService userService) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
-        this.userService=userService;
+        this.userService = userService;
     }
 
-    record AuthRequest(String username, String password) {}
-    record AuthResponse(String token,Long userId) {}
+    record AuthRequest(String username, String password) {
+    }
+
+    record AuthResponse(String token, Long userId) {
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request, HttpServletResponse response) {
-        try{
+        try {
             System.out.println(request);
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.username(), request.password())
-            );
+                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));
 
             var userDetails = userDetailsService.loadUserByUsername(request.username());
 
@@ -61,46 +62,50 @@ public class AuthController {
                     .collect(Collectors.toList());
 
             String token = jwtUtil.generateToken(request.username(), roles);
-            ResponseCookie cookie=jwtUtil.generateJwtCookie(token);
-            Optional<UserResponse> userResponse=userService.findByUsername(request.username());
-            return userResponse.map(value -> ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(new AuthResponse(value.username(), value.id()))).orElseGet(() -> ResponseEntity.badRequest().body(new AuthResponse("", 0L)));
+            ResponseCookie cookie = jwtUtil.generateJwtCookie(token);
+            Optional<UserResponse> userResponse = userService.findByUsername(request.username());
+            return userResponse
+                    .map(value -> ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
+                            .body(new AuthResponse(value.username(), value.id())))
+                    .orElseGet(() -> ResponseEntity.badRequest().body(new AuthResponse("", 0L)));
 
-        }
-        catch (BadCredentialsException ex){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse("Invalid Credentials",0L));
+        } catch (BadCredentialsException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse("Invalid Credentials", 0L));
         }
 
     }
 
-//    @GetMapping("/validateUser")
-//    public ResponseEntity<?> me(@AuthenticationPrincipal UserDetails user) {
-//        if (user == null) return ResponseEntity.status(401).build();
-//
-//        Optional<UserResponse> userResponse=userService.findByUsername(user.getUsername());
-//        if (userResponse.isPresent()){
-//            return ResponseEntity.ok(Map.of("username",userResponse.get().username(),"userId",userResponse.get().id()));
-//        }
-//        else {
-//            return ResponseEntity.badRequest().build();
-//        }
-//    }
+    // @GetMapping("/validateUser")
+    // public ResponseEntity<?> me(@AuthenticationPrincipal UserDetails user) {
+    // if (user == null) return ResponseEntity.status(401).build();
+    //
+    // Optional<UserResponse>
+    // userResponse=userService.findByUsername(user.getUsername());
+    // if (userResponse.isPresent()){
+    // return
+    // ResponseEntity.ok(Map.of("username",userResponse.get().username(),"userId",userResponse.get().id()));
+    // }
+    // else {
+    // return ResponseEntity.badRequest().build();
+    // }
+    // }
 
     @GetMapping("/validateUser")
-    public ResponseEntity<?> me(@CookieValue(name = "jwt",required = false) String token) {
-        if (token == null || token.isBlank()) return ResponseEntity.status(401).build();
+    public ResponseEntity<?> me(@CookieValue(name = "jwt", required = false) String token) {
+        if (token == null || token.isBlank())
+            return ResponseEntity.status(401).build();
 
-        String username= jwtUtil.extractUsername(token);
-        boolean isTokenValid=jwtUtil.isTokenValid(token,username);
-        if(isTokenValid){
-            Optional<UserResponse> userResponse=userService.findByUsername(username);
-            if (userResponse.isPresent()){
-                return ResponseEntity.ok(Map.of("username",userResponse.get().username(),"userId",userResponse.get().id()));
-            }
-            else {
+        String username = jwtUtil.extractUsername(token);
+        boolean isTokenValid = jwtUtil.isTokenValid(token, username);
+        if (isTokenValid) {
+            Optional<UserResponse> userResponse = userService.findByUsername(username);
+            if (userResponse.isPresent()) {
+                return ResponseEntity
+                        .ok(Map.of("username", userResponse.get().username(), "userId", userResponse.get().id()));
+            } else {
                 return ResponseEntity.badRequest().build();
             }
-        }
-        else{
+        } else {
             return ResponseEntity.badRequest().build();
         }
 
@@ -109,6 +114,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
         ResponseCookie cookie = jwtUtil.getCleanJwtCookie();
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(Map.of("message", "Logged out successfully"));
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(Map.of("message", "Logged out successfully"));
     }
 }

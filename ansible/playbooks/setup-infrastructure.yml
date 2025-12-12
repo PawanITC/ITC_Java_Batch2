@@ -1,0 +1,17 @@
+---
+- name: Setup All Infrastructure Services
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+- name: Setup PostgreSQL
+  import_playbook: ../roles/postgresql/tasks/main.yml
+
+- name: Setup MongoDB
+  import_playbook: ../roles/mongodb/tasks/main.yml
+
+- name: Setup Redis
+  import_playbook: ../roles/redis/tasks/main.yml
+
+- name: Setup Kafka KRaft Cluster
+  import_playbook: setup-kafka-kraft.yml

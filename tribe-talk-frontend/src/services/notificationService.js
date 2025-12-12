@@ -1,15 +1,15 @@
 import axios from "axios";
 import axiosInstance from "./axiosInstance";
 
-const API_BASE_URL = 'http://localhost:8082/api/notifications';
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/notification/api/notifications`;
 
 axios.defaults.withCredentials = true;
 
 export const notificationService = {
 
-    async fetchNotifications(userId,page,size){
+    async fetchNotifications(userId, page, size) {
         try {
-            
+
             const response = await axios.get(`${API_BASE_URL}?recipientId=${userId}&page=${page}&size=${size}`);
             return response.data;
         }
@@ -19,7 +19,7 @@ export const notificationService = {
         }
     },
 
-    async markAsRead(notificationId){
+    async markAsRead(notificationId) {
         try {
             const response = await axios.patch(`${API_BASE_URL}/${notificationId}/read`);
             return response.data;
@@ -30,7 +30,7 @@ export const notificationService = {
         }
     },
 
-    async fetchUnReadCount(userId){
+    async fetchUnReadCount(userId) {
         try {
             const response = await axios.get(`${API_BASE_URL}/unReadCount?recipientId=${userId}`);
             return response.data;
@@ -41,7 +41,7 @@ export const notificationService = {
         }
     },
 
-    async markAllAsRead(userId){
+    async markAllAsRead(userId) {
         try {
             const response = await axios.patch(`${API_BASE_URL}/markAllRead?recipientId=${userId}`);
             return response.data;

@@ -1,0 +1,44 @@
+# Kafka KRaft Configuration
+# Node ID: {{ kafka_node_id }}
+# Cluster ID: {{ kafka_cluster_uuid }}
+
+process.roles=broker,controller
+node.id={{ kafka_node_id }}
+controller.quorum.voters={% for host in groups['ansible_kafka'] %}{{ hostvars[host]['tags']['NodeId'] }}@{{ hostvars[host]['private_ip_address'] }}:9093{% if not loop.last %},{% endif %}{% endfor %}
+
+
+# Listeners
+listeners=PLAINTEXT://:9092,CONTROLLER://:9093
+advertised.listeners=PLAINTEXT://{{ hostvars[inventory_hostname]['private_ip_address'] }}:9092
+controller.listener.names=CONTROLLER
+listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
+inter.broker.listener.name=PLAINTEXT
+
+# Log Directories
+log.dirs={{ kafka_data_dir }}/data
+
+# Replication
+num.network.threads=3
+num.io.threads=8
+socket.send.buffer.bytes=102400
+socket.receive.buffer.bytes=102400
+socket.request.max.bytes=104857600
+
+# Log Retention
+log.retention.hours=168
+log.retention.check.interval.ms=300000
+log.segment.bytes=1073741824
+
+# Topic Configuration
+num.partitions=3
+default.replication.factor=3
+min.insync.replicas=2
+offsets.topic.replication.factor=3
+transaction.state.log.replication.factor=3
+transaction.state.log.min.isr=2
+
+# Group Coordinator
+group.coordinator.rebalance.protocols=classic,consumer
+
+# Cluster Metadata
+metadata.log.dir={{ kafka_data_dir }}/metadata

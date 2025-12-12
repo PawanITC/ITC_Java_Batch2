@@ -13,21 +13,24 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
     private final FollowService followService;
 
-    public UserController(UserService userService , FollowService followService) {
-        this.userService=userService;
-        this.followService=followService;
+    public UserController(UserService userService, FollowService followService) {
+        this.userService = userService;
+        this.followService = followService;
     }
 
     @GetMapping("/loggedUser")
     public ResponseEntity<UserResponse> getUserByUsername(@AuthenticationPrincipal User user) {
-        return userService.findByUsername(user.getUsername()).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        if (user == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return userService.findByUsername(user.getUsername()).map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/all")
@@ -37,7 +40,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id){
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         return userService.findByUserId(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
@@ -62,7 +65,7 @@ public class UserController {
 
     @GetMapping("/suggested-users/{userId}")
     public ResponseEntity<List<UserResponse>> getSuggestedUsers(@PathVariable Long userId) {
-        List<UserResponse> suggestedUsers=userService.findSuggestedUsers(userId);
+        List<UserResponse> suggestedUsers = userService.findSuggestedUsers(userId);
         return ResponseEntity.ok(suggestedUsers);
     }
 

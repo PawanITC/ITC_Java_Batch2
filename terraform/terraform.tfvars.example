@@ -1,0 +1,39 @@
+# Example terraform.tfvars file
+# Copy this file to terraform.tfvars and update with your values
+
+aws_region = "eu-north-1"
+environment = "dev"
+
+# VPC Configuration
+vpc_cidr = "10.0.0.0/16"
+availability_zones = ["eu-north-1a", "eu-north-1b"]
+
+# EC2 Configuration
+instance_type = "t3.small"
+key_pair_name = "k8-SecurityKey"  # Update with your SSH key pair name
+
+# Database Credentials
+# IMPORTANT: Change these values and use AWS Secrets Manager in production
+db_username = "admin"
+db_password = "admin123"  # Update with a strong password
+
+# Security
+allowed_ssh_cidr = "0.0.0.0/0"  # Restrict to your IP in production (e.g., "1.2.3.4/32")
+
+# Kafka Configuration
+kafka_cluster_size = 1
+
+# Microservices Auto Scaling
+microservice_min_count = 1
+microservice_desired_count = 2
+microservice_max_count = 4
+
+# Secrets Manager Configuration
+# IMPORTANT: Change these values and keep them secure!
+jwt_secret = "change_this_to_a_long_random_secret_with_min_256_bits_for_production"
+
+# OAuth2 Configuration (optional, leave empty if not using)
+github_client_id = "Ov23liGm8fihan8YBuCU"
+github_client_secret = "0dc9230ac778fe76c4c4645ed1fe685f1dc8d502"
+google_client_id = ""
+google_client_secret = ""
