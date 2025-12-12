@@ -8,55 +8,44 @@ function FollowersListComponent() {
   const userId = user?.userId;
 
   const [followers, setFollowers] = useState([]);
-  const [followingMap, setFollowingMap] = useState({}); // store follow status
+  const [followingMap, setFollowingMap] = useState({});
 
-  // 1️⃣ Load followers list from backend
   const fetchFollowers = async () => {
     try {
       const res = await axiosInstance.get(`/api/follow/followers-list/${userId}`);
-      console.log(" Followers List is ",res.data);
       setFollowers(res.data);
-    } catch (err) {
-      toast.error("Failed to load followers list"); 
+    } catch {
+      toast.error("Failed to load followers list");
     }
   };
 
-  // 2️⃣ Load my following list to determine follow status
   const fetchMyFollowing = async () => {
     try {
       const res = await axiosInstance.get(`/api/follow/following-list/${userId}`);
-      const list = res.data;
-
       const map = {};
-      list.forEach(u => (map[u.id] = true)); // user is following
+      res.data.forEach((u) => (map[u.id] = true));
       setFollowingMap(map);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load follow status");
     }
   };
 
   useEffect(() => {
     if (!userId) return;
-
     fetchFollowers();
     fetchMyFollowing();
-       
   }, [userId]);
 
-  // 3️⃣ Toggle follow/unfollow
   const toggleFollow = async (targetId) => {
-    const isFollowing = followingMap[targetId] === true;
-
+    const isFollowing = followingMap[targetId];
     const method = isFollowing ? "delete" : "post";
-    const url = isFollowing
-      ? `/api/follow/unfollow-user`
-      : `/api/follow/follow-user`;
+    const url = isFollowing ? "/api/follow/unfollow-user" : "/api/follow/follow-user";
 
     try {
       await axiosInstance({
         method,
         url,
-        data: { followerId: userId, followingId: targetId }
+        data: { followerId: userId, followingId: targetId },
       });
 
       setFollowingMap((prev) => ({
@@ -64,8 +53,8 @@ function FollowersListComponent() {
         [targetId]: !isFollowing,
       }));
 
-      toast.success(isFollowing ? "Unfollowed" : "Followed");
-    } catch (err) {
+      toast.success(isFollowing ? "Unfollowed!" : "Followed!");
+    } catch {
       toast.error("Operation failed");
     }
   };

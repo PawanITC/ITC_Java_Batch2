@@ -1,7 +1,11 @@
+com\tribetalk\chatservice\DTO\NotificationDTO$NotificationDTOBuilder.class
 com\tribetalk\chatservice\configuration\WebSocketConfig.class
 com\tribetalk\chatservice\Repository\ChatMessageRepository.class
+com\tribetalk\chatservice\Entity\NotificationType.class
 com\tribetalk\chatservice\Entity\ChatMessage.class
 com\tribetalk\chatservice\ChatServiceApplication.class
+com\tribetalk\chatservice\configuration\AppConfig.class
+com\tribetalk\chatservice\Services\NotificationProducer.class
 com\tribetalk\chatservice\Services\ChatService.class
 com\tribetalk\chatservice\DTO\MarkReadRequest.class
 com\tribetalk\chatservice\configuration\CorsConfig.class
@@ -9,6 +13,8 @@ com\tribetalk\chatservice\Controller\ChatController.class
 com\tribetalk\chatservice\Exception\ErrorResponse.class
 com\tribetalk\chatservice\Controller\ChatRestController.class
 com\tribetalk\chatservice\configuration\CorsConfig$1.class
+com\tribetalk\chatservice\DTO\NotificationDTO.class
+com\tribetalk\chatservice\DTO\ChatMessageResponse$ChatMessageResponseBuilder.class
 com\tribetalk\chatservice\Exception\GlobalExceptionHandler.class
 com\tribetalk\chatservice\Services\impl\ChatServiceImpl.class
 com\tribetalk\chatservice\DTO\ChatMessageResponse.class

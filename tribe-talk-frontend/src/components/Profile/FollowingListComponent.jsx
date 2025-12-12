@@ -13,13 +13,12 @@ function FollowingListComponent() {
   const userId = user?.userId;
 
   const fetchFollowingList = async () => {
-    if (!userId) return;
     try {
       const res = await axiosInstance.get(`/api/follow/following-list/${userId}`);
       setFollowingList(res.data);
 
       const map = {};
-      res.data.forEach(u => (map[u.id] = true));
+      res.data.forEach((u) => (map[u.id] = true));
       setFollowingMap(map);
     } catch {
       toast.error("Failed to load following list.");
@@ -27,7 +26,7 @@ function FollowingListComponent() {
   };
 
   useEffect(() => {
-    fetchFollowingList();
+    if (userId) fetchFollowingList();
   }, [userId]);
 
   const toggleFollow = async (targetId) => {
@@ -43,15 +42,15 @@ function FollowingListComponent() {
       });
 
       if (isFollowing) {
-        setFollowingList(prev => prev.filter((u) => u.id !== targetId));
-        setFollowingCount(prev => prev - 1);
-        toast.success("Unfollowed!");
+        setFollowingList((prev) => prev.filter((u) => u.id !== targetId));
+        setFollowingCount((prev) => prev - 1);
       } else {
-        setFollowingCount(prev => prev + 1);
-        toast.success("Followed!");
+        setFollowingCount((prev) => prev + 1);
       }
 
-      setFollowingMap(prev => ({ ...prev, [targetId]: !isFollowing }));
+      setFollowingMap((prev) => ({ ...prev, [targetId]: !isFollowing }));
+
+      toast.success(isFollowing ? "Unfollowed!" : "Followed!");
     } catch {
       toast.error("Failed to update follow status.");
     }
@@ -68,13 +67,11 @@ function FollowingListComponent() {
           {followingList.map((u) => (
             <li
               key={u.id}
-              className="flex items-center justify-between 
-                         bg-neutral-800 border border-yellow-700/40 
-                         p-3 rounded-xl"
+              className="flex items-center justify-between bg-neutral-800 border border-yellow-700/40 p-3 rounded-xl"
             >
               <div>
                 <p className="text-yellow-100 font-semibold">{u.displayname}</p>
-                <p className="text-yellow-400 text-sm">@{u.username}</p>
+                <p className="text-sm text-yellow-400">@{u.username}</p>
               </div>
 
               <button
