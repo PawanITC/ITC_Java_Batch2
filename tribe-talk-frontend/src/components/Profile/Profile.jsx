@@ -68,7 +68,7 @@ function Profile() {
     const fetchLikedPosts = async () => {
       try {
         const res = await axiosInstance.get(
-          `/api/v1/posts/liked?userId=${userDetails.id}`
+          `/v1/posts/liked?userId=${userDetails.id}`
         );
         setLikedPosts(res.data);
       } catch (err) {
