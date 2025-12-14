@@ -149,6 +149,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
+    public Optional<User> findUserEntityByUsername(String username) {
+        return repo.findByUsername(username);
+    }
+
+    @Override
     public Optional<UserResponse> findByUserId(Long userId) {
         return Optional.ofNullable(repo.findById(userId)
                 .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname()))

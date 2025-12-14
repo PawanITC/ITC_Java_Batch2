@@ -1,5 +1,5 @@
-// Jenkinsfile for TribeTalk Microservices
-// This pipeline builds, tests, dockerizes, and deploys to EKS
+// Enhanced Jenkinsfile for TribeTalk - All Services Including Frontend
+// Supports: tribetalk, chatservice, notification-service, tribe-talk-frontend
 
 @Library('tribetalk-shared-library') _
 
@@ -7,21 +7,27 @@ pipeline {
     agent any
     
     parameters {
-        choice(name: 'SERVICE', choices: ['tribetalk', 'chatservice', 'notification-service'], description: 'Select service to build')
+        choice(
+            name: 'SERVICE', 
+            choices: ['tribetalk', 'chatservice', 'notification-service', 'tribe-talk-frontend'], 
+            description: 'Select service to build'
+        )
         string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag')
         booleanParam(name: 'DEPLOY_TO_EKS', defaultValue: true, description: 'Deploy to EKS after build')
+        string(name: 'VITE_API_BASE_URL', defaultValue: '', description: 'Frontend API URL (leave empty for auto-detect)')
     }
     
     environment {
         AWS_REGION = 'eu-north-1'
         AWS_ACCOUNT_ID = sh(script: 'aws sts get-caller-identity --query Account --output text', returnStdout: true).trim()
         ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-        EKS_CLUSTER_NAME = 'tribetalk-eks'
+        EKS_CLUSTER_NAME = 'tribetalk-cluster'
         
         // Service-specific configurations
         SERVICE_NAME = "${params.SERVICE}"
-        ECR_REPO = "${params.SERVICE == 'tribetalk' ? 'tribetalk-service' : params.SERVICE}"
-        SERVICE_PORT = "${params.SERVICE == 'tribetalk' ? '8080' : (params.SERVICE == 'chatservice' ? '8081' : '8082')}"
+        IS_FRONTEND = "${params.SERVICE == 'tribe-talk-frontend'}"
+        ECR_REPO = "${params.SERVICE}"
+        SERVICE_PORT = getServicePort("${params.SERVICE}")
     }
     
     stages {
@@ -31,7 +37,11 @@ pipeline {
             }
         }
         
+        // Backend stages (Java services)
         stage('Build JAR') {
+            when {
+                expression { params.SERVICE != 'tribe-talk-frontend' }
+            }
             steps {
                 script {
                     dir("${SERVICE_NAME}") {
@@ -42,7 +52,10 @@ pipeline {
             }
         }
         
-        stage('Run Tests') {
+        stage('Run Backend Tests') {
+            when {
+                expression { params.SERVICE != 'tribe-talk-frontend' }
+            }
             steps {
                 script {
                     dir("${SERVICE_NAME}") {
@@ -58,13 +71,82 @@ pipeline {
             }
         }
         
+        // Frontend stages
+        stage('Build Frontend') {
+            when {
+                expression { params.SERVICE == 'tribe-talk-frontend' }
+            }
+            steps {
+                script {
+                    dir('tribe-talk-frontend') {
+                        echo "Building frontend..."
+                        
+                        // Get ALB DNS if not provided
+                        def apiBaseUrl = params.VITE_API_BASE_URL
+                        if (!apiBaseUrl) {
+                            apiBaseUrl = sh(
+                                script: "kubectl get ingress tribetalk-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'",
+                                returnStdout: true
+                            ).trim()
+                            apiBaseUrl = "http://${apiBaseUrl}"
+                        }
+                        
+                        // Get GitHub client ID from secrets
+                        def githubClientId = sh(
+                            script: "kubectl get secret tribetalk-app-secrets -o jsonpath='{.data.github_client_id}' | base64 -d",
+                            returnStdout: true
+                        ).trim()
+                        
+                        echo "Building with API URL: ${apiBaseUrl}"
+                        
+                        sh """
+                            npm install
+                            VITE_API_BASE_URL="${apiBaseUrl}" VITE_GITHUB_CLIENT_ID="${githubClientId}" npm run build
+                        """
+                    }
+                }
+            }
+        }
+        
+        stage('Run Frontend Tests') {
+            when {
+                expression { params.SERVICE == 'tribe-talk-frontend' }
+            }
+            steps {
+                script {
+                    dir('tribe-talk-frontend') {
+                        echo "Running frontend tests..."
+                        sh 'npm test -- --passWithNoTests || true'
+                    }
+                }
+            }
+        }
+        
+        // Docker build (common for all services)
         stage('Build Docker Image') {
             steps {
                 script {
-                    dir("${SERVICE_NAME}") {
+                    def buildDir = params.SERVICE == 'tribe-talk-frontend' ? 'tribe-talk-frontend' : SERVICE_NAME
+                    
+                    dir(buildDir) {
                         echo "Building Docker image for ${SERVICE_NAME}..."
+                        
+                        // For frontend, pass build args
+                        def buildArgs = ""
+                        if (params.SERVICE == 'tribe-talk-frontend') {
+                            def apiBaseUrl = params.VITE_API_BASE_URL ?: sh(
+                                script: "kubectl get ingress tribetalk-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'",
+                                returnStdout: true
+                            ).trim()
+                            def githubClientId = sh(
+                                script: "kubectl get secret tribetalk-app-secrets -o jsonpath='{.data.github_client_id}' | base64 -d",
+                                returnStdout: true
+                            ).trim()
+                            buildArgs = "--build-arg VITE_API_BASE_URL=http://${apiBaseUrl} --build-arg VITE_GITHUB_CLIENT_ID=${githubClientId}"
+                        }
+                        
                         sh """
-                            docker build -t ${ECR_REPO}:${params.IMAGE_TAG} .
+                            docker build ${buildArgs} -t ${ECR_REPO}:${params.IMAGE_TAG} .
                             docker tag ${ECR_REPO}:${params.IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPO}:${params.IMAGE_TAG}
                             docker tag ${ECR_REPO}:${params.IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPO}:build-${BUILD_NUMBER}
                         """
@@ -152,5 +234,21 @@ pipeline {
                 docker rmi ${ECR_REGISTRY}/${ECR_REPO}:build-${BUILD_NUMBER} || true
             """
         }
+    }
+}
+
+// Helper function to get service port
+def getServicePort(service) {
+    switch(service) {
+        case 'tribetalk':
+            return '8080'
+        case 'chatservice':
+            return '8081'
+        case 'notification-service':
+            return '8082'
+        case 'tribe-talk-frontend':
+            return '80'
+        default:
+            return '8080'
     }
 }

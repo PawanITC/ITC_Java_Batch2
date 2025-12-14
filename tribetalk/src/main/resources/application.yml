@@ -91,7 +91,9 @@ logging:
 
 jwt:
   secret: ${JWT_SECRET:change_this_to_a_long_random_secret_with_min_256_bits}
-  expirationMillis: 3600000
+  expirationMillis: 3600000  # 1 hour for access token
+  refresh:
+    expirationMillis: 2592000000  # 30 days for refresh token
 
 otel:
   exporter:
