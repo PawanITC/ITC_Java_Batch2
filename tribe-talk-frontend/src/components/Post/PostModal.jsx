@@ -157,11 +157,11 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
 
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-neutral-900 text-yellow-100 w-full max-w-xl rounded-lg p-6 relative">
+            <div className="bg-white dark:bg-neutral-900 text-gray-900 dark:text-yellow-100 w-full max-w-xl rounded-lg p-6 relative">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-200"
+                    className="absolute top-4 right-4 text-yellow-400 dark:text-gray-600 hover:text-gray-700 dark:text-yellow-200"
                 >
                     <FiX size={20} />
                 </button>
@@ -177,7 +177,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                         placeholder="What's happening?"
                         value={text}
                         onChange={(e) => setText(e.target.value)}
-                        className="w-full bg-neutral-800 text-yellow-200 p-3 rounded-md border border-yellow-700/40 resize-none focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                        className="w-full bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-yellow-200 p-3 rounded-md border border-yellow-700/40 resize-none focus:outline-none focus:ring-2 focus:ring-yellow-500"
                     />
                 ) : (
                     <div className="space-y-3">
@@ -186,7 +186,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                             value={text}
                             onChange={(e) => setText(e.target.value)}
                             placeholder="Ask a question"
-                            className="w-full bg-neutral-800 text-yellow-200 p-3 rounded-md border border-yellow-700/40"
+                            className="w-full bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-yellow-200 p-3 rounded-md border border-yellow-700/40"
                         />
 
                         {pollOptions.map((opt, idx) => (
@@ -201,14 +201,14 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                                     setPollOptions(updated);
                                 }}
                                 placeholder={`Choice ${idx + 1}`}
-                                className="w-full bg-neutral-800 text-yellow-200 p-2 rounded-md border border-yellow-700/40"
+                                className="w-full bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-yellow-200 p-2 rounded-md border border-yellow-700/40"
                             />
                         ))}
 
                         {pollOptions.length < 4 && (
                             <button
                                 onClick={() => setPollOptions([...pollOptions, ""])}
-                                className="text-yellow-400 text-sm hover:text-yellow-200"
+                                className="text-yellow-400 dark:text-gray-600 text-sm hover:text-gray-700 dark:text-yellow-200"
                             >
                                 + Add option
                             </button>
@@ -225,7 +225,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                                             days: parseInt(e.target.value),
                                         })
                                     }
-                                    className="ml-1 bg-neutral-800 text-yellow-100 p-1 rounded"
+                                    className="ml-1 bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-yellow-100 p-1 rounded"
                                 >
                                     {[...Array(8)].map((_, i) => (
                                         <option key={i} value={i}>
@@ -245,7 +245,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                                             hours: parseInt(e.target.value),
                                         })
                                     }
-                                    className="ml-1 bg-neutral-800 text-yellow-100 p-1 rounded"
+                                    className="ml-1 bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-yellow-100 p-1 rounded"
                                 >
                                     {[...Array(24)].map((_, i) => (
                                         <option key={i} value={i}>
@@ -265,7 +265,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                                             minutes: parseInt(e.target.value),
                                         })
                                     }
-                                    className="ml-1 bg-neutral-800 text-yellow-100 p-1 rounded"
+                                    className="ml-1 bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-yellow-100 p-1 rounded"
                                 >
                                     {[0, 1, 5, 10, 15, 30, 45].map((m) => (
                                         <option key={m} value={m}>
@@ -299,7 +299,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                                     onClick={() =>
                                         setMediaFiles(mediaFiles.filter((_, i) => i !== idx))
                                     }
-                                    className="absolute top-1 right-1 bg-black/60 text-yellow-100 rounded-full p-1 cursor-pointer hover:bg-yellow-700"
+                                    className="absolute top-1 right-1 bg-black/60 text-gray-900 dark:text-yellow-100 rounded-full p-1 cursor-pointer hover:bg-yellow-700"
                                 >
                                     <FiX size={14} />
                                 </span>
@@ -318,7 +318,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                                     />
                                 )}
 
-                                <div className="mt-1 text-xs text-yellow-400">
+                                <div className="mt-1 text-xs text-yellow-400 dark:text-gray-600">
                                     {file.name} ({(file.size / 1024).toFixed(1)} KB)
                                 </div>
                             </div>
@@ -330,13 +330,13 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                 <div className="relative mt-3">
                     <button
                         onClick={() => setShowVisibilityDropdown((prev) => !prev)}
-                        className="text-sm text-yellow-400 hover:text-yellow-200"
+                        className="text-sm text-yellow-400 dark:text-gray-600 hover:text-gray-700 dark:text-yellow-200"
                     >
                         Who can see this post:{" "}
                         {visibilityOptions.find((opt) => opt.value === visibility)?.label}
                     </button>
                     {showVisibilityDropdown && (
-                        <div className="absolute bg-neutral-800 border border-yellow-700 rounded shadow-md mt-2 z-10 w-64">
+                        <div className="absolute bg-gray-100 dark:bg-neutral-800 border border-yellow-700 rounded shadow-md mt-2 z-10 w-64">
                             {visibilityOptions.map((opt) => (
                                 <div
                                     key={opt.value}
@@ -344,7 +344,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                                         setVisibility(opt.value);
                                         setShowVisibilityDropdown(false);
                                     }}
-                                    className="px-4 py-2 text-yellow-100 hover:bg-yellow-700 cursor-pointer"
+                                    className="px-4 py-2 text-gray-900 dark:text-yellow-100 hover:bg-yellow-700 cursor-pointer"
                                 >
                                     {opt.label}
                                 </div>
@@ -357,13 +357,13 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                 <div className="relative mt-2">
                     <button
                         onClick={() => setShowReplyDropdown((prev) => !prev)}
-                        className="text-sm text-yellow-400 hover:text-yellow-200"
+                        className="text-sm text-yellow-400 dark:text-gray-600 hover:text-gray-700 dark:text-yellow-200"
                     >
                         Who can reply:{" "}
                         {replyOptions.find((opt) => opt.value === replyPermission)?.label}
                     </button>
                     {showReplyDropdown && (
-                        <div className="absolute bg-neutral-800 border border-yellow-700 rounded shadow-md mt-2 z-10 w-64">
+                        <div className="absolute bg-gray-100 dark:bg-neutral-800 border border-yellow-700 rounded shadow-md mt-2 z-10 w-64">
                             {replyOptions.map((opt) => (
                                 <div
                                     key={opt.value}
@@ -371,7 +371,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                                         setReplyPermission(opt.value);
                                         setShowReplyDropdown(false);
                                     }}
-                                    className="px-4 py-2 text-yellow-100 hover:bg-yellow-700 cursor-pointer"
+                                    className="px-4 py-2 text-gray-900 dark:text-yellow-100 hover:bg-yellow-700 cursor-pointer"
                                 >
                                     {opt.label}
                                 </div>
@@ -388,7 +388,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                             onChange={(date) => setScheduledAt(date)}
                             showTimeSelect
                             dateFormat="Pp"
-                            className="bg-neutral-800 text-yellow-200 p-2 rounded-md"
+                            className="bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-yellow-200 p-2 rounded-md"
                         />
                     </div>
                 )}
@@ -419,11 +419,11 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                 )}
 
                 {/* Action Icons */}
-                <div className="flex items-center gap-4 mt-4 text-yellow-400 flex-wrap">
+                <div className="flex items-center gap-4 mt-4 text-yellow-400 dark:text-gray-600 flex-wrap">
                     <button
                         title="Attach Photo or Video"
                         onClick={() => fileInputRef.current.click()}
-                        className="hover:text-yellow-200 transition"
+                        className="hover:text-gray-700 dark:text-yellow-200 transition"
                     >
                         <FiImage size={20} />
                     </button>
@@ -439,7 +439,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                     <button
                         title="Add Emoji"
                         onClick={() => setShowEmojiPopover((prev) => !prev)}
-                        className="hover:text-yellow-200 transition"
+                        className="hover:text-gray-700 dark:text-yellow-200 transition"
                     >
                         <FiSmile size={20} />
                     </button>
@@ -450,7 +450,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                             setShowPoll(true);
                             setPollOptions(["", ""]);
                         }}
-                        className="hover:text-yellow-200 transition"
+                        className="hover:text-gray-700 dark:text-yellow-200 transition"
                     >
                         <FiBarChart2 size={20} />
                     </button>
@@ -458,7 +458,7 @@ function PostModal({ onClose, replyToPostId = null, prefillText = "" }) {
                     <button
                         title="Schedule Post"
                         onClick={() => setShowDatePicker((prev) => !prev)}
-                        className="hover:text-yellow-200 transition"
+                        className="hover:text-gray-700 dark:text-yellow-200 transition"
                     >
                         <FiCalendar size={20} />
                     </button>

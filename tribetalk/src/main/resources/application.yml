@@ -55,7 +55,7 @@ spring:
           github:
             client-id: ${GITHUB_CLIENT_ID:Ov23lizJ8kpXKzpZZi2P}
             client-secret: ${GITHUB_CLIENT_SECRET:58d5de6261dc8b9d2585f513e39cb4c443e63e66}
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: ${GITHUB_REDIRECT_URI:http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/login/oauth2/code/github}
             scope:
               - read:user
               - user:email
@@ -91,7 +91,9 @@ logging:
 
 jwt:
   secret: ${JWT_SECRET:change_this_to_a_long_random_secret_with_min_256_bits}
-  expirationMillis: 3600000
+  expirationMillis: 3600000  # 1 hour for access token
+  refresh:
+    expirationMillis: 2592000000  # 30 days for refresh token
 
 otel:
   exporter:

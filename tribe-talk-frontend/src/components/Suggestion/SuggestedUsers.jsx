@@ -49,23 +49,22 @@ function SuggestedUsers() {
   };
 
   return (
-    <div className="bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
+    <div className="bg-gray-100 dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
       <h2 className="text-lg font-semibold mb-4">You Might Like</h2>
       <ul className="space-y-4">
         {users.length === 0 ? (
-          <p className="text-yellow-400 text-sm">No users to suggest.</p>
+          <p className="text-yellow-400 dark:text-gray-600 text-sm">No users to suggest.</p>
         ) : (
           users.map((u) => (
             <li key={u.id} className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-yellow-100">{u.displayname}</p>
-                <p className="text-sm text-yellow-400">@{u.username}</p>
+                <p className="font-semibold text-gray-900 dark:text-yellow-100">{u.displayname}</p>
+                <p className="text-sm text-yellow-400 dark:text-gray-600">@{u.username}</p>
               </div>
               <button
                 onClick={() => toggleFollow(u.id)}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition ${
-                  followingMap[u.id] ? "bg-neutral-700 text-yellow-400 border border-yellow-400" : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
-                }`}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition ${followingMap[u.id] ? "bg-gray-200 dark:bg-neutral-700 text-yellow-400 border border-yellow-400" : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
+                  }`}
               >
                 {followingMap[u.id] ? "Following" : "Follow"}
               </button>

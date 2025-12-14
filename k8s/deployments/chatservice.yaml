@@ -19,7 +19,7 @@ spec:
       serviceAccountName: tribetalk-sa
       containers:
       - name: chatservice
-        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/chatservice:v1.0
+        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/chatservice:v1.4
         imagePullPolicy: Always
         ports:
         - containerPort: 8081

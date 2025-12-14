@@ -1,7 +1,15 @@
 @import "tailwindcss";
 
-html, body, #root {
+@theme {
+  --color-primary-light: #1d4ed8;
+  --color-primary-dark: #3b82f6;
+}
+
+html,
+body,
+#root {
   transition: background-color 0.3s, color 0.3s;
+  background-color: var(--color-neutral-900);
 }
 
 @keyframes slideUp {
@@ -9,6 +17,7 @@ html, body, #root {
     transform: translateY(100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -17,4 +26,19 @@ html, body, #root {
 
 .animate-slideUp {
   animation: slideUp 0.35s ease-out;
+}
+
+@layer base {
+
+  /* Global input text color */
+  input,
+  textarea {
+    @apply text-neutral-900 placeholder-gray-400;
+  }
+
+  /* Global dark mode override */
+  .dark input,
+  .dark textarea {
+    @apply text-yellow-100 placeholder-yellow-400;
+  }
 }

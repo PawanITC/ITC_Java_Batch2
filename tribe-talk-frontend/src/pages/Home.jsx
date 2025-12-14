@@ -62,7 +62,7 @@ function Home() {
         }
 
         try {
-            const loginResponse = await axiosInstance.post("/auth/login", {
+            const loginResponse = await axiosInstance.post("/api/auth/login", {
                 username,
                 password,
             });

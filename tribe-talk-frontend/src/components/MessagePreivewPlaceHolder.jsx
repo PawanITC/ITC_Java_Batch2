@@ -14,7 +14,7 @@ const MessagePreivewPlaceHolder = ({ onSelectUser }) => {
       {/* New chat button */}
       <button
         onClick={() => setNewChatPopUp(true)}
-        className="mt-4 px-4 py-2 rounded-lg border border-yellow-700 text-yellow-100 bg-neutral-900 hover:bg-neutral-800 transition"
+        className="mt-4 px-4 py-2 rounded-lg border border-yellow-700 text-gray-900 dark:text-yellow-100 bg-white dark:bg-neutral-900 hover:bg-gray-100 dark:bg-neutral-800 transition"
       >
         New Chat
       </button>

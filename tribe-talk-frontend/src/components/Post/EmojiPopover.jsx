@@ -17,7 +17,7 @@ export default function EmojiPopover({onClose, onSelect}) {
     return (
         <div
             ref={popoverRef}
-            className="absolute bottom-16 left-4 z-50 bg-neutral-900 border border-yellow-700 rounded-md shadow-lg"
+            className="absolute bottom-16 left-4 z-50 bg-white dark:bg-neutral-900 border border-yellow-700 rounded-md shadow-lg"
         >
             <EmojiPicker
                 onEmojiClick={(emojiData) => onSelect(emojiData.emoji)}

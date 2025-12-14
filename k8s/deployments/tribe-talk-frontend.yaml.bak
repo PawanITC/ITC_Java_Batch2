@@ -18,15 +18,12 @@ spec:
     spec:
       containers:
       - name: tribe-talk-frontend
-        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend:v1.0
+        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend:v1.9
         imagePullPolicy: Always
         ports:
         - containerPort: 80
           name: http
         env:
-        # API URL will point to the backend through Ingress
-        - name: VITE_API_BASE_URL
-          value: "http://k8s-default-tribetal-089de13287-1370767621.eu-north-1.elb.amazonaws.com"
         - name: VITE_GITHUB_CLIENT_ID
           valueFrom:
             secretKeyRef:

@@ -5,7 +5,7 @@ function NewsItemCard({ id, image, headline, timestamp, category, summary, url }
     <Link
       to={`/news/${id}`}
       state={{ id, image, headline, timestamp, category, summary, url }}
-      className="flex items-start gap-4 hover:bg-neutral-700/40 p-2 rounded-md transition"
+      className="flex items-start gap-4 hover:bg-gray-200 dark:bg-neutral-700/40 p-2 rounded-md transition"
     >
       <img
         src={image}
@@ -14,11 +14,11 @@ function NewsItemCard({ id, image, headline, timestamp, category, summary, url }
       />
 
       <div className="flex-1">
-        <p className="text-sm font-semibold text-yellow-100 leading-snug">
+        <p className="text-sm font-semibold text-gray-900 dark:text-yellow-100 leading-snug">
           {headline}
         </p>
 
-        <p className="text-xs text-yellow-400 mt-1">
+        <p className="text-xs text-yellow-400 dark:text-gray-600 mt-1">
           {timestamp ? timestamp : "Just now"} · {category}
         </p>
       </div>

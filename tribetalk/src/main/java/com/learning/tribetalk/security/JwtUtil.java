@@ -16,12 +16,15 @@ public class JwtUtil {
 
     private final Key key;
     private final long expirationMillis;
+    private final long refreshExpirationMillis;
 
     public JwtUtil(@Value("${jwt.secret}") String secret,
-                   @Value("${jwt.expirationMillis}") long expirationMillis) {
+            @Value("${jwt.expirationMillis}") long expirationMillis,
+            @Value("${jwt.refresh.expirationMillis:2592000000}") long refreshExpirationMillis) {
         // expect base64 or raw string; ensure enough length; convert to bytes
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.expirationMillis = expirationMillis;
+        this.refreshExpirationMillis = refreshExpirationMillis;
     }
 
     public String generateToken(String username, List<String> authorities) {
@@ -67,6 +70,23 @@ public class JwtUtil {
     public ResponseCookie getCleanJwtCookie() {
         return ResponseCookie.from("jwt", "")
                 .path("/")
+                .maxAge(0)
+                .build();
+    }
+
+    public ResponseCookie generateRefreshTokenCookie(String token) {
+        return ResponseCookie.from("refreshToken", token)
+                .httpOnly(true)
+                .secure(false) // ✅ set true in production
+                .path("/api/auth")
+                .maxAge(refreshExpirationMillis / 1000)
+                .sameSite("Lax")
+                .build();
+    }
+
+    public ResponseCookie getCleanRefreshTokenCookie() {
+        return ResponseCookie.from("refreshToken", "")
+                .path("/api/auth")
                 .maxAge(0)
                 .build();
     }

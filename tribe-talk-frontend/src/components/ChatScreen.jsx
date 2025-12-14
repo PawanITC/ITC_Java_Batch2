@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { FiImage, FiSend } from "react-icons/fi";
 import { FaRegSmile } from "react-icons/fa";
-import axios from "axios";
+import axiosInstance from "../services/axiosInstance";
 import EmojiPicker from "emoji-picker-react";
 
 /**
@@ -17,6 +17,10 @@ function ChatScreen({ user, currentUser, stompClient }) {
     const [messages, setMessages] = useState([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+    console.log("ChatScreen - currentUser:", currentUser);
+    console.log("ChatScreen - currentUser.id:", currentUser?.userId);
+    console.log("ChatScreen - user:", user);
+
     const roomId =
         currentUser.id < user.id
             ? `${currentUser.id}_${user.id}`
@@ -27,9 +31,8 @@ function ChatScreen({ user, currentUser, stompClient }) {
         if (!roomId) return;
 
         // Fetch messages from backend
-        fetch(`http://localhost:8081/api/chat/messages/${roomId}`)
-            .then((res) => res.json())
-            .then((data) => setMessages(data))
+        axiosInstance.get(`/api/chat/messages/${roomId}`)
+            .then((res) => setMessages(res.data))
             .catch((err) => console.error("Error fetching messages:", err));
     }, [roomId]);
 
@@ -41,20 +44,20 @@ function ChatScreen({ user, currentUser, stompClient }) {
             setMessages((prev) => [...prev, newMessage]);
             const markAsRead = async () => {
                 if (Number(newMessage.receiverId) === currentUser.id && !newMessage.isRead) {
-                try {
-                    await axios.put("http://localhost:8081/api/chat/mark-as-read", {
-                    senderId: newMessage.senderId,
-                    receiverId: newMessage.receiverId,
-                    });
-                    console.log("Marked incoming message as read");
-                } catch (err) {
-                    console.error("Failed to mark incoming message as read", err);
-                }
+                    try {
+                        await axiosInstance.put("/api/chat/mark-as-read", {
+                            senderId: newMessage.senderId,
+                            receiverId: newMessage.receiverId,
+                        });
+                        console.log("Marked incoming message as read");
+                    } catch (err) {
+                        console.error("Failed to mark incoming message as read", err);
+                    }
                 }
             };
 
-            markAsRead(); 
-            });
+            markAsRead();
+        });
 
 
 
@@ -62,16 +65,26 @@ function ChatScreen({ user, currentUser, stompClient }) {
     }, [stompClient, roomId]);
 
     const handleSend = () => {
-        if (!messageInput.trim() || !stompClient) return;
+        console.log("handleSend called");
+        console.log("messageInput:", messageInput);
+        console.log("stompClient:", stompClient);
+        console.log("stompClient connected:", stompClient?.connected);
+
+        if (!messageInput.trim() || !stompClient) {
+            console.log("Send blocked - empty message or no stomp client");
+            return;
+        }
 
         const chatMessage = {
             senderId: currentUser.id,
             receiverId: user.id,
             content: messageInput,
             chatRoomId: roomId,
-            senderUsername:currentUser.displayname,
-            isRead:false
+            senderUsername: currentUser.displayname,
+            isRead: false
         };
+
+        console.log("Sending message:", chatMessage);
 
         stompClient.publish({
             destination: "/app/chat.send",
@@ -81,31 +94,38 @@ function ChatScreen({ user, currentUser, stompClient }) {
         setMessageInput("");
     };
 
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    };
+
     useEffect(() => {
         const markMessagesAsRead = async () => {
             try {
-            await axios.put(`http://localhost:8081/api/chat/mark-as-read`, {
-                senderId: user.id,
-                receiverId: currentUser.id,
-            });
-            console.log("Marked messages as read");
+                await axiosInstance.put(`/api/chat/mark-as-read`, {
+                    senderId: user.id,
+                    receiverId: currentUser.id,
+                });
+                console.log("Marked messages as read");
             } catch (err) {
-            console.error("Failed to mark messages as read", err);
+                console.error("Failed to mark messages as read", err);
             }
         };
 
         if (user && currentUser) {
             markMessagesAsRead();
         }
-        }, [user, currentUser]);
+    }, [user, currentUser]);
 
-        const handleEmojiClick = (emojiData) => {
+    const handleEmojiClick = (emojiData) => {
         setMessageInput((prev) => prev + emojiData.emoji);
-        };
+    };
 
     return (
-            <div className="flex flex-col w-full max-w-[600px] h-[90vh] bg-black text-yellow-100 border border-yellow-700 rounded-xl shadow-lg">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-yellow-700">
+        <div className="flex flex-col w-full max-w-[600px] h-[90vh] bg-black text-gray-900 dark:text-yellow-100 border border-yellow-700 rounded-xl shadow-lg">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-yellow-700">
                 <div className="flex items-center gap-2">
                     <img
                         src={`https://api.dicebear.com/9.x/thumbs/svg?seed=${user.username}`}
@@ -117,35 +137,34 @@ function ChatScreen({ user, currentUser, stompClient }) {
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 flex flex-col">
-               {Array.isArray(messages) && messages.length > 0 ? (
-                messages.map((msg, index) => {
-                    const isSender = msg?.senderId?.toString?.() === currentUser?.id?.toString?.();
-                    return (
-                    <div
-                        key={index}
-                        className={`max-w-xs px-4 py-2 rounded-lg ${
-                        isSender
-                            ? "bg-yellow-700 text-black self-end"
-                            : "bg-neutral-800 text-yellow-100 self-start"
-                        }`}
-                    >
-                        {msg?.content}
-                    </div>
-                    );
-                })
+                {Array.isArray(messages) && messages.length > 0 ? (
+                    messages.map((msg, index) => {
+                        const isSender = msg?.senderId?.toString?.() === currentUser?.id?.toString?.();
+                        return (
+                            <div
+                                key={index}
+                                className={`max-w-xs px-4 py-2 rounded-lg ${isSender
+                                    ? "bg-yellow-700 text-black self-end"
+                                    : "bg-gray-100 dark:bg-neutral-800 text-yellow-100 self-start"
+                                    }`}
+                            >
+                                {msg?.content}
+                            </div>
+                        );
+                    })
                 ) : (
-                <p className="text-yellow-500 text-sm text-center">No messages yet. Say hi!</p>
+                    <p className="text-yellow-500 text-sm text-center">No messages yet. Say hi!</p>
                 )}
             </div>
 
-                <div className="flex items-center gap-2 px-4 py-3 border-t border-yellow-700 relative">
+            <div className="flex items-center gap-2 px-4 py-3 border-t border-yellow-700 relative">
                 <button onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
-                    <FaRegSmile className="text-yellow-400 text-xl cursor-pointer" />
+                    <FaRegSmile className="text-yellow-400 dark:text-gray-600 text-xl cursor-pointer" />
                 </button>
 
                 {showEmojiPicker && (
                     <div className="absolute bottom-12 left-4 z-50">
-                    <EmojiPicker onEmojiClick={handleEmojiClick} />
+                        <EmojiPicker onEmojiClick={handleEmojiClick} />
                     </div>
                 )}
 
@@ -154,12 +173,13 @@ function ChatScreen({ user, currentUser, stompClient }) {
                     placeholder="Start a new message"
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
-                    className="flex-1 bg-transparent text-yellow-100 placeholder-yellow-400 focus:outline-none"
+                    onKeyPress={handleKeyPress}
+                    className="flex-1 bg-transparent text-gray-900 dark:text-yellow-100 placeholder-yellow-400 focus:outline-none"
                 />
                 <button onClick={handleSend}>
-                    <FiSend className="text-yellow-400 text-xl cursor-pointer" />
+                    <FiSend className="text-yellow-400 dark:text-gray-600 text-xl cursor-pointer" />
                 </button>
-                </div>
+            </div>
         </div>
     );
 }

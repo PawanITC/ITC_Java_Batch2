@@ -19,7 +19,7 @@ spec:
       serviceAccountName: tribetalk-sa
       containers:
       - name: tribetalk
-        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service:v1.1
+        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk:v1.1
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

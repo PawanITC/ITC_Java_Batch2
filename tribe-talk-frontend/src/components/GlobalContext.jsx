@@ -59,8 +59,8 @@ export const GlobalProvider = ({ children }) => {
 
     const fetchCounts = async () => {
       try {
-        const followersRes = await axiosInstance.get(`/users/${userId}/followers-count`);
-        const followingRes = await axiosInstance.get(`/users/${userId}/following-count`);
+        const followersRes = await axiosInstance.get(`/api/users/${userId}/followers-count`);
+        const followingRes = await axiosInstance.get(`/api/users/${userId}/following-count`);
         setFollowersCount(followersRes.data);
         setFollowingCount(followingRes.data);
         console.log("Following Count = ", followingCount);

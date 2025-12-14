@@ -21,17 +21,17 @@ function TrendingTopics() {
   ];
 
   return (
-    <div className="bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
+    <div className="bg-gray-100 dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
       <h2 className="text-lg font-semibold mb-4">What's Happening</h2>
       <ul className="space-y-4">
         {trends.map((trend, i) => (
           <li key={i} className="flex justify-between items-start">
             <div>
-              <p className="text-xs text-yellow-400">{trend.category}</p>
-              <p className="font-semibold text-yellow-100">{trend.topic}</p>
-              <p className="text-xs text-yellow-400">{trend.posts}</p>
+              <p className="text-xs text-yellow-400 dark:text-gray-600">{trend.category}</p>
+              <p className="font-semibold text-gray-900 dark:text-yellow-100">{trend.topic}</p>
+              <p className="text-xs text-yellow-400 dark:text-gray-600">{trend.posts}</p>
             </div>
-            <FiMoreHorizontal className="text-yellow-400 hover:text-yellow-200 cursor-pointer mt-1" />
+            <FiMoreHorizontal className="text-yellow-400 dark:text-gray-600 hover:text-gray-700 dark:text-yellow-200 cursor-pointer mt-1" />
           </li>
         ))}
       </ul>
