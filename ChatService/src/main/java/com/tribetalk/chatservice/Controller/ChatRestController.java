@@ -26,12 +26,7 @@ public class ChatRestController {
     private ChatServiceImpl chatService;
     private static final Logger log = LoggerFactory.getLogger(ChatRestController.class);
 
-    @Operation(
-            summary = "End Point To get Chat Messages",
-            description = "To write history messages from a chat room assorted with respect to time"
-    )
-
-
+    @Operation(summary = "End Point To get Chat Messages", description = "To write history messages from a chat room assorted with respect to time")
 
     @GetMapping("/messages/{roomId}")
     public Flux<ChatMessageResponse> getChatMessages(@PathVariable String roomId) {
@@ -57,7 +52,5 @@ public class ChatRestController {
         log.info("getUnreadConversations called on thread: {}", Thread.currentThread().getName());
         return chatService.getUnreadGroupedChatsForUser(userId);
     }
-
-
 
 }

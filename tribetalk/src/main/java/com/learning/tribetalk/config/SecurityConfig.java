@@ -49,6 +49,7 @@ public class SecurityConfig {
                                 )
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/api/auth/**").permitAll()
+                                                .requestMatchers("/api/auth/refresh").permitAll()
                                                 .requestMatchers("/api/users/**").permitAll()
                                                 .requestMatchers("/h2-console/**").permitAll()
                                                 .requestMatchers("oauth2/**").permitAll()

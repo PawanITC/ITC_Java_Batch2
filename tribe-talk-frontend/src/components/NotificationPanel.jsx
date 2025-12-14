@@ -177,11 +177,11 @@ const NotificationPanel=({userId})=>{
     };
     return (
         <>
-            <div className="max-w-2xl mx-auto px-4 py-6 text-yellow-100">
+            <div className="max-w-2xl mx-auto px-4 py-6 text-gray-900 dark:text-yellow-100">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-bold">Notifications</h2>
                     <div className="flex items-center gap-4">
-                        <button onClick={handleMarkAllAsRead} className="flex items-center gap-2 cursor-pointer text-yellow-400 hover:text-yellow-500 font-medium transition-colors">
+                        <button onClick={handleMarkAllAsRead} className="flex items-center gap-2 cursor-pointer text-yellow-400 dark:text-gray-600 hover:text-yellow-500 font-medium transition-colors">
                             <CheckCheck size={20} />
                             <span className="hidden sm:inline">Mark all as read</span>
                         </button>

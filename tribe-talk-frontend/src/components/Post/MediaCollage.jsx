@@ -43,7 +43,7 @@ function MediaCollage({ media }) {
 
           {/* Overlay for extra images */}
           {i === 3 && media.length > 4 && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-yellow-200 text-xl font-bold">
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-gray-700 dark:text-yellow-200 text-xl font-bold">
               +{media.length - 4}
             </div>
           )}

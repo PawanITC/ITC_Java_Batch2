@@ -91,54 +91,54 @@ function CreateAccountModal({ onClose }) {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <form
                 onSubmit={handleSubmit}
-                className="bg-neutral-900 text-yellow-100 rounded-lg p-6 w-full max-w-md space-y-5 shadow-xl border border-yellow-700"
+                className="bg-white dark:bg-neutral-900 text-gray-900 dark:text-yellow-100 rounded-lg p-6 w-full max-w-md space-y-5 shadow-xl border border-yellow-700"
             >
                 <h2 className="text-2xl font-bold text-center text-yellow-300">
                     Create Your Account
                 </h2>
 
                 {/* Username */}
-                <div className="flex items-center border border-yellow-500 rounded-md bg-neutral-900 px-3 py-2">
-                    <FiUser className="text-yellow-400 mr-2" />
+                <div className="flex items-center border border-yellow-500 rounded-md bg-white dark:bg-neutral-900 px-3 py-2">
+                    <FiUser className="text-yellow-400 dark:text-gray-600 mr-2" />
                     <input
                         type="text"
                         name="username"
                         value={form.username}
                         onChange={handleChange}
                         placeholder="Username"
-                        className="bg-transparent w-full text-yellow-100 placeholder-yellow-400 focus:outline-none"
+                        className="bg-transparent w-full text-gray-900 dark:text-yellow-100 placeholder-yellow-400 focus:outline-none"
                     />
                 </div>
 
                 {/* Email */}
-                <div className="flex items-center border border-yellow-500 rounded-md bg-neutral-900 px-3 py-2">
-                    <FiMail className="text-yellow-400 mr-2" />
+                <div className="flex items-center border border-yellow-500 rounded-md bg-white dark:bg-neutral-900 px-3 py-2">
+                    <FiMail className="text-yellow-400 dark:text-gray-600 mr-2" />
                     <input
                         type="email"
                         name="email"
                         value={form.email}
                         onChange={handleChange}
                         placeholder="Email"
-                        className="bg-transparent w-full text-yellow-100 placeholder-yellow-400 focus:outline-none"
+                        className="bg-transparent w-full text-gray-900 dark:text-yellow-100 placeholder-yellow-400 focus:outline-none"
                     />
                 </div>
 
                 {/* Password */}
                 <div
-                    className="relative flex items-center border border-yellow-500 rounded-md bg-neutral-900 px-3 py-2">
-                    <FiLock className="text-yellow-400 mr-2" />
+                    className="relative flex items-center border border-yellow-500 rounded-md bg-white dark:bg-neutral-900 px-3 py-2">
+                    <FiLock className="text-yellow-400 dark:text-gray-600 mr-2" />
                     <input
                         type={showPassword ? "text" : "password"}
                         name="password"
                         value={form.password}
                         onChange={handleChange}
                         placeholder="Password"
-                        className="bg-transparent w-full text-yellow-100 placeholder-yellow-400 focus:outline-none"
+                        className="bg-transparent w-full text-gray-900 dark:text-yellow-100 placeholder-yellow-400 focus:outline-none"
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute right-3 text-yellow-400"
+                        className="absolute right-3 text-yellow-400 dark:text-gray-600"
                     >
                         {showPassword ? <FiEyeOff /> : <FiEye />}
                     </button>
@@ -146,20 +146,20 @@ function CreateAccountModal({ onClose }) {
 
                 {/* Confirm Password */}
                 <div
-                    className="relative flex items-center border border-yellow-500 rounded-md bg-neutral-900 px-3 py-2">
-                    <FiLock className="text-yellow-400 mr-2" />
+                    className="relative flex items-center border border-yellow-500 rounded-md bg-white dark:bg-neutral-900 px-3 py-2">
+                    <FiLock className="text-yellow-400 dark:text-gray-600 mr-2" />
                     <input
                         type={showPassword ? "text" : "password"}
                         name="confirmPassword"
                         value={form.confirmPassword}
                         onChange={handleChange}
                         placeholder="Confirm Password"
-                        className="bg-transparent w-full text-yellow-100 placeholder-yellow-400 focus:outline-none"
+                        className="bg-transparent w-full text-gray-900 dark:text-yellow-100 placeholder-yellow-400 focus:outline-none"
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute right-3 text-yellow-400"
+                        className="absolute right-3 text-yellow-400 dark:text-gray-600"
                     >
                         {showPassword ? <FiEyeOff /> : <FiEye />}
                     </button>

@@ -22,6 +22,15 @@ spec:
   rules:
   - http:
       paths:
+      # ChatService API routes (must come before /api to match first)
+      - path: /api/chat
+        pathType: Prefix
+        backend:
+          service:
+            name: chatservice
+            port:
+              number: 8081
+      
       # Backend API routes
       - path: /api
         pathType: Prefix

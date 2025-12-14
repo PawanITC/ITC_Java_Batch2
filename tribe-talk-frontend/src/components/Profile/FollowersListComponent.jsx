@@ -71,29 +71,29 @@ function FollowersListComponent() {
   };
 
   return (
-    <div className="p-4 text-yellow-200">
+    <div className="p-4 text-gray-700 dark:text-yellow-200">
       <h1 className="text-xl font-semibold mb-4">Followers</h1>
 
       {followers.length === 0 && (
-        <p className="text-yellow-400">No followers found.</p>
+        <p className="text-yellow-400 dark:text-gray-600">No followers found.</p>
       )}
 
       <ul className="space-y-4">
         {followers.map((u) => (
           <li
             key={u.id}
-            className="flex items-center justify-between bg-neutral-800 border border-yellow-700/40 p-3 rounded-xl"
+            className="flex items-center justify-between bg-gray-100 dark:bg-neutral-800 border border-yellow-700/40 p-3 rounded-xl"
           >
             <div>
-              <p className="font-semibold text-yellow-100">{u.displayname}</p>
-              <p className="text-sm text-yellow-400">@{u.username}</p>
+              <p className="font-semibold text-gray-900 dark:text-yellow-100">{u.displayname}</p>
+              <p className="text-sm text-yellow-400 dark:text-gray-600">@{u.username}</p>
             </div>
 
             <button
               onClick={() => toggleFollow(u.id)}
               className={`px-3 py-1 rounded-full text-sm font-medium transition ${
                 followingMap[u.id]
-                  ? "bg-neutral-700 text-yellow-400 border border-yellow-400"
+                  ? "bg-gray-200 dark:bg-neutral-700 text-yellow-400 border border-yellow-400"
                   : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
               }`}
             >

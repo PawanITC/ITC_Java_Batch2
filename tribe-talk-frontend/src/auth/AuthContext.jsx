@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const validateUser = async () => {
       try {
-        const res = await axiosInstance.get("/auth/validateUser", {
+        const res = await axiosInstance.get("/api/auth/validateUser", {
           maxRedirects: 0, // Don't follow redirects
           validateStatus: function (status) {
             // Only accept 200 as success, treat everything else (including 302) as error

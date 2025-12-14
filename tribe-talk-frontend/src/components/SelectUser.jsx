@@ -12,8 +12,8 @@ const SelectUser = ({ onClose, onUserSelect }) => {
     const fetchData = async () => {
       try {
         const [loggedUserRes, allUsersRes] = await Promise.all([
-          axiosInstance.get(`/users/loggedUser`),
-          axiosInstance.get(`api/users/all`),
+          axiosInstance.get(`/api/users/loggedUser`),
+          axiosInstance.get(`/api/users/all`)
         ]);
 
         setCurrentUser(loggedUserRes.data);
@@ -27,13 +27,13 @@ const SelectUser = ({ onClose, onUserSelect }) => {
   }, []);
 
   const filtered =
-  searchQuery.trim().length === 0 || !Array.isArray(users) || users.length === 0
+    searchQuery.trim().length === 0 || !Array.isArray(users) || users.length === 0
       ? []
       : users
-          .filter((u) => currentUser && u.id !== currentUser.id)
-          .filter((u) =>
-            u.displayname.toLowerCase().includes(searchQuery.toLowerCase())
-          );
+        .filter((u) => currentUser && u.id !== currentUser.userId)
+        .filter((u) =>
+          u.displayname.toLowerCase().includes(searchQuery.toLowerCase())
+        );
 
   return (
     <>
@@ -41,11 +41,11 @@ const SelectUser = ({ onClose, onUserSelect }) => {
       <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
 
         {/* POPUP CARD */}
-        <div className="bg-neutral-900 border border-yellow-700 rounded-2xl p-6 w-96 text-yellow-100 relative">
+        <div className="bg-white dark:bg-neutral-900 border border-yellow-700 rounded-2xl p-6 w-96 text-gray-900 dark:text-yellow-100 relative">
 
           {/* CLOSE BUTTON */}
           <button
-            className="absolute top-3 right-3 text-yellow-400 text-xl"
+            className="absolute top-3 right-3 text-yellow-400 dark:text-gray-600 text-xl"
             onClick={onClose}
           >
             <FiX />
@@ -54,12 +54,12 @@ const SelectUser = ({ onClose, onUserSelect }) => {
           <h2 className="text-xl font-bold mb-4">Start New Chat</h2>
 
           {/* SEARCH BAR */}
-          <div className="flex items-center gap-2 bg-neutral-800 border border-yellow-700 rounded-full px-4 py-2 mb-4">
-            <FiSearch className="text-yellow-400 text-lg" />
+          <div className="flex items-center gap-2 bg-gray-100 dark:bg-neutral-800 border border-yellow-700 rounded-full px-4 py-2 mb-4">
+            <FiSearch className="text-yellow-400 dark:text-gray-600 text-lg" />
             <input
               type="text"
               placeholder="Search users..."
-              className="bg-transparent w-full text-yellow-100 focus:outline-none placeholder-yellow-400"
+              className="bg-transparent w-full text-gray-900 dark:text-yellow-100 focus:outline-none placeholder-yellow-400"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -69,7 +69,7 @@ const SelectUser = ({ onClose, onUserSelect }) => {
           <div className="max-h-64 overflow-y-auto space-y-2">
 
             {searchQuery.trim().length === 0 ? (
-              <p className="text-yellow-400 text-sm text-center">
+              <p className="text-yellow-400 dark:text-gray-600 text-sm text-center">
                 Type to search users…
               </p>
             ) : filtered.length > 0 ? (
@@ -77,7 +77,7 @@ const SelectUser = ({ onClose, onUserSelect }) => {
                 <button
                   key={user.id}
                   onClick={() => onUserSelect(user)}
-                  className="flex items-center gap-3 w-full px-3 py-2 bg-neutral-800 rounded-lg border border-yellow-700/40 hover:bg-yellow-700/20 transition"
+                  className="flex items-center gap-3 w-full px-3 py-2 bg-gray-100 dark:bg-neutral-800 rounded-lg border border-yellow-700/40 hover:bg-yellow-700/20 transition"
                 >
                   <img
                     src={`https://api.dicebear.com/9.x/thumbs/svg?seed=${user.username}`}
@@ -86,12 +86,12 @@ const SelectUser = ({ onClose, onUserSelect }) => {
 
                   <div className="text-left">
                     <p className="font-semibold">{user.displayname}</p>
-                    <p className="text-sm text-yellow-400">@{user.username}</p>
+                    <p className="text-sm text-yellow-400 dark:text-gray-600">@{user.username}</p>
                   </div>
                 </button>
               ))
             ) : (
-              <p className="text-yellow-400 text-sm">No users found.</p>
+              <p className="text-yellow-400 dark:text-gray-600 text-sm">No users found.</p>
             )}
           </div>
         </div>

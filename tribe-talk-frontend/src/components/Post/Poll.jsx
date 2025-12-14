@@ -38,7 +38,7 @@ function Poll({ post, user }) {
                             <span>{opt.option}</span>
                             <span>{percentage.toFixed(1)}%</span>
                         </div>
-                        <div className="w-full bg-neutral-700 rounded-md overflow-hidden h-7">
+                        <div className="w-full bg-gray-200 dark:bg-neutral-700 rounded-md overflow-hidden h-7">
                             <div
                                 className="bg-yellow-500 h-full transition-all duration-300"
                                 style={{ width: `${percentage}%` }}
@@ -47,7 +47,7 @@ function Poll({ post, user }) {
                     </button>
                 );
             })}
-            <div className="flex justify-between text-xs text-yellow-400">
+            <div className="flex justify-between text-xs text-yellow-400 dark:text-gray-600">
                 <span>{totalVotes} votes</span>
                 {poll.expiresAt && (
                     <span>Ends {new Date(poll.expiresAt).toLocaleString()}</span>

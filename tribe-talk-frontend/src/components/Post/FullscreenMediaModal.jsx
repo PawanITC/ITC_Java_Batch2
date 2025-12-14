@@ -25,7 +25,7 @@ const prev = () => setCurrent((prev) => (prev - 1 + media.length) % media.length
             e.stopPropagation();
             onClose();
           }}
-          className="absolute top-[5%] right-[5%] bg-black/60 hover:bg-black/80 px-3 py-1 rounded-full text-yellow-200 text-2xl font-bold z-10000"
+          className="absolute top-[5%] right-[5%] bg-black/60 hover:bg-black/80 px-3 py-1 rounded-full text-gray-700 dark:text-yellow-200 text-2xl font-bold z-10000"
         >
           ✕
         </button>
@@ -53,7 +53,7 @@ const prev = () => setCurrent((prev) => (prev - 1 + media.length) % media.length
                 e.stopPropagation();
                 prev();
               }}
-              className="absolute left-[2%] top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 px-3 py-1 rounded-full text-yellow-200 text-4xl font-bold z-10000"
+              className="absolute left-[2%] top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 px-3 py-1 rounded-full text-gray-700 dark:text-yellow-200 text-4xl font-bold z-10000"
             >
               ‹
             </button>
@@ -63,7 +63,7 @@ const prev = () => setCurrent((prev) => (prev - 1 + media.length) % media.length
                 e.stopPropagation();
                 next();
               }}
-              className="absolute right-[2%] top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 px-3 py-1 rounded-full text-yellow-200 text-4xl font-bold z-10000"
+              className="absolute right-[2%] top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 px-3 py-1 rounded-full text-gray-700 dark:text-yellow-200 text-4xl font-bold z-10000"
             >
               ›
             </button>

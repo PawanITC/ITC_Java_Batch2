@@ -73,7 +73,7 @@ function Profile() {
   }, [userDetails]);
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 py-6 text-yellow-100">
+    <div className="w-full max-w-3xl mx-auto px-4 py-6 text-gray-900 dark:text-yellow-100">
 
       {/* Cover */}
       <div className="relative h-40 rounded-md overflow-hidden mb-20">
@@ -100,22 +100,22 @@ function Profile() {
       {/* User Info */}
       <div className="mb-2 px-2">
         <h2 className="text-xl font-bold">{userDetails?.displayname}</h2>
-        <p className="text-yellow-400 text-sm">@{userDetails?.username}</p>
+        <p className="text-yellow-400 dark:text-gray-600 text-sm">@{userDetails?.username}</p>
       </div>
 
       {/* Joined Info */}
-      <div className="flex items-center gap-2 text-sm text-yellow-100 mb-4 px-2">
+      <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-yellow-100 mb-4 px-2">
         <FiCalendar />
         <span>Joined October 2025</span>
       </div>
 
       {/* Followers / Following Counts */}
-      <div className="flex gap-6 text-sm text-yellow-200 mb-6 px-2">
+      <div className="flex gap-6 text-sm text-gray-700 dark:text-yellow-200 mb-6 px-2">
         <button onClick={() => navigate("/connections?tab=following")}>
-          <strong className="text-yellow-100">{followingCount}</strong> Following
+          <strong className="text-gray-900 dark:text-yellow-100">{followingCount}</strong> Following
         </button>
         <button onClick={() => navigate("/connections?tab=followers")}>
-          <strong className="text-yellow-100">{followersCount}</strong> Followers
+          <strong className="text-gray-900 dark:text-yellow-100">{followersCount}</strong> Followers
         </button>
       </div>
 
@@ -141,21 +141,21 @@ function Profile() {
           (originalPosts.length > 0 ? (
             originalPosts.map((post) => <PostCard key={post._id} post={post} />)
           ) : (
-            <p className="text-yellow-400">No posts found</p>
+            <p className="text-yellow-400 dark:text-gray-600">No posts found</p>
           ))}
 
         {activeTab === "replies" &&
           (replyPosts.length > 0 ? (
             replyPosts.map((post) => <PostCard key={post._id} post={post} />)
           ) : (
-            <p className="text-yellow-400">No replies found</p>
+            <p className="text-yellow-400 dark:text-gray-600">No replies found</p>
           ))}
 
         {activeTab === "likes" &&
           (likedPosts.length > 0 ? (
             likedPosts.map((post) => <PostCard key={post._id} post={post} />)
           ) : (
-            <p className="text-yellow-400">No liked posts</p>
+            <p className="text-yellow-400 dark:text-gray-600">No liked posts</p>
           ))}
       </div>
     </div>

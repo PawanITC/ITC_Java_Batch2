@@ -39,7 +39,7 @@ function Sidebar() {
   useEffect(() => {
     const fetchUserDetails = async (e) => {
       try {
-        const userResponse = await axiosInstance.get(`/users/loggedUser`);
+        const userResponse = await axiosInstance.get(`/api/users/loggedUser`);
         setUserDetails(userResponse.data);
       } catch (err) {
         console.log(err);
@@ -51,7 +51,7 @@ function Sidebar() {
   }, []);
   const logoutHandler = async (e) => {
     try {
-      const response = await axiosInstance.post("auth/logout", {});
+      const response = await axiosInstance.post("/api/auth/logout", {});
       setIsAuthenticated(false);
       setUser(null);
       toast.info("You have been logged out");
@@ -61,7 +61,7 @@ function Sidebar() {
     }
   };
   return (
-    <aside className="fixed top-0 left-0 h-screen w-20 md:w-64 bg-neutral-900 text-yellow-100 border-r border-yellow-800 px-2 md:px-6 py-4 z-50">
+    <aside className="fixed top-0 left-0 h-screen w-20 md:w-64 bg-white dark:bg-neutral-900 text-gray-900 dark:text-yellow-100 border-r border-yellow-800 px-2 md:px-6 py-4 z-50">
       <div className="flex flex-col h-full justify-between">
         {/* Top: Logo and Navigation */}
         <div className="flex flex-col md:space-y-6">
@@ -126,25 +126,25 @@ function Sidebar() {
                 {/* <span className="text-sm font-semibold">
                   {loggedUser?.displayname || ""}
                 </span>
-                <span className="text-xs text-yellow-400">
+                <span className="text-xs text-yellow-400 dark:text-gray-600">
                   @{loggedUser?.username || ""}
                 </span> */}
 
                 <span className="text-sm font-semibold">{userDetails?.displayname || ''}</span>
-                <span className="text-xs text-yellow-400">{'@' + userDetails?.username || ''}</span>
+                <span className="text-xs text-yellow-400 dark:text-gray-600">{'@' + (userDetails?.username || '')}</span>
               </div>
             </div>
           </button>
 
           {showAccountMenu && (
-            <div className="absolute bottom-16 left-4 bg-neutral-900 text-yellow-100 rounded-md shadow-lg border border-yellow-700 w-64 z-50">
+            <div className="absolute bottom-16 left-4 bg-white dark:bg-neutral-900 text-gray-900 dark:text-yellow-100 rounded-md shadow-lg border border-yellow-700 w-64 z-50">
               <button
-                className="w-full text-left px-4 py-3 hover:bg-neutral-800 transition"
+                className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:bg-neutral-800 transition"
                 onClick={logoutHandler}
               >
                 Log out{" "}
-                <span className="text-yellow-400">
-                  {"@" + userDetails?.username || ""}
+                <span className="text-yellow-400 dark:text-gray-600">
+                  {"@" + (userDetails?.username || "")}
                 </span>
               </button>
             </div>

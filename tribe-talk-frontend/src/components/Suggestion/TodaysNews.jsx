@@ -60,15 +60,15 @@ function TodaysNews() {
 
   if (loading) {
     return (
-      <div className="bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
+      <div className="bg-gray-100 dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
         <h2 className="text-lg font-semibold mb-4">Today's News</h2>
-        <p className="text-yellow-400 text-sm">Loading...</p>
+        <p className="text-yellow-400 dark:text-gray-600 text-sm">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
+    <div className="bg-gray-100 dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
       <h2 className="text-lg font-semibold mb-4">Today's News</h2>
 
       <ul className="space-y-4">
@@ -79,10 +79,10 @@ function TodaysNews() {
               state={item}
               className="flex-1 hover:underline"
             >
-              <p className="text-sm font-semibold text-yellow-100 leading-snug">
+              <p className="text-sm font-semibold text-gray-900 dark:text-yellow-100 leading-snug">
                 {item.headline}
               </p>
-              <p className="text-xs text-yellow-400 mt-1">
+              <p className="text-xs text-yellow-400 dark:text-gray-600 mt-1">
                 {item.timestamp} · {item.category}
               </p>
             </Link>
