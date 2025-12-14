@@ -2,175 +2,202 @@ package com.learning.tribetalk.service.postgres.impl;
 
 import com.learning.tribetalk.dto.request.RegistrationRequest;
 import com.learning.tribetalk.dto.response.UserResponse;
+import com.learning.tribetalk.entity.mongo.UserProfile;
 import com.learning.tribetalk.entity.postgres.User;
 import com.learning.tribetalk.exception.DuplicateResourceException;
 import com.learning.tribetalk.exception.ResourceNotFoundException;
 import com.learning.tribetalk.metrics.annotations.BusinessMetric;
+import com.learning.tribetalk.repository.mongo.UserProfileRepository;
 import com.learning.tribetalk.repository.postgres.FollowRepository;
 import com.learning.tribetalk.repository.postgres.UserRepository;
 import com.learning.tribetalk.service.postgres.UserService;
-
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class UserServiceImpl implements UserService, UserDetailsService {
+public class UserServiceImpl implements UserService {
 
-    private final UserRepository repo;
-    private final FollowRepository followRepo;
+    private final UserRepository userRepository;
+    private final FollowRepository followRepository;
+    private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository repo, FollowRepository followRepo, PasswordEncoder passwordEncoder) {
-        this.repo = repo;
+    public UserServiceImpl(
+            UserRepository userRepository,
+            FollowRepository followRepository,
+            UserProfileRepository userProfileRepository,
+            PasswordEncoder passwordEncoder
+    ) {
+        this.userRepository = userRepository;
+        this.followRepository = followRepository;
+        this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
-        this.followRepo = followRepo;
-
     }
 
+    // =========================
+    // REGISTER USER
+    // =========================
     @Override
     @Transactional
     @BusinessMetric("user.registration")
     public void registerUser(RegistrationRequest request) {
-        if (repo.existsByUsername(request.username())) {
+
+        if (userRepository.existsByUsername(request.username())) {
             throw new DuplicateResourceException("Username already in use: " + request.username());
         }
-        if (repo.existsByEmail(request.email())) {
+
+        if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("Email already in use: " + request.email());
         }
-        String encodedpassword = passwordEncoder.encode(request.password());
-        System.out.println("User Details " + request);
-        System.out.println("encoded " + encodedpassword);
-        System.out.println("Repo Object Name is  " + repo.toString());
+
+        // 1️⃣ Save auth user (Postgres)
         User user = new User();
-        user.setPassword(encodedpassword);
         user.setUsername(request.username());
         user.setEmail(request.email());
         user.setDisplayname(request.displayname());
-        repo.save(user);
+        user.setPassword(passwordEncoder.encode(request.password()));
 
+        User savedUser = userRepository.save(user);
+
+        // 2️⃣ Create profile (Mongo)
+        UserProfile profile = UserProfile.builder()
+                .userId(savedUser.getId())
+                .username(savedUser.getUsername())
+                .displayName(savedUser.getDisplayname())
+                .build();
+
+        userProfileRepository.save(profile);
     }
 
+    // =========================
+    // UPDATE USER
+    // =========================
     @Override
     @Transactional
     public void updateUser(Long id, RegistrationRequest request) {
-        User user = repo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Check email uniqueness
-        if (!user.getEmail().equalsIgnoreCase(request.email()) && repo.existsByEmail(request.email())) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!user.getEmail().equalsIgnoreCase(request.email())
+                && userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("Email already in use: " + request.email());
         }
 
-        // Check username uniqueness
-        if (!user.getUsername().equalsIgnoreCase(request.username()) && repo.existsByUsername(request.username())) {
+        if (!user.getUsername().equalsIgnoreCase(request.username())
+                && userRepository.existsByUsername(request.username())) {
             throw new DuplicateResourceException("Username already in use: " + request.username());
         }
 
         user.setUsername(request.username());
         user.setEmail(request.email());
         user.setDisplayname(request.displayname());
+
         if (request.password() != null && !request.password().isBlank()) {
             user.setPassword(passwordEncoder.encode(request.password()));
         }
 
-        repo.save(user);
+        userRepository.save(user);
     }
 
+    // =========================
+    // DELETE USER
+    // =========================
     @Override
     @Transactional
     public void deleteUser(Long id) {
-        User user = repo.findById(id).orElseThrow(() -> new ResourceNotFoundException("No User Found"));
-        repo.delete(user);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No User Found"));
+
+        // delete profile first
+        userProfileRepository.deleteByUserId(id);
+
+        // then delete auth user
+        userRepository.delete(user);
     }
 
+    // =========================
+    // READ OPERATIONS
+    // =========================
     @Override
     public List<UserResponse> getAllUsers() {
-        return repo.findAll().stream().map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).toList();
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        System.out.println("Trying to load user: " + username);
-
-        var user = repo.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-
-        System.out.println("User found: " + user.getUsername() + ", password: " + user.getPassword());
-
-        var authorities = user.getAuthorities().stream()
-                .map(a -> new SimpleGrantedAuthority(a.getAuthority()))
+        return userRepository.findAll()
+                .stream()
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getDisplayname()))
                 .toList();
-
-        System.out.println("Authorities: " + authorities);
-
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword()) // {noop} prefix if plain password
-                .authorities(authorities)
-                .build();
-    }
-
-    public long getTotalUsers() {
-        return 0;
     }
 
     @Override
     public Optional<User> findByEmail(String email) {
-        return repo.findByEmail(email);
+        return userRepository.findByEmail(email);
     }
 
     @Override
     public Optional<UserResponse> findByUsername(String username) {
-        return Optional.ofNullable(repo.findByUsername(username).map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).orElseThrow(() -> new ResourceNotFoundException("User not found")));
+        return userRepository.findByUsername(username)
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getDisplayname()));
     }
 
     @Override
     public Optional<UserResponse> findByUserId(Long userId) {
-        return Optional.ofNullable(repo.findById(userId).map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).orElseThrow(() -> new ResourceNotFoundException("User not found")));
+        return userRepository.findById(userId)
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getDisplayname()));
     }
 
-
+    // =========================
+    // SUGGESTED USERS
+    // =========================
     public List<UserResponse> findSuggestedUsers(Long userId) {
 
-        // Step 1: Fetch all users except the current one
-        List<User> users = repo.findAll()
+        List<User> users = userRepository.findAll()
                 .stream()
-                .filter(user -> !user.getId().equals(userId)) // exclude current user
+                .filter(user -> !user.getId().equals(userId))
                 .toList();
 
-        // Step 2: Get IDs of users the current user is following
-        List<Long> followingIds = followRepo.findAll().stream()
+        List<Long> followingIds = followRepository.findAll()
+                .stream()
                 .filter(f -> f.getFollower().getId().equals(userId))
                 .map(f -> f.getFollowing().getId())
                 .distinct()
                 .toList();
 
-        // Step 3: Exclude already-followed users
         List<User> suggestedUsers = users.stream()
-                .filter(user -> !followingIds.contains(user.getId())) // ✅ correct filter
+                .filter(user -> !followingIds.contains(user.getId()))
                 .collect(Collectors.toList());
 
-        // Step 4: Randomize order (optional)
         Collections.shuffle(suggestedUsers);
 
-        // Step 5: Limit results and map to DTOs
         return suggestedUsers.stream()
                 .limit(3)
                 .map(user -> new UserResponse(
                         user.getId(),
                         user.getUsername(),
                         user.getEmail(),
-                        user.getDisplayname()
-                ))
+                        user.getDisplayname()))
                 .toList();
     }
 
-
+    // =========================
+    // METRICS
+    // =========================
+    public long getTotalUsers() {
+        return userRepository.count();
+    }
 }
