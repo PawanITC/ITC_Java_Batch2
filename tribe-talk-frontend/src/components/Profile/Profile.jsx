@@ -21,6 +21,7 @@ function Profile() {
 
   const navigate = useNavigate();
   const userId = user?.userId;
+  const username=user?.username;
 
   // ==========================
   // Fetch profile (Mongo)
@@ -116,7 +117,7 @@ function Profile() {
       {/* User Info */}
       <div className="mb-2 px-2">
         <h2 className="text-xl font-bold">{userProfile.displayName}</h2>
-        <p className="text-yellow-400 text-sm">@{userProfile.username}</p>
+        <p className="text-yellow-400 text-sm">@{username}</p>
         {userProfile.bio && (
           <p className="mt-2 text-sm">{userProfile.bio}</p>
         )}

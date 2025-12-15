@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/api/users/user-profile")
 public class UserProfileController {
@@ -35,16 +37,30 @@ public class UserProfileController {
      * Partially update user profile
      * PATCH /api/user-profile/{userId}
      */
-    @PatchMapping(value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public UserProfileResponse updateProfile(
+    @PatchMapping(
+            value = "/{userId}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<UserProfileResponse> updateProfile(
             @PathVariable Long userId,
-            @RequestPart(required = false) MultipartFile profileImage,
-            @RequestPart(required = false) MultipartFile coverImage,
+            @RequestPart(required = false) String username,
+            @RequestPart(required = false) String displayName,
             @RequestPart(required = false) String bio,
-            @RequestPart(required = false) String location
-    ) {
-        return userProfileService.updateProfile(
-                userId, bio, location, profileImage, coverImage
-        );
+            @RequestPart(required = false) String location,
+            @RequestPart(required = false) MultipartFile profileImage,
+            @RequestPart(required = false) MultipartFile coverImage
+    ) throws IOException {
+
+        UserProfileResponse response =
+                userProfileService.updateProfile(
+                        userId,
+                        displayName,
+                        bio,
+                        location,
+                        profileImage,
+                        coverImage
+                );
+
+        return ResponseEntity.ok(response);
     }
 }

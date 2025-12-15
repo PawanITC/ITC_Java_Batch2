@@ -1,10 +1,17 @@
-import { useState } from "react";
+import { useState ,useContext} from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
 import { FiX, FiCamera } from "react-icons/fi";
+import { AuthContext } from "../../auth/AuthContext";
 
 function EditProfileModal({ userDetails, onClose, onSaved }) {
+
+  const { user } = useContext(AuthContext);
+
+  const userId = user?.userId;
+  console.log("Display name is ",user.user);
   const [form, setForm] = useState({
+    displayName: userDetails?.displayName || "",
     bio: userDetails?.bio || "",
     location: userDetails?.location || "",
   });
@@ -15,6 +22,8 @@ function EditProfileModal({ userDetails, onClose, onSaved }) {
 
   const handleSubmit = async () => {
     const data = new FormData();
+
+    data.append("displayName", form.displayName);
     data.append("bio", form.bio);
     data.append("location", form.location);
 
@@ -23,8 +32,9 @@ function EditProfileModal({ userDetails, onClose, onSaved }) {
 
     try {
       setLoading(true);
+
       const res = await axiosInstance.patch(
-        `/api/users/user-profile/${userDetails.userId}`,
+        `/api/users/user-profile/${userDetails.userId}`, // ✅ fixed path
         data,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -58,9 +68,22 @@ function EditProfileModal({ userDetails, onClose, onSaved }) {
 
         {/* Cover */}
         <div className="relative h-40 bg-neutral-800">
-          <label className="absolute inset-0 flex items-center justify-center cursor-pointer">
+          {coverImage && (
+            <img
+              src={URL.createObjectURL(coverImage)}
+              className="w-full h-full object-cover"
+              alt="Cover preview"
+            />
+          )}
+
+          <label className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/40">
             <FiCamera size={22} />
-            <input type="file" hidden onChange={(e) => setCoverImage(e.target.files[0])} />
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => setCoverImage(e.target.files[0])}
+            />
           </label>
         </div>
 
@@ -68,16 +91,37 @@ function EditProfileModal({ userDetails, onClose, onSaved }) {
         <div className="relative px-4">
           <div className="absolute -top-12">
             <label className="relative cursor-pointer">
-              <div className="w-24 h-24 bg-neutral-700 rounded-full flex items-center justify-center">
+              <img
+                src={
+                  profileImage
+                    ? URL.createObjectURL(profileImage)
+                    : userDetails?.profileImageUrl
+                }
+                className="w-24 h-24 rounded-full object-cover border-4 border-neutral-900"
+                alt="Avatar preview"
+              />
+              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
                 <FiCamera />
               </div>
-              <input type="file" hidden onChange={(e) => setProfileImage(e.target.files[0])} />
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => setProfileImage(e.target.files[0])}
+              />
             </label>
           </div>
         </div>
 
         {/* Form */}
         <div className="px-4 pt-16 pb-6 space-y-4">
+          <input
+            placeholder="Display name"
+            value={form.displayName}
+            onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+            className="w-full bg-neutral-800 p-3 rounded"
+          />
+
           <textarea
             placeholder="Bio"
             value={form.bio}
