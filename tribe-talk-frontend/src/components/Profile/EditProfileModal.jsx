@@ -1,15 +1,13 @@
-import { useState ,useContext} from "react";
+import { useState, useContext } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
 import { FiX, FiCamera } from "react-icons/fi";
 import { AuthContext } from "../../auth/AuthContext";
 
 function EditProfileModal({ userDetails, onClose, onSaved }) {
-
   const { user } = useContext(AuthContext);
-
   const userId = user?.userId;
-  console.log("Display name is ",user.user);
+
   const [form, setForm] = useState({
     displayName: userDetails?.displayName || "",
     bio: userDetails?.bio || "",
@@ -22,7 +20,6 @@ function EditProfileModal({ userDetails, onClose, onSaved }) {
 
   const handleSubmit = async () => {
     const data = new FormData();
-
     data.append("displayName", form.displayName);
     data.append("bio", form.bio);
     data.append("location", form.location);
@@ -34,7 +31,7 @@ function EditProfileModal({ userDetails, onClose, onSaved }) {
       setLoading(true);
 
       const res = await axiosInstance.patch(
-        `/api/users/user-profile/${userDetails.userId}`, // ✅ fixed path
+        `/api/users/user-profile/${userId}`,
         data,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -42,7 +39,7 @@ function EditProfileModal({ userDetails, onClose, onSaved }) {
       toast.success("Profile updated");
       onSaved(res.data);
       onClose();
-    } catch (err) {
+    } catch {
       toast.error("Failed to update profile");
     } finally {
       setLoading(false);
@@ -68,13 +65,15 @@ function EditProfileModal({ userDetails, onClose, onSaved }) {
 
         {/* Cover */}
         <div className="relative h-40 bg-neutral-800">
-          {coverImage && (
-            <img
-              src={URL.createObjectURL(coverImage)}
-              className="w-full h-full object-cover"
-              alt="Cover preview"
-            />
-          )}
+          <img
+            src={
+              coverImage
+                ? URL.createObjectURL(coverImage)
+                : userDetails?.coverImageUrl || "/default-cover.png"
+            }
+            className="w-full h-full object-cover"
+            alt="Cover preview"
+          />
 
           <label className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/40">
             <FiCamera size={22} />
@@ -95,7 +94,7 @@ function EditProfileModal({ userDetails, onClose, onSaved }) {
                 src={
                   profileImage
                     ? URL.createObjectURL(profileImage)
-                    : userDetails?.profileImageUrl
+                    : userDetails?.profileImageUrl || "/default-avatar.png"
                 }
                 className="w-24 h-24 rounded-full object-cover border-4 border-neutral-900"
                 alt="Avatar preview"

@@ -18,69 +18,47 @@ function Profile() {
 
   const { user } = useContext(AuthContext);
   const { followersCount, followingCount } = useContext(GlobalContext);
-
   const navigate = useNavigate();
   const userId = user?.userId;
-  const username=user?.username;
+  const username = user?.username;
 
-  // ==========================
-  // Fetch profile (Mongo)
-  // ==========================
+  // ======================
+  // Fetch profile
+  // ======================
   useEffect(() => {
     if (!userId) return;
 
-    const fetchProfile = async () => {
-      try {
-        const res = await axiosInstance.get(`/api/users/user-profile/${userId}`);
-        setUserProfile(res.data);
-      } catch {
-        toast.error("Failed to load profile");
-      }
-    };
-
-    fetchProfile();
+    axiosInstance
+      .get(`/api/users/user-profile/${userId}`)
+      .then((res) => setUserProfile(res.data))
+      .catch(() => toast.error("Failed to load profile"));
   }, [userId]);
 
-  // ==========================
+  // ======================
   // Fetch posts
-  // ==========================
+  // ======================
   useEffect(() => {
     if (!userProfile?.userId) return;
 
-    const fetchPosts = async () => {
-      try {
-        const res = await axiosInstance.get(
-          `/api/v1/posts/userPost?userId=${userProfile.userId}`
-        );
-        const all = res.data;
-        setOriginalPosts(all.filter((p) => p.replyToPostId === null));
-        setReplyPosts(all.filter((p) => p.replyToPostId !== null));
-      } catch {
-        toast.warn("Failed to fetch posts");
-      }
-    };
-
-    fetchPosts();
+    axiosInstance
+      .get(`/api/v1/posts/userPost?userId=${userProfile.userId}`)
+      .then((res) => {
+        setOriginalPosts(res.data.filter((p) => p.replyToPostId === null));
+        setReplyPosts(res.data.filter((p) => p.replyToPostId !== null));
+      })
+      .catch(() => toast.warn("Failed to fetch posts"));
   }, [userProfile]);
 
-  // ==========================
+  // ======================
   // Fetch liked posts
-  // ==========================
+  // ======================
   useEffect(() => {
     if (!userProfile?.userId) return;
 
-    const fetchLiked = async () => {
-      try {
-        const res = await axiosInstance.get(
-          `/api/v1/posts/liked?userId=${userProfile.userId}`
-        );
-        setLikedPosts(res.data);
-      } catch {
-        toast.warn("Failed to fetch liked posts");
-      }
-    };
-
-    fetchLiked();
+    axiosInstance
+      .get(`/api/v1/posts/liked?userId=${userProfile.userId}`)
+      .then((res) => setLikedPosts(res.data))
+      .catch(() => toast.warn("Failed to fetch liked posts"));
   }, [userProfile]);
 
   if (!userProfile) return null;
@@ -91,23 +69,23 @@ function Profile() {
       {/* Cover */}
       <div className="relative h-40 rounded-md overflow-hidden mb-20">
         <img
-          src={userProfile.coverPictureUrl}
+          src={userProfile.coverImageUrl || "/default-cover.png"}
           alt="Cover"
           className="w-full h-full object-cover"
         />
       </div>
 
-      {/* Avatar + Button */}
+      {/* Avatar + Edit */}
       <div className="relative flex items-center gap-4 -mt-28 mb-6 px-2">
         <img
-          src={userProfile.profilePictureUrl}
+          src={userProfile.profileImageUrl || "/default-avatar.png"}
           alt="Avatar"
           className="w-24 h-24 rounded-full border-4 border-neutral-900 object-cover"
         />
         <div className="ml-auto mt-6">
           <button
             onClick={() => setShowEdit(true)}
-            className="px-4 py-2 bg-yellow-500 text-neutral-900 font-semibold rounded-full hover:bg-yellow-400"
+            className="px-4 py-2 bg-yellow-500 text-neutral-900 font-semibold rounded-full"
           >
             Edit profile
           </button>
@@ -118,9 +96,7 @@ function Profile() {
       <div className="mb-2 px-2">
         <h2 className="text-xl font-bold">{userProfile.displayName}</h2>
         <p className="text-yellow-400 text-sm">@{username}</p>
-        {userProfile.bio && (
-          <p className="mt-2 text-sm">{userProfile.bio}</p>
-        )}
+        {userProfile.bio && <p className="mt-2 text-sm">{userProfile.bio}</p>}
       </div>
 
       {/* Joined */}
@@ -176,12 +152,11 @@ function Profile() {
             : <p>No likes</p>)}
       </div>
 
-      {/* Edit Modal */}
       {showEdit && (
         <EditProfileModal
           userDetails={userProfile}
           onClose={() => setShowEdit(false)}
-          onSaved={(updated) => setUserProfile(updated)}
+          onSaved={setUserProfile}
         />
       )}
     </div>
