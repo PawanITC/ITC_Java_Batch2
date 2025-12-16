@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
-import UserHoverCard from "./UserHoverCard";
+import UserHoverCard from "./HoverUserCard";
 
 const cache = new Map();
 
