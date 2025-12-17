@@ -65,6 +65,15 @@ spec:
             port:
               number: 8082
       
+      # Grafana Monitoring Dashboard
+      - path: /grafana
+        pathType: Prefix
+        backend:
+          service:
+            name: monitoring-grafana-proxy
+            port:
+              number: 80
+      
       # Actuator endpoints (for health checks)
       - path: /actuator
         pathType: Prefix
@@ -76,6 +85,15 @@ spec:
 
       # Authentication routes
       - path: /auth
+        pathType: Prefix
+        backend:
+          service:
+            name: tribetalk
+            port:
+              number: 8080
+
+      # Login routes (including OAuth callbacks)
+      - path: /login
         pathType: Prefix
         backend:
           service:

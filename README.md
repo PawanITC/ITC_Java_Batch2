@@ -460,27 +460,150 @@ curl http://<ALB-DNS>/api/auth/validateUser
 
 ---
 
-## 📊 Monitoring & Logs
+## 📊 Monitoring & Observability
 
-### View Logs
+### Grafana Monitoring Stack
+
+The project includes a self-hosted Grafana monitoring stack deployed on EKS for metrics visualization and monitoring.
+
+#### What's Deployed
+
+- **Grafana** (v12.3.0) - Visualization and dashboarding
+- **Prometheus** - Metrics collection and storage (7-day retention)
+- **Kube State Metrics** - Kubernetes cluster metrics
+- **Node Exporter** - Node-level system metrics
+- **Prometheus Operator** - Manages Prometheus instances
+
+#### Access Grafana
+
+**Via Port Forward (Recommended):**
+```bash
+kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
+```
+Then open: **http://localhost:3000**
+
+**Default Credentials:**
+- Username: `admin`
+- Password: `admin123` (⚠️ Change immediately after first login!)
+
+#### Import Dashboards
+
+1. Login to Grafana
+2. Navigate to **Dashboards** → **Import**
+3. Import these dashboard IDs:
+   - **7249** - Kubernetes Cluster Monitoring
+   - **12900** - Spring Boot Statistics
+   - **1860** - Node Exporter Full
+
+#### View Application Metrics
 
 ```bash
-# Application logs
-kubectl logs -f deployment/tribetalk
-kubectl logs -f deployment/chatservice
-kubectl logs -f deployment/notification-service
-kubectl logs -f deployment/tribe-talk-frontend
+# TribeTalk metrics endpoint
+curl http://<ALB-DNS>/actuator/prometheus
+
+# Query Prometheus directly
+kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+# Open: http://localhost:9090
+```
+
+#### ServiceMonitor Configuration
+
+TribeTalk application metrics are automatically scraped via ServiceMonitor:
+```yaml
+# k8s/monitoring/servicemonitor-tribetalk.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tribetalk-metrics
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: tribetalk
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+```
+
+### View Application Logs
+
+```bash
+# TribeTalk logs
+kubectl logs -f deployment/tribetalk --tail=100
+
+# Chat Service logs
+kubectl logs -f deployment/chatservice --tail=100
+
+# Notification Service logs
+kubectl logs -f deployment/notification-service --tail=100
+
+# Frontend logs
+kubectl logs -f deployment/tribe-talk-frontend --tail=100
+
+# All pods in namespace
+kubectl logs --all-containers=true --tail=100 -n default
 
 # Ingress controller logs
-kubectl logs -n kube-system deployment/aws-load-balancer-controller
+kubectl logs -n kube-system deployment/aws-load-balancer-controller --tail=100
 ```
 
-### Metrics
+### Monitoring Stack Details
 
+**Resource Usage:**
+- Grafana: 256Mi memory, 100m CPU
+- Prometheus: 1Gi memory, 500m CPU
+- Total pods: 7 (Grafana, Prometheus, 2x Node Exporters, Operator, Kube State Metrics, Admission Patch)
+
+**Storage:**
+- No persistence (metrics stored in memory)
+- 7-day retention period
+- Metrics lost on pod restart
+
+**Cost:** $0 additional (uses existing cluster resources)
+
+**Configuration Files:**
+- `k8s/monitoring/namespace.yaml` - Monitoring namespace
+- `k8s/monitoring/values-lightweight.yaml` - Helm chart configuration
+- `k8s/monitoring/servicemonitor-tribetalk.yaml` - TribeTalk metrics scraping
+- `docs/monitoring/grafana-stack-implementation.md` - Full deployment guide
+- `docs/monitoring/grafana-deployment-walkthrough.md` - Deployment walkthrough
+
+### Troubleshooting
+
+**Grafana not accessible:**
 ```bash
-# Access Prometheus metrics
+# Check pod status
+kubectl get pods -n monitoring
+
+# Check port-forward
+kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
+
+# Check logs
+kubectl logs -n monitoring -l app.kubernetes.io/name=grafana
+```
+
+**Prometheus not scraping metrics:**
+```bash
+# Check ServiceMonitor
+kubectl get servicemonitor -n monitoring
+
+# Check Prometheus targets
+kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+# Open: http://localhost:9090/targets
+
+# Verify TribeTalk metrics endpoint
 curl http://<ALB-DNS>/actuator/prometheus
 ```
+
+### Future Enhancements
+
+For production environments, consider:
+- **Loki** - Log aggregation and querying
+- **Tempo** - Distributed tracing
+- **AlertManager** - Alert routing and notifications
+- **Persistent storage** - EBS volumes for metrics retention
+- **Grafana Cloud** - Managed Grafana service
 
 ---
 

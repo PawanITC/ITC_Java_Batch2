@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tribetalk-metrics
+  namespace: monitoring
+  labels:
+    app: tribetalk
+    release: monitoring
+spec:
+  # Select the TribeTalk service
+  selector:
+    matchLabels:
+      app: tribetalk
+  
+  # Look for services in the default namespace
+  namespaceSelector:
+    matchNames:
+      - default
+  
+  # Scrape configuration
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s

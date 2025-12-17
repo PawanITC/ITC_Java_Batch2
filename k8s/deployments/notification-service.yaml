@@ -15,11 +15,15 @@ spec:
       labels:
         app: notification-service
         version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8082"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
       serviceAccountName: tribetalk-sa
       containers:
       - name: notification-service
-        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/notification-service:v1.1
+        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/notification-service:v1.3
         imagePullPolicy: Always
         ports:
         - containerPort: 8082
