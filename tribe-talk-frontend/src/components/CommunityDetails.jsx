@@ -26,24 +26,24 @@ function CommunityDetails() {
   );
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 text-yellow-100">
+    <div className="max-w-3xl mx-auto px-4 py-6 text-gray-900 dark:text-yellow-100">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold">Communities</h1>
         </div>
-        <FaUsers className="text-yellow-400 text-xl cursor-pointer" />
+        <FaUsers className="text-yellow-400 dark:text-gray-600 text-xl cursor-pointer" />
       </div>
 
       {/* Search Bar */}
-      <div className="flex items-center gap-2 bg-neutral-800 border border-yellow-700 rounded-full px-4 py-2 mb-6">
-        <FiSearch className="text-yellow-400 text-lg" />
+      <div className="flex items-center gap-2 bg-gray-100 dark:bg-neutral-800 border border-yellow-700 rounded-full px-4 py-2 mb-6">
+        <FiSearch className="text-yellow-400 dark:text-gray-600 text-lg" />
         <input
           type="text"
           placeholder="Search Communities"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-transparent w-full text-yellow-100 placeholder-yellow-400 focus:outline-none"
+          className="bg-transparent w-full text-gray-900 dark:text-yellow-100 placeholder-yellow-400 focus:outline-none"
         />
       </div>
 
@@ -52,7 +52,7 @@ function CommunityDetails() {
         {filteredCategories.map((category, i) => (
           <button
             key={i}
-            className="px-4 py-2 bg-neutral-800 border border-yellow-700/40 rounded-full text-sm text-yellow-100 hover:bg-yellow-700/20 transition"
+            className="px-4 py-2 bg-gray-100 dark:bg-neutral-800 border border-yellow-700/40 rounded-full text-sm text-gray-900 dark:text-yellow-100 hover:bg-yellow-700/20 transition"
           >
             {category}
           </button>

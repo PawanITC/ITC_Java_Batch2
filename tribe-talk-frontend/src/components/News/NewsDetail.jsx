@@ -17,13 +17,13 @@ function NewsDetail() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 text-yellow-100">
+    <div className="max-w-3xl mx-auto px-4 py-6 text-gray-900 dark:text-yellow-100">
       {/* Headline */}
       <h1 className="text-xl md:text-2xl font-bold mb-2">
         {article.headline}
       </h1>
 
-      <p className="text-sm text-yellow-400 mb-4">
+      <p className="text-sm text-yellow-400 dark:text-gray-600 mb-4">
         {article.timestamp}
       </p>
 
@@ -37,7 +37,7 @@ function NewsDetail() {
       )}
 
       {/* Summary */}
-      <p className="text-base leading-relaxed text-yellow-200 mb-6">
+      <p className="text-base leading-relaxed text-gray-700 dark:text-yellow-200 mb-6">
         {article.summary}
       </p>
 
@@ -47,7 +47,7 @@ function NewsDetail() {
           href={article.url}
           target="_blank"
           rel="noreferrer"
-          className="text-yellow-400 underline mb-6 inline-block"
+          className="text-yellow-400 dark:text-gray-600 underline mb-6 inline-block"
         >
           Read full article
         </a>

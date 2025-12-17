@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tribetalk
+  labels:
+    app: tribetalk
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tribetalk
+  template:
+    metadata:
+      labels:
+        app: tribetalk
+        version: v1
+    spec:
+      serviceAccountName: tribetalk-sa
+      containers:
+      - name: tribetalk
+        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service:v1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: SPRING_DATASOURCE_URL
+          valueFrom:
+            secretKeyRef:
+              name: tribetalk-database-secrets
+              key: postgres_url
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: tribetalk-database-secrets
+              key: postgres_username
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: tribetalk-database-secrets
+              key: postgres_password
+        - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+          value: "org.postgresql.Driver"
+        - name: SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION
+          value: "true"
+        - name: SPRING_SQL_INIT_MODE
+          value: "never"
+        - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+          value: "create"
+        - name: SPRING_DATA_MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: tribetalk-database-secrets
+              key: mongodb_uri
+        - name: SPRING_REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: tribetalk-app-secrets
+              key: redis_host
+        - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          valueFrom:
+            secretKeyRef:
+              name: tribetalk-app-secrets
+              key: kafka_bootstrap_servers
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: tribetalk-app-secrets
+              key: jwt_secret
+        - name: APP_URL
+          value: "http://k8s-default-tribetal-089de13287-1370767621.eu-north-1.elb.amazonaws.com"
+        - name: FRONTEND_URL
+          value: "http://k8s-default-tribetal-089de13287-1370767621.eu-north-1.elb.amazonaws.com"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 180
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 180
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tribetalk
+  labels:
+    app: tribetalk
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: tribetalk

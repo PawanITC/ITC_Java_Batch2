@@ -3,12 +3,12 @@ spring:
     name: notification-service
   data:
     mongodb:
-      uri: mongodb://admin:admin123@localhost:27017/tribetalknosqldb?authSource=admin
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://admin:admin123@localhost:27017/tribetalknosqldb?authSource=admin}
 
 
   kafka:
     consumer:
-      bootstrap-servers: localhost:9092
+      bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
       group-id: notification-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -21,3 +21,19 @@ spring:
       auto-create: true
 server:
   port: 8082
+  servlet:
+    context-path: /notification
+
+# Spring Boot Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    defaults:
+      enabled: true

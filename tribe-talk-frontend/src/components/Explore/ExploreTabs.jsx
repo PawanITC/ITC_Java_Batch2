@@ -98,16 +98,16 @@ function ExploreTabs() {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 py-6 text-yellow-100">
+    <div className="w-full max-w-3xl mx-auto px-4 py-6 text-gray-900 dark:text-yellow-100">
       {/* Search Bar */}
-      <div className="flex items-center gap-2 bg-neutral-800 border border-yellow-700 rounded-full px-4 py-2 mb-6">
-        <FiSearch className="text-yellow-400 text-lg" />
+      <div className="flex items-center gap-2 bg-gray-100 dark:bg-neutral-800 border border-yellow-700 rounded-full px-4 py-2 mb-6">
+        <FiSearch className="text-yellow-400 dark:text-gray-600 text-lg" />
         <input
           type="text"
           placeholder="Search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-transparent w-full text-yellow-100 placeholder-yellow-400 focus:outline-none"
+          className="bg-transparent w-full text-gray-900 dark:text-yellow-100 placeholder-yellow-400 focus:outline-none"
         />
       </div>
 
@@ -133,7 +133,7 @@ function ExploreTabs() {
       {/* Tab Content */}
       <div className="space-y-4 px-2">
         {feeds[activeTab].length === 0 && (
-          <p className="text-yellow-400">Loading...</p>
+          <p className="text-yellow-400 dark:text-gray-600">Loading...</p>
         )}
         {feeds[activeTab].map((item) => (
           <NewsItemCard key={item.id} {...item} />

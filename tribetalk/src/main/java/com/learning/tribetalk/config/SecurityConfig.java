@@ -22,86 +22,86 @@ import java.util.Arrays;
 @Configuration
 public class SecurityConfig {
 
-    @Value("${app.url}")
-    private String url;
+        @Value("${app.url}")
+        private String url;
 
-    @Autowired
-    OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-    private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
+        @Autowired
+        OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+        private final JwtUtil jwtUtil;
+        private final UserDetailsService userDetailsService;
 
-    public SecurityConfig(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
-        this.jwtUtil = jwtUtil;
-        this.userDetailsService = userDetailsService;
-    }
+        public SecurityConfig(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+                this.jwtUtil = jwtUtil;
+                this.userDetailsService = userDetailsService;
+        }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception{
-        var jwtFilter = new JwtAuthenticationFilter(jwtUtil, userDetailsService);
-        var mdcFilter = new MDCAndTelemetryFilter();
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+                var jwtFilter = new JwtAuthenticationFilter(jwtUtil, userDetailsService);
+                var mdcFilter = new MDCAndTelemetryFilter();
 
-        httpSecurity
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> {})   // ✅ enable CORS support here
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // ADD THIS
-                )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/api/test/**").permitAll()
-                        .requestMatchers("/api/users/**").permitAll()
-                        .requestMatchers("/api/follow/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("oauth2/**").permitAll()
-                        .requestMatchers("/oauth2/**").permitAll()
-                        .requestMatchers("/actuator/prometheus").permitAll()  // allow Prometheus
-                        .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/v3/api-docs.yaml",
-                                "/v3/api-docs.json"
-                        ).permitAll()
-                        .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/favicon.ico",
-                                "/manifest.json",
-                                "/static/**",
-                                "/assets/**"
-                        ).permitAll()
-                        //.requestMatchers("/").permitAll()
-                        .anyRequest().authenticated())
-                .oauth2Login(oAuth2->{
-                        oAuth2.successHandler(oAuth2LoginSuccessHandler);
-                });
-        // Allow frames for H2 cons
+                httpSecurity
+                                .csrf(csrf -> csrf.disable())
+                                .cors(cors -> {
+                                }) // ✅ enable CORS support here
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // ADD THIS
+                                )
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers("/api/auth/**").permitAll()
+                                                .requestMatchers("/api/auth/refresh").permitAll()
+                                                .requestMatchers("/api/users/**").permitAll()
+                                                .requestMatchers("/h2-console/**").permitAll()
+                                                .requestMatchers("oauth2/**").permitAll()
+                                                .requestMatchers("/oauth2/**").permitAll()
+                                                .requestMatchers("/actuator/prometheus").permitAll() // allow Prometheus
+                                                .requestMatchers("/notification/ws/**").permitAll() // WebSocket endpoint
+                                                .requestMatchers(
+                                                                "/swagger-ui.html",
+                                                                "/swagger-ui/**",
+                                                                "/v3/api-docs/**",
+                                                                "/v3/api-docs.yaml",
+                                                                "/v3/api-docs.json")
+                                                .permitAll()
+                                                .requestMatchers(
+                                                                "/",
+                                                                "/index.html",
+                                                                "/favicon.ico",
+                                                                "/manifest.json",
+                                                                "/static/**",
+                                                                "/assets/**")
+                                                .permitAll()
+                                                // .requestMatchers("/").permitAll()
+                                                .anyRequest().authenticated())
+                                .oauth2Login(oAuth2 -> {
+                                        oAuth2.successHandler(oAuth2LoginSuccessHandler);
+                                });
+                // Allow frames for H2 cons
 
+                // allow frames for H2 console (dev only)
+                httpSecurity.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
+                // add JWT filter BEFORE UsernamePasswordAuthenticationFilter so it runs for
+                // other endpoints
+                httpSecurity.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // allow frames for H2 console (dev only)
-        httpSecurity.headers(headers -> headers.frameOptions(frame -> frame.disable()));
+                // Add MDC Filter after JWT Filter
+                httpSecurity.addFilterAfter(mdcFilter, JwtAuthenticationFilter.class);
+                return httpSecurity.build();
+        }
 
-        // add JWT filter BEFORE UsernamePasswordAuthenticationFilter so it runs for other endpoints
-        httpSecurity.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-        //Add MDC Filter after JWT Filter
-        httpSecurity.addFilterAfter( mdcFilter, JwtAuthenticationFilter.class);
-        return httpSecurity.build();
-    }
-
-
-    @Bean
-    public CorsFilter corsFilter(){
-        CorsConfiguration corsConfig=new CorsConfiguration();
-        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:8080","http://localhost:8082","http://localhost:5173"));
-        corsConfig.setAllowedMethods(Arrays.asList("GET","POST","PUT","PATCH","DELETE"));
-        corsConfig.setAllowCredentials(true);
-        corsConfig.setAllowedHeaders(Arrays.asList("*"));
-        // ✅ Expose Set-Cookie so frontend can receive JWT cookie
-        corsConfig.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "Set-Cookie"));
-        UrlBasedCorsConfigurationSource source=new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**",corsConfig);
-        return new CorsFilter(source);
-    }
+        @Bean
+        public CorsFilter corsFilter() {
+                CorsConfiguration corsConfig = new CorsConfiguration();
+                // Allow all origins for now - in production, restrict to specific domains
+                corsConfig.addAllowedOriginPattern("*");
+                corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE"));
+                corsConfig.setAllowCredentials(true);
+                corsConfig.setAllowedHeaders(Arrays.asList("*"));
+                // ✅ Expose Set-Cookie so frontend can receive JWT cookie
+                corsConfig.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "Set-Cookie"));
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", corsConfig);
+                return new CorsFilter(source);
+        }
 }

@@ -1,0 +1,117 @@
+# Grafana Stack Configuration for kube-prometheus-stack Helm Chart
+# This configures Prometheus, Grafana, and AlertManager for monitoring
+
+grafana:
+  enabled: true
+  
+  # Admin credentials
+  adminPassword: "admin123"  # TODO: Change this in production!
+  
+  # Service configuration - using LoadBalancer for easy access
+  service:
+    type: LoadBalancer
+    port: 80
+    targetPort: 3000
+  
+  # Persistent storage for dashboards and settings
+  persistence:
+    enabled: true
+    type: pvc
+    size: 10Gi
+    storageClassName: gp2  # AWS EBS gp2
+  
+  # Resource limits
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+prometheus:
+  enabled: true
+  
+  prometheusSpec:
+    # Data retention period
+    retention: 15d
+    
+    # Persistent storage for metrics
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp2
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
+    
+    # Resource limits
+    resources:
+      requests:
+        memory: 2Gi
+        cpu: 500m
+      limits:
+        memory: 4Gi
+        cpu: 2000m
+    
+    # Service monitors - auto-discover services with matching labels
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    
+    # Additional scrape configs for custom endpoints
+    additionalScrapeConfigs: []
+
+alertmanager:
+  enabled: true
+  
+  alertmanagerSpec:
+    # Persistent storage for alert state
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp2
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+    
+    # Resource limits
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 50m
+      limits:
+        memory: 256Mi
+        cpu: 200m
+
+# Prometheus Operator configuration
+prometheusOperator:
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 200m
+
+# Node Exporter - collects node-level metrics
+nodeExporter:
+  enabled: true
+
+# Kube State Metrics - collects Kubernetes object metrics
+kubeStateMetrics:
+  enabled: true
+
+# Default rules and alerts
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: false  # Not needed for EKS
+    kubeApiserver: true
+    kubePrometheusNodeRecording: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    node: true

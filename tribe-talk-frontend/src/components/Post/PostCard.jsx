@@ -177,11 +177,10 @@ function PostCard({ post }) {
   return (
     <div
       onClick={handleOpenPost}
-      className={` bg-neutral-800 p-4 rounded-md border shadow-sm hover:shadow-md transition ${
-        post.replyToPostId
-          ? "border-blue-500/50"
-          : "border-yellow-700/30 hover:border-yellow-500"
-      }`}
+      className={` bg-white dark:bg-neutral-900 p-4 rounded-md border shadow-sm hover:shadow-md transition ${post.replyToPostId
+        ? "border-blue-500/50"
+        : "border-yellow-700/30 hover:border-yellow-500"
+        }`}
     >
       {/* Header: User Info */}
       <div className="flex flex-col gap-1 mb-2">
@@ -199,21 +198,21 @@ function PostCard({ post }) {
           />
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-yellow-100">
+              <span className="font-semibold text-gray-900 dark:text-yellow-100">
                 {userDetails?.displayname || "User"}
               </span>
-              <span className="text-yellow-400 text-sm">
+              <span className="text-yellow-400 dark:text-gray-600 text-sm">
                 {" "}
                 @{userDetails?.username || "user"}
               </span>
               <span
-                className="text-yellow-500 text-xs cursor-default"
+                className="text-gray-500 dark:text-yellow-500 text-xs cursor-default"
                 title={formatFullDate(post.createdAt)}
               >
                 • {formatPostTime(post.createdAt)}
               </span>
             </div>
-            <p className="text-yellow-200 text-sm mt-1">{post.text}</p>
+            <p className="text-gray-700 dark:text-yellow-200 text-sm mt-1">{post.text}</p>
           </div>
 
           {/* Three-dot menu only for owner */}
@@ -224,18 +223,18 @@ function PostCard({ post }) {
                   e.stopPropagation();
                   setShowMenu((prev) => !prev);
                 }}
-                className="p-2 rounded-full hover:bg-neutral-700"
+                className="p-2 rounded-full hover:bg-gray-200 dark:bg-neutral-700"
               >
                 <FiMoreHorizontal />
               </button>
               {showMenu && (
-                <div className="absolute right-0 mt-2 w-32 bg-neutral-900 border border-yellow-700 rounded-md shadow-lg">
+                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-neutral-900 border border-yellow-700 rounded-md shadow-lg">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete();
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-neutral-800 transition"
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:bg-neutral-800 transition"
                   >
                     Delete
                   </button>
@@ -254,14 +253,14 @@ function PostCard({ post }) {
       <Poll post={post} user={user} />
 
       {/* Actions */}
-      <div className="flex justify-between mt-4 text-yellow-400 text-sm flex-wrap">
+      <div className="flex justify-between mt-4 text-yellow-400 dark:text-gray-600 text-sm flex-wrap">
         <button
           title="Reply"
           onClick={(e) => {
             e.stopPropagation();
             handleOpenReply();
           }}
-          className="flex items-center gap-1 hover:text-yellow-200 transition"
+          className="flex items-center gap-1 hover:text-yellow-200 dark:hover:text-gray-900 dark:text-gray-700 transition"
         >
           <FiMessageCircle />
           <span>{post.replyCount || 0}</span>
@@ -269,7 +268,7 @@ function PostCard({ post }) {
         <button
           title="Repost"
           onClick={(e) => e.stopPropagation()}
-          className="flex items-center gap-1 hover:text-yellow-200 transition"
+          className="flex items-center gap-1 hover:text-yellow-200 dark:hover:text-gray-900 dark:text-gray-700 transition"
         >
           <FiRepeat />
           <span>0</span>
@@ -277,7 +276,7 @@ function PostCard({ post }) {
         <button
           title="Share"
           onClick={(e) => e.stopPropagation()}
-          className="flex items-center gap-1 hover:text-yellow-200 transition"
+          className="flex items-center gap-1 hover:text-yellow-200 dark:hover:text-gray-900 dark:text-gray-700 transition"
         >
           <FiShare />
           <span>0</span>
@@ -288,9 +287,8 @@ function PostCard({ post }) {
             e.stopPropagation();
             handleBookmarkToggle();
           }}
-          className={`flex items-center gap-1 transition ${
-            bookmarked ? "text-yellow-900" : "hover:text-yellow-200"
-          }`}
+          className={`flex items-center gap-1 transition ${bookmarked ? "text-yellow-900" : "hover:text-yellow-200 dark:hover:text-gray-900"
+            }`}
         >
           <FiBookmark />
         </button>
@@ -300,9 +298,8 @@ function PostCard({ post }) {
             e.stopPropagation();
             handleLikeToggle();
           }}
-          className={`flex items-center gap-1 transition ${
-            liked ? "text-red-500" : "hover:text-yellow-200"
-          }`}
+          className={`flex items-center gap-1 transition ${liked ? "text-red-500" : "hover:text-yellow-200 dark:hover:text-gray-900"
+            }`}
         >
           <FiHeart />
           <span>{likeCount}</span>
@@ -310,7 +307,7 @@ function PostCard({ post }) {
         <button
           title="Views"
           onClick={(e) => e.stopPropagation()}
-          className="flex items-center gap-1 hover:text-yellow-200 transition"
+          className="flex items-center gap-1 hover:text-yellow-200 dark:hover:text-gray-900 dark:text-gray-700 transition"
         >
           <FiEye />
           <span>{post.viewCount}</span>

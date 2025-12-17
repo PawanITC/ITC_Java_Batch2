@@ -12,7 +12,7 @@ function PostDetails() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const res = await axiosInstance.get(`/api/v1/posts/${postId}`);
+        const res = await axiosInstance.get(`/v1/posts/${postId}`);
         setPost(res.data);
       } catch (err) {
         console.error("Failed to fetch post", err);
@@ -21,7 +21,7 @@ function PostDetails() {
 
     const fetchReplies = async () => {
       try {
-        const res = await axiosInstance.get(`/api/v1/posts/${postId}/replies`);
+        const res = await axiosInstance.get(`/v1/posts/${postId}/replies`);
         setReplies(res.data);
       } catch (err) {
         console.error("Failed to fetch replies", err);

@@ -1,0 +1,72 @@
+---
+- name: Setup PostgreSQL Database
+  hosts: ansible_postgresql
+  become: yes
+  vars:
+    postgresql_version: "14"
+    db_name: "tribetalk"
+    db_user: "admin"
+    db_password: "{{ lookup('env', 'DB_PASSWORD') | default('admin123', true) }}"
+    
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install PostgreSQL
+      apt:
+        name:
+          - postgresql-{{ postgresql_version }}
+          - postgresql-contrib-{{ postgresql_version }}
+          - python3-psycopg2
+        state: present
+
+    - name: Ensure PostgreSQL is running
+      systemd:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Create database
+      become_user: postgres
+      postgresql_db:
+        name: "{{ db_name }}"
+        encoding: UTF-8
+        lc_collate: en_US.UTF-8
+        lc_ctype: en_US.UTF-8
+        template: template0
+
+    - name: Create database user
+      become_user: postgres
+      postgresql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        role_attr_flags: CREATEDB,NOSUPERUSER
+
+    - name: Grant privileges to user
+      become_user: postgres
+      postgresql_privs:
+        database: "{{ db_name }}"
+        roles: "{{ db_user }}"
+        type: database
+        privs: ALL
+
+    - name: Configure PostgreSQL to listen on all interfaces
+      lineinfile:
+        path: "/etc/postgresql/{{ postgresql_version }}/main/postgresql.conf"
+        regexp: '^#?listen_addresses'
+        line: "listen_addresses = '*'"
+      notify: restart postgresql
+
+    - name: Configure PostgreSQL authentication
+      lineinfile:
+        path: "/etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf"
+        line: "host    all             all             10.0.0.0/16            md5"
+      notify: restart postgresql
+
+  handlers:
+    - name: restart postgresql
+      systemd:
+        name: postgresql
+        state: restarted
