@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import NewsItemCard from "../News/NewsItemCard";
-import { fetchNews } from "../../api/newsApi";
+import axiosInstance from "../../services/axiosInstance";
 
 function NewsTab({ query }) {
   const [articles, setArticles] = useState([]);
@@ -9,13 +9,21 @@ function NewsTab({ query }) {
   useEffect(() => {
     const loadNews = async () => {
       try {
-        const data = await fetchNews({ q: query });
+        const data = await axiosInstance.get("/api/v1/news", {
+          params: {
+            q: query,
+            size: 10,
+          },
+        });
+
+        const articles = Array.isArray(data) ? data : data.results || [];
+
         setArticles(
-          data.map((a, index) => ({
+          articles.map((a, index) => ({
             id: a.article_id || `news-${index}`,
             headline: a.title,
             timestamp: formatTimestamp(a.pubDate),
-            category: a.category || "News",
+            category: Array.isArray(a.category) ? a.category[0] : a.category || "News",
             posts: "",
             image: a.image_url || "https://via.placeholder.com/60x60",
             summary: a.description,

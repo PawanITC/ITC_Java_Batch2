@@ -34,6 +34,9 @@ public interface PostRepository extends MongoRepository<Post, String> {
     List<Post> findByMentionsContainingIgnoreCaseOrderByCreatedAtDesc(String mention);
 
     // Autocomplete hashtags (for dropdown)
-    @Query(value = "{ 'hashtags': { $regex: '^?0', $options: 'i' } }", fields = "{ 'hashtags': 1 }")
+    @Query(
+            value = "{ 'hashtags': { $elemMatch: { $regex: '^?0', $options: 'i' } } }",
+            fields = "{ 'hashtags': 1 }"
+    )
     List<Post> findDistinctHashtagsStartingWith(String prefix);
 }
