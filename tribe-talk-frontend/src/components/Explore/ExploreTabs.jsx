@@ -1,7 +1,7 @@
 import { FiSearch } from "react-icons/fi";
 import NewsItemCard from "../News/NewsItemCard";
 import { useEffect, useState, useMemo } from "react";
-import { fetchNews } from "../../api/newsApi";
+import axiosInstance from "../../services/axiosInstance";
 
 function ExploreTabs() {
   const [forYou, setForYou] = useState([]);
@@ -17,28 +17,39 @@ function ExploreTabs() {
     const loadCategory = async () => {
       try {
         if (activeTab === "forYou" && forYou.length === 0) {
-          const data = await fetchNews({ category: "top" });
-          setForYou(mapArticles(data));
+          const res = await axiosInstance.get("/api/v1/news", {
+            params: { category: "top" },
+          });
+          setForYou(mapArticles(res.data));
         }
 
         if (activeTab === "trending" && trending.length === 0) {
-          const data = await fetchNews({ q: "breaking", sort: "relevancy" });
-          setTrending(mapArticles(data));
+          const res = await axiosInstance.get("/api/v1/news", {
+            params: { q: "breaking", sort: "relevancy" },
+          });
+
+          setTrending(mapArticles(res.data));
         }
 
         if (activeTab === "news" && news.length === 0) {
-          const data = await fetchNews({ category: "top" });
-          setNews(mapArticles(data));
+          const res = await axiosInstance.get("/api/v1/news", {
+            params: { category: "top" },
+          });
+          setNews(mapArticles(res.data));
         }
 
         if (activeTab === "sports" && sports.length === 0) {
-          const data = await fetchNews({ category: "sports" });
-          setSports(mapArticles(data));
+          const res = await axiosInstance.get("/api/v1/news", {
+            params: { category: "sports" },
+          });
+          setSports(mapArticles(res.data));
         }
 
         if (activeTab === "entertainment" && entertainment.length === 0) {
-          const data = await fetchNews({ category: "entertainment" });
-          setEntertainment(mapArticles(data));
+          const res = await axiosInstance.get("/api/v1/news", {
+            params: { category: "entertainment" },
+          });
+          setEntertainment(mapArticles(res.data));
         }
       } catch (err) {
         console.error(err);
@@ -49,32 +60,31 @@ function ExploreTabs() {
   }, [activeTab]);
 
   function formatTimestamp(timestamp) {
-  if (!timestamp) return "";
+    if (!timestamp) return "";
 
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diffMs = now - date;
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
 
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
 
-  // Less than 1 hour → minutes
-  if (diffMinutes < 60) {
-    return `${diffMinutes}m ago`;
+    // Less than 1 hour → minutes
+    if (diffMinutes < 60) {
+      return `${diffMinutes}m ago`;
+    }
+
+    // Less than 24 hours → hours
+    if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    }
+
+    //  More than 24 hours → Month + Day
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
   }
-
-  // Less than 24 hours → hours
-  if (diffHours < 24) {
-    return `${diffHours}h ago`;
-  }
-
-  //  More than 24 hours → Month + Day
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-}
-
 
   function mapArticles(articles) {
     return articles.map((a, index) => ({

@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FiMoreHorizontal } from "react-icons/fi";
-import { fetchNews } from "../../api/newsApi";
-
+import axiosInstance from "../../services/axiosInstance";
 
 function formatTimestamp(timestamp) {
   if (!timestamp) return "";
@@ -31,22 +29,24 @@ function TodaysNews() {
   useEffect(() => {
     const loadNews = async () => {
       try {
-        const articles = await fetchNews({
-          country: "gb",
-          category: "top",
-          size: 10,
+        const { data } = await axiosInstance.get("/api/v1/news", {
+          params: {
+            country: "gb",
+            category: "top",
+            size: 10,
+          },
         });
+        const articles = Array.isArray(data) ? data : data.results || [];
 
         const mapped = articles.map((a, index) => ({
           id: a.article_id || `today-${index}`,
           headline: a.title,
-          timestamp: formatTimestamp(a.pubDate),   
+          timestamp: formatTimestamp(a.pubDate),
           category: a.category || "News",
           image: a.image_url,
           summary: a.description,
           url: a.link,
         }));
-
         setItems(mapped.slice(0, 3));
       } catch (err) {
         console.error("Failed to load today's news", err);
@@ -86,7 +86,6 @@ function TodaysNews() {
                 {item.timestamp} · {item.category}
               </p>
             </Link>
-            
           </li>
         ))}
       </ul>

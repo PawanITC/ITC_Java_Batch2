@@ -7,12 +7,12 @@ import axiosInstance from "../../services/axiosInstance";
 
 function SuggestionSidebar() {
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState({ users: [], hashtags: [] });
   const navigate = useNavigate();
 
   useEffect(() => {
     if (query.trim().length === 0) {
-      setSuggestions([]);
+      setSuggestions({ users: [], hashtags: [] });
       return;
     }
 
@@ -21,7 +21,11 @@ function SuggestionSidebar() {
         const res = await axiosInstance.get(`/api/v1/search/suggestions`, {
           params: { q: query },
         });
-        setSuggestions(res.data.users);
+        setSuggestions({
+          users: res.data.users,
+          hashtags: res.data.hashtags,
+        });
+        console.log(suggestions);
       } catch (err) {
         console.error("Failed to fetch suggestions:", err);
       }
@@ -54,10 +58,10 @@ function SuggestionSidebar() {
       </div>
 
       {/* Autocomplete Dropdown */}
-      {suggestions.length > 0 && (
+      {(suggestions.users.length > 0 || suggestions.hashtags.length > 0) && (
         <div className="px-6 mt-2 z-50">
           <div className="bg-neutral-800 mt-2 rounded-lg shadow-lg border border-yellow-700/40">
-            {suggestions.map((user) => (
+            {suggestions.users.map((user) => (
               <div
                 key={user.id}
                 onClick={() => navigate(`/profile/${user.id}`)}
@@ -76,6 +80,17 @@ function SuggestionSidebar() {
                     @{user.username}
                   </span>
                 </div>
+              </div>
+            ))}
+
+            {/* Hashtags */}
+            {suggestions.hashtags.map((tag) => (
+              <div
+                key={tag}
+                onClick={() => setQuery(`#${tag}`)}
+                className="px-4 py-2 hover:bg-neutral-700 cursor-pointer text-yellow-300"
+              >
+                #{tag}
               </div>
             ))}
           </div>
