@@ -342,8 +342,8 @@ public class PostServiceImpl implements PostService {
                 .map(m -> s3Service.generatePresignedUrl(m.url(), Duration.ofMinutes(15)))
                 .toList();
     }
-
-    private PostResponse mapToResponse(Post post) {
+    @Override
+     public PostResponse mapToResponse(Post post) {
         List<String> urls = generatePresignedUrls(post);
         return PostMapper.toResponse(post, urls);
     }

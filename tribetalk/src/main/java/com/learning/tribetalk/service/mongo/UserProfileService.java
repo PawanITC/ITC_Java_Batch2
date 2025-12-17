@@ -1,11 +1,20 @@
 package com.learning.tribetalk.service.mongo;
 
-import com.learning.tribetalk.dto.request.UserProfileRequest;
 import com.learning.tribetalk.dto.response.UserProfileResponse;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 public interface UserProfileService {
 
-    UserProfileResponse getProfile(Long userId);
+    UserProfileResponse updateProfile(
+            Long userId,
+            String displayName,
+            String bio,
+            String location,
+            MultipartFile profileImage,
+            MultipartFile coverImage
+    ) throws IOException;
 
-    UserProfileResponse updateProfile(Long userId, UserProfileRequest request);
+    UserProfileResponse getProfile(Long userId);
 }

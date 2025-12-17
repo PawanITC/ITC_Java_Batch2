@@ -3,75 +3,82 @@ import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../auth/AuthContext";
 import { GlobalContext } from "../GlobalContext";
+import UserCard from "../user/UserCard";
 
 function SuggestedUsers() {
   const { user } = useContext(AuthContext);
-  const { followingCount, setFollowingCount } = useContext(GlobalContext);
+  const { setFollowingCount } = useContext(GlobalContext);
+
+  const userId = user?.userId;
 
   const [users, setUsers] = useState([]);
   const [followingMap, setFollowingMap] = useState({});
-  const userId = user?.userId;
-
-  const fetchSuggestedUsers = async () => {
-    if (!userId) return;
-    try {
-      const res = await axiosInstance.get(`/api/users/suggested-users/${userId}`);
-      setUsers(res.data);
-
-      const map = {};
-      res.data.forEach((u) => {
-        map[u.id] = u.isFollowing || false;
-      });
-      setFollowingMap(map);
-    } catch {
-      toast.error("Failed to load suggested users.");
-    }
-  };
 
   useEffect(() => {
-    fetchSuggestedUsers();
+    if (!userId) return;
+
+    const fetchData = async () => {
+      try {
+        const [suggestedRes, followingRes] = await Promise.all([
+          axiosInstance.get(`/api/users/suggested-users/${userId}`),
+          axiosInstance.get(`/api/follow/following-list/${userId}`),
+        ]);
+
+        setUsers(suggestedRes.data);
+
+        const map = {};
+        followingRes.data.forEach(u => (map[u.id] = true));
+        setFollowingMap(map);
+
+      } catch {
+        toast.error("Failed to load suggestions");
+      }
+    };
+
+    fetchData();
   }, [userId]);
 
   const toggleFollow = async (targetId) => {
     const isFollowing = followingMap[targetId];
-    const url = isFollowing ? "/api/follow/unfollow-user" : "/api/follow/follow-user";
-    const method = isFollowing ? "delete" : "post";
 
     try {
-      await axiosInstance({ method, url, data: { followerId: userId, followingId: targetId } });
-      setFollowingMap((prev) => ({ ...prev, [targetId]: !isFollowing }));
+      await axiosInstance({
+        method: isFollowing ? "delete" : "post",
+        url: isFollowing
+          ? "/api/follow/unfollow-user"
+          : "/api/follow/follow-user",
+        data: { followerId: userId, followingId: targetId },
+      });
 
-      setFollowingCount((prev) => (isFollowing ? prev - 1 : prev + 1));
-      toast.success(isFollowing ? "Unfollowed!" : "Followed!");
+      setFollowingMap(prev => ({
+        ...prev,
+        [targetId]: !isFollowing,
+      }));
+
+      setFollowingCount(prev => (isFollowing ? prev - 1 : prev + 1));
     } catch {
-      toast.error("Could not update follow status.");
+      toast.error("Action failed");
     }
   };
 
   return (
-    <div className="bg-gray-100 dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
-      <h2 className="text-lg font-semibold mb-4">You Might Like</h2>
-      <ul className="space-y-4">
-        {users.length === 0 ? (
-          <p className="text-yellow-400 dark:text-gray-600 text-sm">No users to suggest.</p>
-        ) : (
-          users.map((u) => (
-            <li key={u.id} className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-gray-900 dark:text-yellow-100">{u.displayname}</p>
-                <p className="text-sm text-yellow-400 dark:text-gray-600">@{u.username}</p>
-              </div>
-              <button
-                onClick={() => toggleFollow(u.id)}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition ${followingMap[u.id] ? "bg-gray-200 dark:bg-neutral-700 text-yellow-400 border border-yellow-400" : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
-                  }`}
-              >
-                {followingMap[u.id] ? "Following" : "Follow"}
-              </button>
-            </li>
-          ))
-        )}
-      </ul>
+    <div className="bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
+      <h2 className="text-lg font-semibold mb-4">You might like</h2>
+
+      {users.length === 0 ? (
+        <p className="text-yellow-400 text-sm">No suggestions</p>
+      ) : (
+        <div className="space-y-2">
+          {users.map(u => (
+            <UserCard
+              key={u.id}
+              user={u}
+              isFollowing={!!followingMap[u.id]}
+              onToggleFollow={() => toggleFollow(u.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

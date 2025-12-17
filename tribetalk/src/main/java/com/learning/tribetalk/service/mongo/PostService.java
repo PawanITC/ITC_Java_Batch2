@@ -24,4 +24,5 @@ public interface PostService {
     List<PostResponse> getReplies(String postId);
     void deletePost(String postId);
     PostResponse findByPostId(String postId);
+    PostResponse mapToResponse(Post post);
 }

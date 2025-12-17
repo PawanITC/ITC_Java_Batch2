@@ -2,108 +2,85 @@ import { useEffect, useState, useContext } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../auth/AuthContext";
+import { GlobalContext } from "../GlobalContext";
+import UserCard from "../user/UserCard";
 
-function FollowersListComponent() {
+function FollowersList() {
   const { user } = useContext(AuthContext);
+  const { setFollowingCount } = useContext(GlobalContext);
+
   const userId = user?.userId;
 
-  const [followers, setFollowers] = useState([]);
-  const [followingMap, setFollowingMap] = useState({}); // store follow status
-
-  // 1️⃣ Load followers list from backend
-  const fetchFollowers = async () => {
-    try {
-      const res = await axiosInstance.get(`/follow/followers-list/${userId}`);
-      console.log(" Followers List is ",res.data);
-      setFollowers(res.data);
-    } catch (err) {
-      toast.error("Failed to load followers list"); 
-    }
-  };
-
-  // 2️⃣ Load my following list to determine follow status
-  const fetchMyFollowing = async () => {
-    try {
-      const res = await axiosInstance.get(`/follow/following-list/${userId}`);
-      const list = res.data;
-
-      const map = {};
-      list.forEach(u => (map[u.id] = true)); // user is following
-      setFollowingMap(map);
-    } catch (err) {
-      toast.error("Failed to load follow status");
-    }
-  };
+  const [users, setUsers] = useState([]);
+  const [followingMap, setFollowingMap] = useState({});
 
   useEffect(() => {
     if (!userId) return;
 
-    fetchFollowers();
-    fetchMyFollowing();
-       
+    const fetchData = async () => {
+      try {
+        const [followersRes, followingRes] = await Promise.all([
+          axiosInstance.get(`/api/follow/followers-list/${userId}`),
+          axiosInstance.get(`/api/follow/following-list/${userId}`),
+        ]);
+
+        setUsers(followersRes.data);
+
+        const map = {};
+        followingRes.data.forEach(u => (map[u.id] = true));
+        setFollowingMap(map);
+
+      } catch {
+        toast.error("Failed to load followers");
+      }
+    };
+
+    fetchData();
   }, [userId]);
 
-  // 3️⃣ Toggle follow/unfollow
   const toggleFollow = async (targetId) => {
-    const isFollowing = followingMap[targetId] === true;
-
-    const method = isFollowing ? "delete" : "post";
-    const url = isFollowing
-      ? `/api/follow/unfollow-user`
-      : `/api/follow/follow-user`;
+    const isFollowing = followingMap[targetId];
 
     try {
       await axiosInstance({
-        method,
-        url,
-        data: { followerId: userId, followingId: targetId }
+        method: isFollowing ? "delete" : "post",
+        url: isFollowing
+          ? "/api/follow/unfollow-user"
+          : "/api/follow/follow-user",
+        data: { followerId: userId, followingId: targetId },
       });
 
-      setFollowingMap((prev) => ({
+      setFollowingMap(prev => ({
         ...prev,
         [targetId]: !isFollowing,
       }));
 
-      toast.success(isFollowing ? "Unfollowed" : "Followed");
-    } catch (err) {
-      toast.error("Operation failed");
+      setFollowingCount(prev => (isFollowing ? prev - 1 : prev + 1));
+    } catch {
+      toast.error("Action failed");
     }
   };
 
   return (
-    <div className="p-4 text-gray-700 dark:text-yellow-200">
+    <div className="p-4 text-yellow-200">
       <h1 className="text-xl font-semibold mb-4">Followers</h1>
 
-      {followers.length === 0 && (
-        <p className="text-yellow-400 dark:text-gray-600">No followers found.</p>
+      {users.length === 0 ? (
+        <p className="text-yellow-400">No followers yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {users.map(u => (
+            <UserCard
+              key={u.id}
+              user={u}
+              isFollowing={!!followingMap[u.id]}
+              onToggleFollow={() => toggleFollow(u.id)}
+            />
+          ))}
+        </div>
       )}
-
-      <ul className="space-y-4">
-        {followers.map((u) => (
-          <li
-            key={u.id}
-            className="flex items-center justify-between bg-gray-100 dark:bg-neutral-800 border border-yellow-700/40 p-3 rounded-xl"
-          >
-            <div>
-              <p className="font-semibold text-gray-900 dark:text-yellow-100">{u.displayname}</p>
-              <p className="text-sm text-yellow-400 dark:text-gray-600">@{u.username}</p>
-            </div>
-
-            <button
-              onClick={() => toggleFollow(u.id)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition ${
-                followingMap[u.id]
-                  ? "bg-gray-200 dark:bg-neutral-700 text-yellow-400 border border-yellow-400"
-                  : "bg-yellow-500 text-neutral-900 hover:bg-yellow-400"
-              }`}
-            >
-              {followingMap[u.id] ? "Following" : "Follow"}
-            </button>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
 
-export default FollowersListComponent;
+export default FollowersList;

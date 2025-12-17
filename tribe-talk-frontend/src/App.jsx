@@ -14,10 +14,12 @@ import Community from "./pages/Community.jsx";
 import Message from "./pages/Message.jsx";
 import PostModal from "./components/Post/PostModal.jsx";
 import PostMain from "./pages/PostMain.jsx";
+import Search from "./pages/Search.jsx";
 import { useContext } from "react";
 import { GlobalContext } from "./components/GlobalContext.jsx";
 import { AuthContext } from "./auth/AuthContext.jsx";
 import FollowersFollowingPage from "./pages/FollowersFollowingPage.jsx";
+
 
 
 
@@ -39,6 +41,7 @@ function App() {
             <Route path="/messages" element={<ProtectedRoute><Message /></ProtectedRoute>} />
             <Route path="/connections" element={<ProtectedRoute><FollowersFollowingPage /></ProtectedRoute>} />
             <Route path="/news/:id" element={<ProtectedRoute><News /></ProtectedRoute>} />
+            <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
             <Route path="/post/:postId" element={<ProtectedRoute><PostMain  /></ProtectedRoute>} />
           </Routes>
 

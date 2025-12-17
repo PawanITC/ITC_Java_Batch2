@@ -2,12 +2,12 @@ package com.learning.tribetalk.service.postgres.impl;
 
 import com.learning.tribetalk.dto.request.RegistrationRequest;
 import com.learning.tribetalk.dto.response.UserResponse;
-import com.learning.tribetalk.entity.postgres.Authority;
+import com.learning.tribetalk.entity.mongo.UserProfile;
 import com.learning.tribetalk.entity.postgres.User;
 import com.learning.tribetalk.exception.DuplicateResourceException;
 import com.learning.tribetalk.exception.ResourceNotFoundException;
 import com.learning.tribetalk.metrics.annotations.BusinessMetric;
-import com.learning.tribetalk.repository.postgres.AuthorityRepository;
+import com.learning.tribetalk.repository.mongo.UserProfileRepository;
 import com.learning.tribetalk.repository.postgres.FollowRepository;
 import com.learning.tribetalk.repository.postgres.UserRepository;
 import com.learning.tribetalk.service.postgres.UserService;
@@ -29,20 +29,19 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final UserRepository repo;
     private final FollowRepository followRepo;
     private final PasswordEncoder passwordEncoder;
-    private final AuthorityRepository authorityRepository;
+    private final UserProfileRepository userProfileRepository;
 
-    public UserServiceImpl(UserRepository repo, FollowRepository followRepo,
-            PasswordEncoder passwordEncoder, AuthorityRepository authorityRepository) {
+    public UserServiceImpl(UserRepository repo, FollowRepository followRepo, PasswordEncoder passwordEncoder, UserProfileRepository userProfileRepository) {
         this.repo = repo;
         this.passwordEncoder = passwordEncoder;
         this.followRepo = followRepo;
-        this.authorityRepository = authorityRepository;
+        this.userProfileRepository = userProfileRepository;
     }
 
     @Override
     @Transactional
     @BusinessMetric("user.registration")
-    public User registerUser(RegistrationRequest request) {
+    public void registerUser(RegistrationRequest request) {
         if (repo.existsByUsername(request.username())) {
             throw new DuplicateResourceException("Username already in use: " + request.username());
         }
@@ -53,24 +52,26 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         System.out.println("User Details " + request);
         System.out.println("encoded " + encodedpassword);
         System.out.println("Repo Object Name is  " + repo.toString());
-
-        // Create user
         User user = new User();
         user.setPassword(encodedpassword);
         user.setUsername(request.username());
         user.setEmail(request.email());
         user.setDisplayname(request.displayname());
+
         User savedUser = repo.save(user);
 
-        // Create default authority for the user
-        Authority authority = new Authority();
-        authority.setAuthority("ROLE_USER");
-        authority.setUser(savedUser);
-        authorityRepository.save(authority);
+        // 2️⃣ Create Mongo profile (NO security impact)
+        UserProfile profile = UserProfile.builder()
+                .userId(savedUser.getId())
+                .username(savedUser.getUsername())
+                .displayName(savedUser.getDisplayname())
+                .build();
 
-        System.out.println("✅ User registered with ROLE_USER authority: " + savedUser.getUsername());
 
-        return savedUser; // Return the saved user
+        userProfileRepository.save(profile);
+
+
+
     }
 
     @Override
@@ -107,9 +108,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public List<UserResponse> getAllUsers() {
-        return repo.findAll().stream()
-                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname()))
-                .toList();
+        return repo.findAll().stream().map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).toList();
     }
 
     @Override
@@ -145,22 +144,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public Optional<UserResponse> findByUsername(String username) {
-        return Optional.ofNullable(repo.findByUsername(username)
-                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname()))
-                .orElseThrow(() -> new ResourceNotFoundException("User not found")));
-    }
-
-    @Override
-    public Optional<User> findUserEntityByUsername(String username) {
-        return repo.findByUsername(username);
+        return Optional.ofNullable(repo.findByUsername(username).map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).orElseThrow(() -> new ResourceNotFoundException("User not found")));
     }
 
     @Override
     public Optional<UserResponse> findByUserId(Long userId) {
-        return Optional.ofNullable(repo.findById(userId)
-                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname()))
-                .orElseThrow(() -> new ResourceNotFoundException("User not found")));
+        return Optional.ofNullable(repo.findById(userId).map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).orElseThrow(() -> new ResourceNotFoundException("User not found")));
     }
+
 
     public List<UserResponse> findSuggestedUsers(Long userId) {
 
@@ -192,8 +183,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                         user.getId(),
                         user.getUsername(),
                         user.getEmail(),
-                        user.getDisplayname()))
+                        user.getDisplayname()
+                ))
                 .toList();
     }
+
 
 }

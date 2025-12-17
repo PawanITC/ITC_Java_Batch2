@@ -6,7 +6,7 @@ function NewsDetail() {
   const { state } = useLocation(); // ✅ this contains the article passed from NewsItemCard
   const [activeTab, setActiveTab] = useState("top");
 
-  // ✅ If user navigates directly without state, show fallback
+  //  If user navigates directly without state, show fallback
   const article = state || {
     id,
     headline: "Article not found",
