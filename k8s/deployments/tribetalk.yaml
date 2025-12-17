@@ -15,11 +15,15 @@ spec:
       labels:
         app: tribetalk
         version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
       serviceAccountName: tribetalk-sa
       containers:
       - name: tribetalk
-        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk:v1.1
+        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk:v2.1-websocket
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -92,6 +96,8 @@ spec:
             secretKeyRef:
               name: tribetalk-app-secrets
               key: github_client_secret
+        - name: GITHUB_REDIRECT_URI
+          value: "http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/login/oauth2/code/github"
         resources:
           requests:
             memory: "256Mi"

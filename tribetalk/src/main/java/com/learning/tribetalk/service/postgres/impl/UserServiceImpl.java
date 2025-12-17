@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     @Transactional
     @BusinessMetric("user.registration")
-    public void registerUser(RegistrationRequest request) {
+    public User registerUser(RegistrationRequest request) {
         if (repo.existsByUsername(request.username())) {
             throw new DuplicateResourceException("Username already in use: " + request.username());
         }
@@ -69,6 +69,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         authorityRepository.save(authority);
 
         System.out.println("✅ User registered with ROLE_USER authority: " + savedUser.getUsername());
+
+        return savedUser; // Return the saved user
     }
 
     @Override

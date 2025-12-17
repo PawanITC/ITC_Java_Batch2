@@ -15,11 +15,15 @@ spec:
       labels:
         app: chatservice
         version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8081"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
       serviceAccountName: tribetalk-sa
       containers:
       - name: chatservice
-        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/chatservice:v1.4
+        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/chatservice:v1.5
         imagePullPolicy: Always
         ports:
         - containerPort: 8081
