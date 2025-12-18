@@ -11,6 +11,9 @@ import com.learning.tribetalk.repository.postgres.FollowRepository;
 import com.learning.tribetalk.repository.postgres.UserRepository;
 import com.learning.tribetalk.service.NotificationProducer;
 import com.learning.tribetalk.service.postgres.FollowService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -33,9 +36,11 @@ public class FollowServiceImpl implements FollowService {
     private final UserRepository userRepository;
     private final NotificationProducer notificationProducer;
 
+    private static final Logger log = LoggerFactory.getLogger(FollowServiceImpl.class);
+
     public FollowServiceImpl(FollowRepository followRepository,
-                             UserRepository userRepository,
-                             NotificationProducer notificationProducer) {
+            UserRepository userRepository,
+            NotificationProducer notificationProducer) {
         this.followRepository = followRepository;
         this.userRepository = userRepository;
         this.notificationProducer = notificationProducer;
@@ -43,12 +48,13 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"followingList_Cache", "followersList_Cache", "followingCount_Cache", "followersCount_Cache"},
-            key = "#followerId", allEntries = true)
+    @CacheEvict(value = { "followingList_Cache", "followersList_Cache", "followingCount_Cache",
+            "followersCount_Cache" }, key = "#followerId", allEntries = true)
     public void follow(Long followerId, Long followingId) {
         Optional<Follow> existing = followRepository.findByFollowerIdAndFollowingId(followerId, followingId);
         if (existing.isPresent()) {
-            throw new DuplicateResourceException("Follow already exists !!");
+            // Already following - this is fine, just return success (idempotent operation)
+            return;
         }
 
         User follower = userRepository.findById(followerId)
@@ -71,15 +77,21 @@ public class FollowServiceImpl implements FollowService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                sendFollowNotification(follower, following);
+                // Send notification asynchronously - don't block the follow operation
+                try {
+                    sendFollowNotification(follower, following);
+                } catch (Exception e) {
+                    // Log error but don't fail the follow operation
+                    log.error("Failed to send follow notification: " + e.getMessage(), e);
+                }
             }
         });
     }
 
     @Override
     @Transactional
-    @CacheEvict(value = {"followingList_Cache", "followersList_Cache", "followingCount_Cache", "followersCount_Cache"},
-            key = "#followerId", allEntries = true)
+    @CacheEvict(value = { "followingList_Cache", "followersList_Cache", "followingCount_Cache",
+            "followersCount_Cache" }, key = "#followerId", allEntries = true)
     public void unFollow(Long followerId, Long followingId) {
         Optional<Follow> follow = followRepository.findByFollowerIdAndFollowingId(followerId, followingId);
         if (follow.isEmpty()) {
@@ -124,8 +136,7 @@ public class FollowServiceImpl implements FollowService {
                         f.getFollower().getId(),
                         f.getFollower().getUsername(),
                         f.getFollower().getEmail(),
-                        f.getFollower().getDisplayname()
-                ))
+                        f.getFollower().getDisplayname()))
                 .toList();
     }
 
@@ -141,8 +152,7 @@ public class FollowServiceImpl implements FollowService {
                         f.getFollowing().getId(),
                         f.getFollowing().getUsername(),
                         f.getFollowing().getEmail(),
-                        f.getFollowing().getDisplayname()
-                ))
+                        f.getFollowing().getDisplayname()))
                 .toList();
     }
 

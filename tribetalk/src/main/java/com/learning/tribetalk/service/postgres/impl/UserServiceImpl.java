@@ -31,7 +31,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final UserProfileRepository userProfileRepository;
 
-    public UserServiceImpl(UserRepository repo, FollowRepository followRepo, PasswordEncoder passwordEncoder, UserProfileRepository userProfileRepository) {
+    public UserServiceImpl(UserRepository repo, FollowRepository followRepo, PasswordEncoder passwordEncoder,
+            UserProfileRepository userProfileRepository) {
         this.repo = repo;
         this.passwordEncoder = passwordEncoder;
         this.followRepo = followRepo;
@@ -41,7 +42,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     @Transactional
     @BusinessMetric("user.registration")
-    public void registerUser(RegistrationRequest request) {
+    public User registerUser(RegistrationRequest request) {
         if (repo.existsByUsername(request.username())) {
             throw new DuplicateResourceException("Username already in use: " + request.username());
         }
@@ -67,11 +68,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .displayName(savedUser.getDisplayname())
                 .build();
 
-
         userProfileRepository.save(profile);
 
+        return savedUser;
+    }
 
-
+    @Override
+    public Optional<User> findUserEntityByUsername(String username) {
+        return repo.findByUsername(username);
     }
 
     @Override
@@ -108,7 +112,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public List<UserResponse> getAllUsers() {
-        return repo.findAll().stream().map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).toList();
+        return repo.findAll().stream()
+                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname()))
+                .toList();
     }
 
     @Override
@@ -144,14 +150,17 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public Optional<UserResponse> findByUsername(String username) {
-        return Optional.ofNullable(repo.findByUsername(username).map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).orElseThrow(() -> new ResourceNotFoundException("User not found")));
+        return Optional.ofNullable(repo.findByUsername(username)
+                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname()))
+                .orElseThrow(() -> new ResourceNotFoundException("User not found")));
     }
 
     @Override
     public Optional<UserResponse> findByUserId(Long userId) {
-        return Optional.ofNullable(repo.findById(userId).map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname())).orElseThrow(() -> new ResourceNotFoundException("User not found")));
+        return Optional.ofNullable(repo.findById(userId)
+                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname()))
+                .orElseThrow(() -> new ResourceNotFoundException("User not found")));
     }
-
 
     public List<UserResponse> findSuggestedUsers(Long userId) {
 
@@ -183,10 +192,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                         user.getId(),
                         user.getUsername(),
                         user.getEmail(),
-                        user.getDisplayname()
-                ))
+                        user.getDisplayname()))
                 .toList();
     }
-
 
 }
