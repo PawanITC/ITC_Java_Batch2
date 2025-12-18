@@ -1,5 +1,5 @@
-# Minimal Loki configuration for small cluster
-# Single instance mode with no persistence
+# Loki configuration for production with persistence
+# Single instance mode with PVC storage
 
 deploymentMode: SingleBinary
 
@@ -11,14 +11,6 @@ loki:
   
   storage:
     type: 'filesystem'
-  
-  # Disable ruler to avoid filesystem errors
-  rulerConfig:
-    enable_api: false
-    storage:
-      type: local
-      local:
-        directory: /tmp/rules
   
   schemaConfig:
     configs:
@@ -33,18 +25,20 @@ loki:
 singleBinary:
   replicas: 1
   
-  # Use emptyDir for temporary writable storage
+  # Enable persistence with PVC
   persistence:
-    enabled: false
+    enabled: true
+    size: 10Gi
+    storageClass: gp2  # AWS EBS gp2
   
-  # Minimal resource limits
+  # Production resource limits
   resources:
     requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 500m
+      cpu: 200m
       memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
 
 # Disable gateway (not needed for single instance)
 gateway:
@@ -80,7 +74,7 @@ monitoring:
 
 # Retention configuration
 limits_config:
-  retention_period: 168h  # 7 days (matches Prometheus)
+  retention_period: 168h  # 7 days
   max_query_length: 721h  # Allow querying full retention period
 
 # Test configuration

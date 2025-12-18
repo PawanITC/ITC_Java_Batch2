@@ -12,7 +12,7 @@ export const useNotificationWebSocket = (userId, onNotification) => {
 
         const client = new Client({
             // SockJS needs the full http URL
-            webSocketFactory: () => new SockJS(`${API_BASE_URL}/notification/ws/notifications`),
+            webSocketFactory: () => new SockJS(`${API_BASE_URL}/notification/ws-notifications`),
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,

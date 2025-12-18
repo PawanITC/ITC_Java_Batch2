@@ -40,7 +40,6 @@ spec:
           valueFrom:
             secretKeyRef:
               name: tribetalk-app-secrets
-              name: tribetalk-app-secrets
               key: kafka_bootstrap_servers
         - name: SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS
           valueFrom:
@@ -51,11 +50,11 @@ spec:
           value: "8082"
         resources:
           requests:
-            memory: "384Mi"
-            cpu: "200m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "768Mi"
-            cpu: "400m"
+            memory: "512Mi"
+            cpu: "300m"
         livenessProbe:
           httpGet:
             path: /notification/actuator/health

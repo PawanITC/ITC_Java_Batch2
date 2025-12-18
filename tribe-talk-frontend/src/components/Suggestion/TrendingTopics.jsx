@@ -21,8 +21,8 @@ function TrendingTopics() {
   ];
 
   return (
-    <div className="bg-gray-100 dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
-      <h2 className="text-lg font-semibold mb-4">What's Happening</h2>
+    <div className="bg-white dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
+      <h2 className="text-lg font-semibold mb-4 text-yellow-700 dark:text-yellow-200">What's Happening</h2>
       <ul className="space-y-4">
         {trends.map((trend, i) => (
           <li key={i} className="flex justify-between items-start">

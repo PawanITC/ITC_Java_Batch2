@@ -62,23 +62,23 @@ function Sidebar() {
   };
   return (
     <aside className="fixed top-0 left-0 h-screen w-20 md:w-64 bg-white dark:bg-neutral-900 text-gray-900 dark:text-yellow-100 border-r border-yellow-800 px-2 md:px-6 py-4 z-50">
-      <div className="flex flex-col h-full justify-between">
+      <div className="flex flex-col w-full h-full justify-between">
         {/* Top: Logo and Navigation */}
         <div className="flex flex-col md:space-y-6">
-          <div className="flex justify-center md:justify-start mb-6 h-20 items-center">
+          <div className="flex justify-center md:justify-start mb-6 items-center align-center self-center" >
             <img
               src={logo}
               alt="TribeTalk Logo"
-              className="w-10 h-10 md:w-32 md:h-auto"
+              className="w-10 h-10 md:w-32 md:h-auto rounded-md mt-3 shadow-[0px_20px_30px_-10px_rgb(38,57,77)] dark:shadow-none"
             />
           </div>
 
-          <nav className="flex flex-col justify-center items-center md:items-start gap-6 md:gap-4 grow">
+          <nav className="flex flex-col justify-center mt-2 items-center md:items-start gap-6 md:gap-4 grow">
             {navItems.map(({ icon, label }, idx) => (
               <Link
                 to={label === "Home" ? "/main" : `/${label.toLowerCase()}`}
                 key={idx}
-                className="w-full flex flex-col md:flex-row items-center md:items-start gap-0 md:gap-4 px-2 py-2 rounded-md hover:bg-yellow-700 transition"
+                className="w-full flex flex-col md:flex-row items-center md:items-start gap-0 md:gap-4 px-2 py-2 rounded-md hover:bg-yellow-700 hover:text-white dark:hover:bg-neutral-800 dark:hover:text-yellow-200 transition"
               >
                 {label === "Notifications" && (
                   <div className="relative">
