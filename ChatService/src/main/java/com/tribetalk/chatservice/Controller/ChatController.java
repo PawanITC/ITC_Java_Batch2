@@ -13,6 +13,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.time.Instant;
+import java.util.Objects;
 
 @Controller
 public class ChatController {
@@ -57,6 +58,42 @@ public class ChatController {
                     // FIRE & FORGET (Kafka is async)
                     notificationProducer.sendNotification(notification);
 
+                })
+                .subscribe();
+    }
+
+    @MessageMapping("/chat.sendGroup")
+    public void sendGroupMessage(ChatMessage message) {
+        message.setTimestamp(Instant.now().toEpochMilli());
+        message.setGroup(true);
+
+        chatMessageRepository.save(message)
+                .doOnSuccess(saved -> {
+                    // Broadcast to group topic
+                    messagingTemplate.convertAndSend(
+                            "/topic/group/" + saved.getChatRoomId(),
+                            saved
+                    );
+
+                    // Send notifications to all group members except sender
+                    if (saved.getGroupMembers() != null) {
+                        saved.getGroupMembers().stream()
+                                .filter(Objects::nonNull) // ✅ skip nulls
+                                .filter(memberId -> !memberId.equals(saved.getSenderId()))
+                                .forEach(memberId -> {
+                                    NotificationDTO notification = NotificationDTO.builder()
+                                            .actorId(saved.getSenderId())
+                                            .recipientId(memberId)
+                                            .actorUsername(saved.getSenderUsername())
+                                            .type(NotificationType.REPLY)
+                                            .resourceId(saved.getChatRoomId())
+                                            .createdAt(Instant.now())
+                                            .readStatus(false)
+                                            .build();
+
+                                    notificationProducer.sendNotification(notification);
+                                });
+                    }
                 })
                 .subscribe();
     }

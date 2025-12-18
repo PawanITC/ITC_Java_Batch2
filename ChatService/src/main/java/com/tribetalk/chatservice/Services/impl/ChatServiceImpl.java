@@ -8,16 +8,14 @@ import com.tribetalk.chatservice.Repository.ChatMessageRepository;
 import com.tribetalk.chatservice.Services.ChatService;
 import com.tribetalk.chatservice.Services.NotificationProducer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,9 +27,6 @@ public class ChatServiceImpl implements ChatService {
     @Autowired
     NotificationProducer notificationProducer;
 
-
-    //public List<ChatMessageResponse> getChatMessages(String roomId) {
-
     public Flux<ChatMessageResponse> getChatMessages(String roomId) {
         return chatMessageRepository.findByChatRoomIdOrderByTimestampAsc(roomId)
                 .map(msg -> ChatMessageResponse.builder()
@@ -41,37 +36,16 @@ public class ChatServiceImpl implements ChatService {
                         .timestamp(msg.getTimestamp())
                         .senderUsername(msg.getSenderUsername())
                         .isRead(msg.isRead())
+                        .isGroup(msg.isGroup())
+                        .groupMembers(msg.getGroupMembers())
+                        .groupName(msg.getGroupName())
                         .build());
-
-
     }
 
-
-  /*     public Map<String, List<ChatMessageResponse>> getGroupedChatsForUser(String userId) {
-        List<ChatMessage> messages = chatMessageRepository
-                .findBySenderIdOrReceiverIdOrderByTimestampDesc(userId, userId);
-
-        return messages.stream()
-                .collect(Collectors.groupingBy(
-                        ChatMessage::getChatRoomId,
-                        Collectors.mapping(chatMessage -> {
-                            ChatMessageResponse dto = new ChatMessageResponse();
-                            dto.setSenderId(chatMessage.getSenderId());
-                            dto.setReceiverId(chatMessage.getReceiverId());
-                            dto.setContent(chatMessage.getContent());
-                            dto.setTimestamp(chatMessage.getTimestamp());
-                            dto.setSenderUsername(chatMessage.getSenderUsername());
-                            dto.setRead(chatMessage.isRead());
-                            return dto;
-                        }, Collectors.toList())
-                ));
-    }*/
-
     public Mono<Map<String, List<ChatMessageResponse>>> getGroupedChatsForUser(String userId) {
-
         return chatMessageRepository
-                .findBySenderIdOrReceiverIdOrderByTimestampDesc(userId, userId)
-                .collectMultimap(ChatMessage::getChatRoomId)  // group by the entity field
+                .findBySenderIdOrReceiverIdOrGroupMembersContainingOrderByTimestampDesc(userId, userId, userId)
+                .collectMultimap(ChatMessage::getChatRoomId)
                 .map(roomMap -> roomMap.entrySet().stream()
                         .collect(Collectors.toMap(
                                 Map.Entry::getKey,
@@ -83,23 +57,15 @@ public class ChatServiceImpl implements ChatService {
                                                 .timestamp(chatMessage.getTimestamp())
                                                 .senderUsername(chatMessage.getSenderUsername())
                                                 .isRead(chatMessage.isRead())
+                                                .isGroup(chatMessage.isGroup())
+                                                .groupMembers(chatMessage.getGroupMembers())
+                                                .groupName(chatMessage.getGroupName())
                                                 .build())
                                         .collect(Collectors.toList())
                         ))
                 );
     }
 
-
-    /*public void     markMessagesAsRead(String senderId, String receiverId) {
-        List<ChatMessage> unreadMessages = chatMessageRepository
-                .findBySenderIdAndReceiverIdAndIsReadFalse(senderId, receiverId);
-
-        for (ChatMessage message : unreadMessages) {
-            message.setRead(true);
-        }
-
-        chatMessageRepository.saveAll(unreadMessages);
-    }*/
     public Mono<Void> markMessagesAsRead(String senderId, String receiverId) {
         return chatMessageRepository
                 .findBySenderIdAndReceiverIdAndIsReadFalse(senderId, receiverId)
@@ -107,15 +73,13 @@ public class ChatServiceImpl implements ChatService {
                     msg.setRead(true);
                     return chatMessageRepository.save(msg);
                 })
-                .then(); // returns Mono<Void>
+                .then();
     }
 
     public Mono<Map<String, List<ChatMessageResponse>>> getUnreadGroupedChatsForUser(String userId) {
-
-
         return chatMessageRepository
                 .findByReceiverIdAndIsReadFalseOrderByTimestampDesc(userId)
-                .collectMultimap(ChatMessage::getChatRoomId)  // group by the entity field
+                .collectMultimap(ChatMessage::getChatRoomId)
                 .map(roomMap -> roomMap.entrySet().stream()
                         .collect(Collectors.toMap(
                                 Map.Entry::getKey,
@@ -127,6 +91,13 @@ public class ChatServiceImpl implements ChatService {
                                                 .timestamp(chatMessage.getTimestamp())
                                                 .senderUsername(chatMessage.getSenderUsername())
                                                 .isRead(chatMessage.isRead())
+                                                .isGroup(chatMessage.isGroup())
+                                                .groupMembers(chatMessage.getGroupMembers() == null
+                                                        ? List.of() // ✅ avoid nulls
+                                                        : chatMessage.getGroupMembers().stream()
+                                                        .filter(Objects::nonNull)
+                                                        .collect(Collectors.toList()))
+                                                .groupName(chatMessage.getGroupName())
                                                 .build())
                                         .collect(Collectors.toList())
                         ))
@@ -135,7 +106,7 @@ public class ChatServiceImpl implements ChatService {
 
     public void sendNotication(ChatMessage message) {
         NotificationDTO event = NotificationDTO.builder()
-                .recipientId(message.getReceiverId()) // random recipient
+                .recipientId(message.getReceiverId())
                 .actorId(message.getSenderId())
                 .type(NotificationType.REPLY)
                 .resourceId(message.getChatRoomId())
@@ -143,5 +114,4 @@ public class ChatServiceImpl implements ChatService {
                 .build();
         notificationProducer.sendNotification(event);
     }
-
 }

@@ -13,5 +13,11 @@ public interface ChatMessageRepository extends ReactiveMongoRepository<ChatMessa
     Flux<ChatMessage> findBySenderIdOrReceiverIdOrderByTimestampDesc(String senderId, String receiverId);
     Flux<ChatMessage> findBySenderIdAndReceiverIdAndIsReadFalse(String senderId, String receiverId);
     Flux<ChatMessage> findByReceiverIdAndIsReadFalseOrderByTimestampDesc(String receiverId);
+    Flux<ChatMessage> findBySenderIdOrReceiverIdOrGroupMembersContainingOrderByTimestampDesc(
+            String senderId,
+            String receiverId,
+            String memberId
+    );
+
 
 }

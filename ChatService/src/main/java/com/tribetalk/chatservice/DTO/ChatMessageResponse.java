@@ -16,4 +16,7 @@ public class ChatMessageResponse {
     private Long timestamp;
     private String senderUsername;
     private boolean isRead;
+    private boolean isGroup;        // flag to indicate group chat
+    private java.util.List<String> groupMembers; // list of userIds in the group
+    private String groupName;
 }

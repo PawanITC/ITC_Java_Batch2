@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -26,8 +25,10 @@ public class ChatRestController {
     private ChatServiceImpl chatService;
     private static final Logger log = LoggerFactory.getLogger(ChatRestController.class);
 
-    @Operation(summary = "End Point To get Chat Messages", description = "To write history messages from a chat room assorted with respect to time")
-
+    @Operation(
+            summary = "End Point To get Chat Messages",
+            description = "To write history messages from a chat room assorted with respect to time"
+    )
     @GetMapping("/messages/{roomId}")
     public Flux<ChatMessageResponse> getChatMessages(@PathVariable String roomId) {
         log.info("getChatMessages called on thread: {}", Thread.currentThread().getName());
@@ -52,5 +53,4 @@ public class ChatRestController {
         log.info("getUnreadConversations called on thread: {}", Thread.currentThread().getName());
         return chatService.getUnreadGroupedChatsForUser(userId);
     }
-
 }

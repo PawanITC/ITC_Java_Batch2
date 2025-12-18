@@ -23,8 +23,8 @@ const MessagePreivewPlaceHolder = ({ onSelectUser }) => {
       {newChatPopup && (
         <SelectUser
           onClose={() => setNewChatPopUp(false)}
-          onUserSelect={(user) => {
-            onSelectUser(user);
+          onUserSelect={(selection) => {
+            onSelectUser(selection);
             setNewChatPopUp(false);
           }}
         />
