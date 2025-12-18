@@ -62,11 +62,11 @@ function SuggestedUsers() {
   };
 
   return (
-    <div className="bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
-      <h2 className="text-lg font-semibold mb-4">You might like</h2>
+    <div className="bg-white dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
+      <h2 className="text-lg font-semibold text-yellow-700 dark:text-yellow-200 mb-4">You might like</h2>
 
       {users.length === 0 ? (
-        <p className="text-yellow-400 text-sm">No suggestions</p>
+        <p className="text-yellow-400 dark:text-yellow-200 text-sm">No suggestions</p>
       ) : (
         <div className="space-y-2">
           {users.map(u => (

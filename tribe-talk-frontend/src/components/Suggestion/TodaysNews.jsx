@@ -60,16 +60,16 @@ function TodaysNews() {
 
   if (loading) {
     return (
-      <div className="bg-gray-100 dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
-        <h2 className="text-lg font-semibold mb-4">Today's News</h2>
+      <div className="bg-white dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
+        <h2 className="text-lg font-semibold text-yellow-700 dark:text-yellow-200 mb-4">Today's News</h2>
         <p className="text-yellow-400 dark:text-gray-600 text-sm">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-100 dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
-      <h2 className="text-lg font-semibold mb-4">Today's News</h2>
+    <div className="bg-white dark:bg-neutral-800 border border-yellow-700/40 rounded-xl p-4">
+      <h2 className="text-lg font-semibold mb-4 text-yellow-700 dark:text-yellow-200">Today's News</h2>
 
       <ul className="space-y-4">
         {items.map((item) => (

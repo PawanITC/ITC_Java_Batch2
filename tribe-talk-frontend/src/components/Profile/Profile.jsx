@@ -7,7 +7,8 @@ import { useNavigate } from "react-router-dom";
 import PostCard from "../Post/PostCard";
 import { FiCalendar } from "react-icons/fi";
 import EditProfileModal from "./EditProfileModal";
-
+import defaultAvatar from "../../assets/default-avatar.jpg";
+import defaultCover from "../../assets/default-cover.jpg";
 function Profile() {
   const [activeTab, setActiveTab] = useState("posts");
   const [originalPosts, setOriginalPosts] = useState([]);
@@ -69,7 +70,7 @@ function Profile() {
       {/* Cover */}
       <div className="relative h-40 rounded-md overflow-hidden mb-20">
         <img
-          src={userProfile.coverImageUrl || "/default-cover.png"}
+          src={userProfile.coverImageUrl || defaultCover}
           alt="Cover"
           className="w-full h-full object-cover"
         />
@@ -78,7 +79,7 @@ function Profile() {
       {/* Avatar + Edit */}
       <div className="relative flex items-center gap-4 -mt-28 mb-6 px-2">
         <img
-          src={userProfile.profileImageUrl || "/default-avatar.png"}
+          src={userProfile.profileImageUrl || defaultAvatar}
           alt="Avatar"
           className="w-24 h-24 rounded-full border-4 border-neutral-900 object-cover"
         />
@@ -123,11 +124,10 @@ function Profile() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`pb-2 font-semibold capitalize ${
-              activeTab === tab
-                ? "border-b-2 border-yellow-400"
-                : "text-yellow-400"
-            }`}
+            className={`pb-2 font-semibold capitalize ${activeTab === tab
+              ? "border-b-2 border-yellow-400"
+              : "text-yellow-400"
+              }`}
           >
             {tab}
           </button>

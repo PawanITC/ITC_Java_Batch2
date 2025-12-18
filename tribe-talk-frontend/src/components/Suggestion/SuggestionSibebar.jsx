@@ -42,9 +42,9 @@ function SuggestionSidebar() {
   };
 
   return (
-    <aside className="hidden md:flex md:flex-col md:w-1/3 border-l border-yellow-700/40 h-screen">
+    <aside className="hidden md:flex md:flex-col md:w-1/3 border-l border-yellow-700/40 min-h-screen">
       {/* Sticky Search Bar */}
-      <div className="sticky top-0 z-40 bg-neutral-900 px-6 py-4 h-20 flex items-center border-b border-yellow-700/40">
+      <div className="sticky top-0 z-40 bg-white dark:bg-neutral-900 px-6 py-4 h-20 flex items-center border-b border-yellow-700/40">
         <div className="relative w-full">
           <input
             type="text"
@@ -52,7 +52,7 @@ function SuggestionSidebar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full bg-neutral-800 text-yellow-200 px-4 py-2 rounded-full border border-yellow-700/40 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full bg-white dark:bg-neutral-800 text-yellow-700 dark:text-yellow-200 px-4 py-2 rounded-full border border-yellow-700/40 focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
         </div>
       </div>
@@ -60,12 +60,12 @@ function SuggestionSidebar() {
       {/* Autocomplete Dropdown */}
       {(suggestions.users.length > 0 || suggestions.hashtags.length > 0) && (
         <div className="px-6 mt-2 z-50">
-          <div className="bg-neutral-800 mt-2 rounded-lg shadow-lg border border-yellow-700/40">
+          <div className="bg-white dark:bg-neutral-800 mt-2 rounded-lg shadow-lg border border-yellow-700/40">
             {suggestions.users.map((user) => (
               <div
                 key={user.id}
                 onClick={() => navigate(`/profile/${user.id}`)}
-                className="flex items-center gap-4 px-4 py-2 hover:bg-neutral-700 cursor-pointer"
+                className="flex items-center gap-4 px-4 py-2 hover:bg-neutral-700 dark:hover:bg-neutral-700 cursor-pointer"
               >
                 <img
                   src={user.avatar || "/default-avatar.png"}
@@ -73,10 +73,10 @@ function SuggestionSidebar() {
                   className="w-8 h-8 rounded-full object-cover"
                 />
                 <div className="flex flex-col">
-                  <span className="text-yellow-100 font-semibold">
+                  <span className="text-yellow-700 dark:text-yellow-200 font-semibold">
                     {user.displayname}
                   </span>
-                  <span className="text-yellow-400 text-sm">
+                  <span className="text-yellow-700 dark:text-yellow-200 text-sm">
                     @{user.username}
                   </span>
                 </div>
@@ -88,7 +88,7 @@ function SuggestionSidebar() {
               <div
                 key={tag}
                 onClick={() => setQuery(`#${tag}`)}
-                className="px-4 py-2 hover:bg-neutral-700 cursor-pointer text-yellow-300"
+                className="px-4 py-2 hover:bg-neutral-700 dark:hover:bg-neutral-700 cursor-pointer text-yellow-300"
               >
                 #{tag}
               </div>
