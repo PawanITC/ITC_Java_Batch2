@@ -20,8 +20,21 @@ function Message() {
       setCurrentUser(res.data);
     });
 
-    const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`);
-    const client = new Client({ webSocketFactory: () => socket });
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || window.location.origin;
+    const socket = new SockJS(`${API_BASE_URL}/ws`);
+    const client = new Client({
+      webSocketFactory: () => socket,
+      onConnect: () => {
+        console.log("Chat WebSocket connected successfully");
+      },
+      onStompError: (frame) => {
+        console.error("STOMP error:", frame.headers['message']);
+        console.error("Error details:", frame.body);
+      },
+      onDisconnect: () => {
+        console.log("Chat WebSocket disconnected");
+      }
+    });
     client.activate();
     setStompClient(client);
   }, []);

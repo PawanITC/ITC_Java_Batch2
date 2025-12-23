@@ -126,6 +126,14 @@ resource "aws_security_group" "postgresql" {
   }
 
   ingress {
+    description     = "PostgreSQL from EKS nodes"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_eks_cluster.main.vpc_config[0].cluster_security_group_id]
+  }
+
+  ingress {
     description     = "SSH from bastion"
     from_port       = 22
     to_port         = 22
@@ -161,6 +169,14 @@ resource "aws_security_group" "mongodb" {
   }
 
   ingress {
+    description     = "MongoDB from EKS nodes"
+    from_port       = 27017
+    to_port         = 27017
+    protocol        = "tcp"
+    security_groups = [aws_eks_cluster.main.vpc_config[0].cluster_security_group_id]
+  }
+
+  ingress {
     description     = "SSH from bastion"
     from_port       = 22
     to_port         = 22
@@ -193,6 +209,14 @@ resource "aws_security_group" "kafka" {
     to_port         = 9092
     protocol        = "tcp"
     security_groups = [aws_security_group.microservices.id]
+  }
+
+  ingress {
+    description     = "Kafka from EKS nodes"
+    from_port       = 9092
+    to_port         = 9092
+    protocol        = "tcp"
+    security_groups = [aws_eks_cluster.main.vpc_config[0].cluster_security_group_id]
   }
 
   ingress {
@@ -244,6 +268,14 @@ resource "aws_security_group" "redis" {
     to_port         = 6379
     protocol        = "tcp"
     security_groups = [aws_security_group.microservices.id]
+  }
+
+  ingress {
+    description     = "Redis from EKS nodes"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_eks_cluster.main.vpc_config[0].cluster_security_group_id]
   }
 
   ingress {

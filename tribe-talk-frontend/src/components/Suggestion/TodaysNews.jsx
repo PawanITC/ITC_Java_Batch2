@@ -82,7 +82,7 @@ function TodaysNews() {
               <p className="text-sm font-semibold text-gray-900 dark:text-yellow-100 leading-snug">
                 {item.headline}
               </p>
-              <p className="text-xs text-yellow-400 dark:text-gray-600 mt-1">
+              <p className="text-xs text-yellow-700 dark:text-gray-600 mt-1">
                 {item.timestamp} · {item.category}
               </p>
             </Link>

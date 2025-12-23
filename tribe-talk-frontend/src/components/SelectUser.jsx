@@ -28,21 +28,33 @@ const SelectUser = ({ onClose, onUserSelect }) => {
     searchQuery.trim().length === 0 || !Array.isArray(users) || users.length === 0
       ? []
       : users
-          .filter((u) => currentUser && u.id !== currentUser.id)
-          .filter((u) =>
-            u.displayname.toLowerCase().includes(searchQuery.toLowerCase())
-          );
+        .filter((u) => currentUser && u.id !== currentUser.id)
+        .filter((u) =>
+          u.displayname.toLowerCase().includes(searchQuery.toLowerCase())
+        );
 
   const toggleUserSelection = (user) => {
-    setSelectedUsers((prev) =>
-      prev.some((u) => u.id === user.id)
-        ? prev.filter((u) => u.id !== user.id)
-        : [...prev, user]
-    );
+    const isAlreadySelected = selectedUsers.some((u) => u.id === user.id);
+
+    if (isAlreadySelected) {
+      // Deselect user
+      setSelectedUsers((prev) => prev.filter((u) => u.id !== user.id));
+    } else {
+      // Add to selection
+      setSelectedUsers((prev) => [...prev, user]);
+    }
+  };
+
+  const handleStart1on1Chat = () => {
+    if (selectedUsers.length === 1) {
+      onUserSelect(selectedUsers[0]);
+      setSelectedUsers([]);
+      onClose();
+    }
   };
 
   const handleCreateGroup = () => {
-    if (selectedUsers.length > 1) {
+    if (selectedUsers.length >= 2) {
       onUserSelect({ type: "group", members: selectedUsers });
       setSelectedUsers([]);
       onClose();
@@ -80,11 +92,10 @@ const SelectUser = ({ onClose, onUserSelect }) => {
               <button
                 key={user.id}
                 onClick={() => toggleUserSelection(user)}
-                className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg border ${
-                  selectedUsers.some((u) => u.id === user.id)
-                    ? "bg-yellow-700 text-black"
-                    : "bg-neutral-800 text-yellow-100"
-                }`}
+                className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg border ${selectedUsers.some((u) => u.id === user.id)
+                  ? "bg-yellow-700 text-black"
+                  : "bg-neutral-800 text-yellow-100"
+                  }`}
               >
                 <img
                   src={`https://api.dicebear.com/9.x/thumbs/svg?seed=${user.username}`}
@@ -101,13 +112,42 @@ const SelectUser = ({ onClose, onUserSelect }) => {
           )}
         </div>
 
-        <button
-          onClick={handleCreateGroup}
-          disabled={selectedUsers.length < 2}
-          className="mt-4 w-full bg-yellow-700 text-black py-2 rounded-lg font-semibold disabled:opacity-50"
-        >
-          Create Group Chat
-        </button>
+        {selectedUsers.length > 0 && (
+          <p className="text-yellow-400 text-xs text-center mt-2">
+            {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''} selected.
+          </p>
+        )}
+
+        {/* Action Buttons */}
+        <div className="mt-4 space-y-2">
+          {selectedUsers.length === 1 && (
+            <button
+              onClick={handleStart1on1Chat}
+              className="w-full bg-yellow-500 text-black py-2 rounded-lg font-semibold hover:bg-yellow-400 transition"
+            >
+              Start 1-on-1 Chat with {selectedUsers[0].displayname}
+            </button>
+          )}
+
+          {selectedUsers.length >= 2 && (
+            <button
+              onClick={handleCreateGroup}
+              className="w-full bg-yellow-700 text-black py-2 rounded-lg font-semibold hover:bg-yellow-600 transition"
+            >
+              Create Group Chat ({selectedUsers.length} members)
+            </button>
+          )}
+
+          {selectedUsers.length === 0 && (
+            <div className="text-yellow-400 text-sm text-center py-2">
+              Select users to start chatting
+            </div>
+          )}
+        </div>
+
+        <p className="text-yellow-400 text-xs text-center mt-3">
+          💡 Tip: Select 1 user for 1-on-1 chat, or 2+ users for a group chat
+        </p>
       </div>
     </div>
   );

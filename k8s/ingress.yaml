@@ -70,9 +70,9 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: monitoring-grafana-proxy
+            name: grafana
             port:
-              number: 80
+              number: 3000
       
       # Actuator endpoints (for health checks)
       - path: /actuator

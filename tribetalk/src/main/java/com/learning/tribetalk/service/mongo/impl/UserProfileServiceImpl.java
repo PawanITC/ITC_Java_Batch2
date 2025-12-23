@@ -19,123 +19,125 @@ import java.time.Instant;
 @Service
 public class UserProfileServiceImpl implements UserProfileService {
 
-    private final UserProfileRepository profileRepo;
-    private final UserRepository userRepo;
-    private final S3Service s3Service;
+        private final UserProfileRepository profileRepo;
+        private final UserRepository userRepo;
+        private final S3Service s3Service;
 
-    public UserProfileServiceImpl(
-            UserProfileRepository profileRepo,
-            UserRepository userRepo,
-            S3Service s3Service
-    ) {
-        this.profileRepo = profileRepo;
-        this.userRepo = userRepo;
-        this.s3Service = s3Service;
-    }
-
-    // =====================================================
-    // UPDATE PROFILE
-    // =====================================================
-    @Override
-    @Transactional
-    public UserProfileResponse updateProfile(
-            Long userId,
-            String displayName,
-            String bio,
-            String location,
-            MultipartFile profileImage,
-            MultipartFile coverImage
-    ) throws IOException {
-
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        UserProfile profile = profileRepo.findByUserId(userId)
-                .orElseGet(() -> UserProfile.builder()
-                        .userId(userId)
-                        .username(user.getUsername())
-                        .createdAt(Instant.now())
-                        .build());
-
-        if (displayName != null && !displayName.isBlank()) {
-            profile.setDisplayName(displayName);
-        }
-        if (bio != null) profile.setBio(bio);
-        if (location != null) profile.setLocation(location);
-
-        // ---- Profile Image ----
-        if (profileImage != null && !profileImage.isEmpty()) {
-            if (profile.getUserProfilePicture() != null) {
-                s3Service.deleteFile(profile.getUserProfilePicture());
-            }
-            String key = s3Service.uploadFile(profileImage);
-            profile.setUserProfilePicture(key);
+        public UserProfileServiceImpl(
+                        UserProfileRepository profileRepo,
+                        UserRepository userRepo,
+                        S3Service s3Service) {
+                this.profileRepo = profileRepo;
+                this.userRepo = userRepo;
+                this.s3Service = s3Service;
         }
 
-        // ---- Cover Image ----
-        if (coverImage != null && !coverImage.isEmpty()) {
-            if (profile.getUserCoverPicture() != null) {
-                s3Service.deleteFile(profile.getUserCoverPicture());
-            }
-            String key = s3Service.uploadFile(coverImage);
-            profile.setUserCoverPicture(key);
+        // =====================================================
+        // UPDATE PROFILE
+        // =====================================================
+        @Override
+        @Transactional
+        public UserProfileResponse updateProfile(
+                        Long userId,
+                        String displayName,
+                        String bio,
+                        String location,
+                        MultipartFile profileImage,
+                        MultipartFile coverImage) throws IOException {
+
+                User user = userRepo.findById(userId)
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+                UserProfile profile = profileRepo.findByUserId(userId)
+                                .orElseGet(() -> UserProfile.builder()
+                                                .userId(userId)
+                                                .username(user.getUsername())
+                                                .createdAt(Instant.now())
+                                                .build());
+
+                if (displayName != null && !displayName.isBlank()) {
+                        profile.setDisplayName(displayName);
+                }
+                if (bio != null)
+                        profile.setBio(bio);
+                if (location != null)
+                        profile.setLocation(location);
+
+                // ---- Profile Image ----
+                if (profileImage != null && !profileImage.isEmpty()) {
+                        if (profile.getUserProfilePicture() != null) {
+                                s3Service.deleteFile(profile.getUserProfilePicture());
+                        }
+                        String key = s3Service.uploadFile(profileImage);
+                        profile.setUserProfilePicture(key);
+                }
+
+                // ---- Cover Image ----
+                if (coverImage != null && !coverImage.isEmpty()) {
+                        if (profile.getUserCoverPicture() != null) {
+                                s3Service.deleteFile(profile.getUserCoverPicture());
+                        }
+                        String key = s3Service.uploadFile(coverImage);
+                        profile.setUserCoverPicture(key);
+                }
+
+                // Save to MongoDB
+                profileRepo.save(profile);
+
+                // ✅ SYNC: Store S3 key in PostgreSQL (not presigned URL to avoid expiration)
+                if (profile.getUserProfilePicture() != null) {
+                        user.setProfileImageUrl(profile.getUserProfilePicture());
+                        userRepo.save(user);
+                }
+
+                return mapToResponse(profile);
         }
 
-        profileRepo.save(profile);
-        return mapToResponse(profile);
-    }
+        // =====================================================
+        // GET PROFILE
+        // =====================================================
+        @Override
+        public UserProfileResponse getProfile(Long userId) {
 
-    // =====================================================
-    // GET PROFILE
-    // =====================================================
-    @Override
-    public UserProfileResponse getProfile(Long userId) {
+                User user = userRepo.findById(userId)
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                UserProfile profile = profileRepo.findByUserId(userId)
+                                .orElseGet(() -> profileRepo.save(
+                                                UserProfile.builder()
+                                                                .userId(userId)
+                                                                .username(user.getUsername())
+                                                                .createdAt(Instant.now())
+                                                                .build()));
 
-        UserProfile profile = profileRepo.findByUserId(userId)
-                .orElseGet(() ->
-                        profileRepo.save(
-                                UserProfile.builder()
-                                        .userId(userId)
-                                        .username(user.getUsername())
-                                        .createdAt(Instant.now())
-                                        .build()
-                        )
-                );
+                return mapToResponse(profile);
+        }
 
-        return mapToResponse(profile);
-    }
+        // =====================================================
+        // MAPPING
+        // =====================================================
+        private UserProfileResponse mapToResponse(UserProfile profile) {
 
-    // =====================================================
-    // MAPPING
-    // =====================================================
-    private UserProfileResponse mapToResponse(UserProfile profile) {
+                String profileUrl = profile.getUserProfilePicture() != null
+                                ? s3Service.generatePresignedUrl(
+                                                profile.getUserProfilePicture(),
+                                                Duration.ofHours(1))
+                                : null;
 
-        String profileUrl = profile.getUserProfilePicture() != null
-                ? s3Service.generatePresignedUrl(
-                profile.getUserProfilePicture(),
-                Duration.ofHours(1)
-        )
-                : null;
+                String coverUrl = profile.getUserCoverPicture() != null
+                                ? s3Service.generatePresignedUrl(
+                                                profile.getUserCoverPicture(),
+                                                Duration.ofHours(1))
+                                : null;
 
-        String coverUrl = profile.getUserCoverPicture() != null
-                ? s3Service.generatePresignedUrl(
-                profile.getUserCoverPicture(),
-                Duration.ofHours(1)
-        )
-                : null;
-
-        return new UserProfileResponse(
-                profile.getUserId(),
-                profile.getUsername(),
-                profile.getDisplayName(),
-                profile.getBio(),
-                profile.getLocation(),
-                profileUrl,
-                coverUrl,
-                profile.getCreatedAt()
-        );
-    }
+                return new UserProfileResponse(
+                                profile.getUserId(),
+                                profile.getUsername(),
+                                profile.getDisplayName(),
+                                profile.getBio(),
+                                profile.getLocation(),
+                                profileUrl,
+                                coverUrl,
+                                profile.getCreatedAt());
+        }
 }

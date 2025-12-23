@@ -16,6 +16,7 @@ export const GlobalProvider = ({ children }) => {
   const [liveNotifications, setLiveNotifications] = useState([]);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [userProfile, setUserProfile] = useState(null);
   const userId = user?.userId;
 
   //   // Real-time follow system
@@ -86,6 +87,26 @@ export const GlobalProvider = ({ children }) => {
       );
   }, [user]);
 
+  // Fetch user profile on mount
+  useEffect(() => {
+    if (!userId) return;
+    fetchUserProfile();
+  }, [userId]);
+
+  const fetchUserProfile = async () => {
+    if (!userId) return;
+    try {
+      const response = await axiosInstance.get(`/api/users/loggedUser`);
+      setUserProfile(response.data);
+    } catch (err) {
+      console.error("Error fetching user profile:", err);
+    }
+  };
+
+  const refreshUserProfile = useCallback(() => {
+    fetchUserProfile();
+  }, [userId]);
+
   return (
     <GlobalContext.Provider
       value={{
@@ -104,6 +125,9 @@ export const GlobalProvider = ({ children }) => {
         followingCount,
         setFollowingCount,
 
+        // User Profile
+        userProfile,
+        refreshUserProfile,
 
         //  Global Post Modal
         isPostModalOpen,

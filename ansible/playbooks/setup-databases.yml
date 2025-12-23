@@ -1,0 +1,156 @@
+---
+- name: Setup MongoDB
+  hosts: mongodb
+  become: yes
+  gather_facts: yes
+  vars:
+    mongodb_version: "7.0"
+    db_name: "tribetalknosqldb"
+    db_user: "admin"
+    db_password: "admin123"
+    
+  tasks:
+    - name: Install dependencies
+      apt:
+        name:
+          - gnupg
+          - curl
+          - python3-pip
+        state: present
+        update_cache: yes
+
+    - name: Install pymongo via pip
+      pip:
+        name: pymongo>=4.0
+        state: present
+        executable: pip3
+
+    - name: Add MongoDB GPG key
+      apt_key:
+        url: https://www.mongodb.org/static/pgp/server-{{ mongodb_version }}.asc
+        state: present
+
+    - name: Add MongoDB repository
+      apt_repository:
+        repo: "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/{{ mongodb_version }} multiverse"
+        state: present
+        filename: mongodb-org-{{ mongodb_version }}
+
+    - name: Install MongoDB
+      apt:
+        name:
+          - mongodb-org
+        state: present
+        update_cache: yes
+
+    - name: Create MongoDB data directory
+      file:
+        path: /var/lib/mongodb
+        state: directory
+        owner: mongodb
+        group: mongodb
+        mode: '0755'
+
+    - name: Configure MongoDB to listen on all interfaces
+      lineinfile:
+        path: /etc/mongod.conf
+        regexp: '^  bindIp:'
+        line: '  bindIp: 0.0.0.0'
+
+    - name: Start MongoDB
+      systemd:
+        name: mongod
+        state: started
+        enabled: yes
+
+    - name: Wait for MongoDB to start
+      wait_for:
+        port: 27017
+        delay: 5
+        timeout: 30
+
+    - name: Create MongoDB admin user
+      mongodb_user:
+        login_port: 27017
+        database: admin
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        roles:
+          - { db: "admin", role: "userAdminAnyDatabase" }
+          - { db: "admin", role: "readWriteAnyDatabase" }
+          - { db: "admin", role: "dbAdminAnyDatabase" }
+        state: present
+
+    - name: Enable MongoDB security section
+      lineinfile:
+        path: /etc/mongod.conf
+        line: 'security:'
+
+    - name: Enable MongoDB authorization
+      lineinfile:
+        path: /etc/mongod.conf
+        insertafter: '^security:'
+        line: '  authorization: enabled'
+
+    - name: Restart MongoDB to enable auth
+      systemd:
+        name: mongod
+        state: restarted
+
+- name: Setup PostgreSQL
+  hosts: postgresql
+  become: yes
+  gather_facts: yes
+  vars:
+    postgres_version: "15"
+    db_name: "tribetalkdb"
+    db_user: "admin"
+    db_password: "admin123"
+    
+  tasks:
+    - name: Install PostgreSQL
+      apt:
+        name:
+          - postgresql-{{ postgres_version }}
+          - postgresql-contrib-{{ postgres_version }}
+          - python3-psycopg2
+        state: present
+        update_cache: yes
+
+    - name: Ensure PostgreSQL is started and enabled
+      systemd:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Configure PostgreSQL to listen on all interfaces
+      lineinfile:
+        path: /etc/postgresql/{{ postgres_version }}/main/postgresql.conf
+        regexp: '^#?listen_addresses'
+        line: "listen_addresses = '*'"
+      notify: restart postgresql
+
+    - name: Configure PostgreSQL authentication
+      lineinfile:
+        path: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
+        line: "host    all             all             10.0.0.0/16            md5"
+      notify: restart postgresql
+
+    - name: Create PostgreSQL user
+      become_user: postgres
+      postgresql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        role_attr_flags: CREATEDB,SUPERUSER
+
+    - name: Create PostgreSQL database
+      become_user: postgres
+      postgresql_db:
+        name: "{{ db_name }}"
+        owner: "{{ db_user }}"
+
+  handlers:
+    - name: restart postgresql
+      systemd:
+        name: postgresql
+        state: restarted

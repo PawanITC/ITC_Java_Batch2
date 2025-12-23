@@ -6,21 +6,28 @@ A production-grade Twitter-like social media platform built with Spring Boot mic
 
 ### Backend Services
 - **TribeTalk Service** (Port 8080) - Main API service for posts, users, authentication
-- **Chat Service** (Port 8081) - Real-time messaging with WebSocket
-- **Notification Service** (Port 8082) - Push notifications via Kafka
+- **Chat Service** (Port 8081) - Real-time messaging with WebSocket (STOMP over SockJS)
+- **Notification Service** (Port 8082) - Push notifications via Kafka with WebSocket delivery
 
 ### Frontend
-- **React SPA** - Modern UI with Vite, served via Nginx
+- **React SPA** - Modern UI with Vite, TailwindCSS, served via Nginx
+- **Features**: Real-time messaging, notifications, posts, likes, bookmarks, user profiles
 
 ### Infrastructure
-- **AWS EKS** - Kubernetes cluster for container orchestration
+- **AWS EKS** - Kubernetes 1.31 cluster (3x t3.small nodes)
 - **PostgreSQL** - Relational database for user data, posts
 - **MongoDB** - NoSQL database for notifications, chat history
 - **Redis** - Caching and session management
 - **Kafka (KRaft)** - Event streaming for notifications
 - **AWS ALB** - Application Load Balancer with Ingress Controller
 - **AWS ECR** - Container registry for Docker images
-- **AWS Secrets Manager** - Secure credential storage
+- **AWS Secrets Manager** - Secure credential storage via External Secrets Operator
+
+### Current Deployment
+- **ALB URL**: `http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com`
+- **Region**: eu-north-1 (Stockholm)
+- **Cluster**: tribetalk-eks-cluster
+- **Nodes**: 3x t3.small (2 vCPU, 2GB RAM each)
 
 ---
 
@@ -29,7 +36,7 @@ A production-grade Twitter-like social media platform built with Spring Boot mic
 ```
 ITC_Java_Batch2/
 ├── tribetalk/                    # Main Spring Boot service
-├── ChatService/                  # Chat microservice
+├── ChatService/                  # Chat microservice  
 ├── notification-service/         # Notification microservice
 ├── tribe-talk-frontend/          # React frontend
 ├── terraform/                    # Infrastructure as Code
@@ -52,13 +59,14 @@ ITC_Java_Batch2/
 ├── k8s/                          # Kubernetes manifests
 │   ├── deployments/             # Service deployments
 │   ├── ingress.yaml             # ALB Ingress configuration
-│   └── external-secrets.yaml    # External Secrets Operator
+│   ├── external-secrets.yaml    # External Secrets Operator
+│   └── monitoring/              # Grafana monitoring stack
 └── scripts/                      # Deployment scripts
 ```
 
 ---
 
-## 🚀 Infrastructure Setup
+## 🚀 Quick Start
 
 ### Prerequisites
 
@@ -71,12 +79,11 @@ ITC_Java_Batch2/
 - **Node.js** 18+ (for frontend)
 - **Java 21** (for backend services)
 - **Maven** 3.9+
+- **Helm** 3.x
 
 ---
 
 ## 📦 Part 1: Terraform Infrastructure
-
-Terraform provisions the following AWS resources:
 
 ### What Terraform Creates
 
@@ -86,18 +93,15 @@ Terraform provisions the following AWS resources:
    - 2 Private subnets (for EKS nodes, databases)
    - Internet Gateway
    - NAT Gateway for private subnet internet access
-   - Route tables
 
 2. **EKS Cluster**
    - Kubernetes version 1.31
-   - Managed node group (t3.medium instances)
+   - Managed node group (t3.small instances)
    - Auto-scaling: 2-4 nodes
    - IAM roles and policies
-   - AWS Load Balancer Controller
 
 3. **EC2 Instances**
    - Database server (t3.medium) for PostgreSQL, MongoDB, Redis, Kafka
-   - Jenkins server (t3.medium) for CI/CD
    - Security groups with proper ingress/egress rules
 
 4. **ECR Repositories**
@@ -110,7 +114,6 @@ Terraform provisions the following AWS resources:
    - Database credentials
    - Application secrets
    - JWT secrets
-   - Kafka/Redis connection strings
 
 ### Terraform Commands
 
@@ -118,7 +121,7 @@ Terraform provisions the following AWS resources:
 # Navigate to terraform directory
 cd terraform
 
-# Initialize Terraform (download providers)
+# Initialize Terraform
 terraform init
 
 # Review the infrastructure plan
@@ -127,37 +130,10 @@ terraform plan -out=tfplan
 # Apply the infrastructure
 terraform apply tfplan
 
-# View outputs (EKS cluster name, ECR URLs, etc.)
+# View outputs
 terraform output
 
-# Destroy infrastructure (when needed)
-terraform destroy
-```
-
-### Important Terraform Outputs
-
-After `terraform apply`, note these outputs:
-
-```bash
-# EKS Cluster Name
-eks_cluster_name = "tribetalk-eks-cluster"
-
-# ECR Repository URLs
-ecr_tribetalk_url = "430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service"
-ecr_frontend_url = "430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend"
-
-# Database EC2 Instance
-database_instance_public_ip = "13.x.x.x"
-database_instance_private_ip = "10.0.10.95"
-
-# Jenkins Instance
-jenkins_instance_public_ip = "13.x.x.x"
-```
-
-### Configure kubectl for EKS
-
-```bash
-# Update kubeconfig to connect to EKS cluster
+# Configure kubectl for EKS
 aws eks update-kubeconfig --region eu-north-1 --name tribetalk-eks-cluster
 
 # Verify connection
@@ -168,37 +144,30 @@ kubectl get nodes
 
 ## 🔧 Part 2: Ansible Configuration
 
-Ansible configures the EC2 database instance with all required services.
-
 ### What Ansible Installs
 
 1. **PostgreSQL 15**
    - Database: `tribetalk`
-   - User: `admin` / Password: `<CONFIGURED_VIA_ANSIBLE>`
    - Port: 5432
    - Configured for remote connections
 
 2. **MongoDB 7.0**
    - Database: `tribetalknosqldb`
-   - User: `admin` / Password: `<CONFIGURED_VIA_ANSIBLE>`
    - Port: 27017
    - Authentication enabled
 
 3. **Redis 7.2**
    - Port: 6379
-   - No authentication (internal network)
    - Persistence enabled
 
 4. **Kafka (KRaft Mode)**
    - Port: 9092
    - No Zookeeper required
    - Topics: `notifications-topic`
-   - Configured for external access
 
 ### Ansible Commands
 
 ```bash
-# Navigate to ansible directory
 cd ansible
 
 # Update inventory with EC2 instance IP
@@ -209,33 +178,18 @@ db-server ansible_host=<DATABASE_INSTANCE_PUBLIC_IP> ansible_user=ubuntu
 # Test connectivity
 ansible -i inventory/hosts database_servers -m ping
 
-# Run infrastructure setup playbook
+# Run infrastructure setup
 ansible-playbook -i inventory/hosts playbooks/setup-infrastructure.yml
 
-# Run Kafka-specific setup
+# Run Kafka setup
 ansible-playbook -i inventory/hosts playbooks/setup-kafka-kraft.yml
 
-# Verify services are running
+# Verify services
 ansible -i inventory/hosts database_servers -a "systemctl status postgresql"
 ansible -i inventory/hosts database_servers -a "systemctl status mongod"
 ansible -i inventory/hosts database_servers -a "systemctl status redis"
 ansible -i inventory/hosts database_servers -a "systemctl status kafka"
 ```
-
-### Ansible Playbook Details
-
-**`setup-infrastructure.yml`**
-- Installs PostgreSQL, MongoDB, Redis
-- Configures databases with users and permissions
-- Sets up firewall rules
-- Enables services to start on boot
-
-**`setup-kafka-kraft.yml`**
-- Installs Java 17 (Kafka requirement)
-- Downloads and configures Kafka in KRaft mode
-- Creates systemd service
-- Configures listeners for external access
-- Creates notification topics
 
 ---
 
@@ -247,17 +201,23 @@ ansible -i inventory/hosts database_servers -a "systemctl status kafka"
 # 1. Build TribeTalk Service
 cd tribetalk
 mvn clean package -DskipTests
-docker build --platform linux/amd64 -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service:v1.1 .
+docker buildx build --no-cache --platform linux/amd64 \
+  -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service:v1.1 \
+  --push .
 
 # 2. Build Chat Service
 cd ../ChatService
 mvn clean package -DskipTests
-docker build --platform linux/amd64 -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/chatservice:v1.0 .
+docker buildx build --no-cache --platform linux/amd64 \
+  -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/chatservice:v1.0 \
+  --push .
 
 # 3. Build Notification Service
 cd ../notification-service
 mvn clean package -DskipTests
-docker build --platform linux/amd64 -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/notification-service:v1.1 .
+docker buildx build --no-cache --platform linux/amd64 \
+  -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/notification-service:v3.4-bulk-update \
+  --push .
 ```
 
 ### Frontend
@@ -265,24 +225,23 @@ docker build --platform linux/amd64 -t 430006376054.dkr.ecr.eu-north-1.amazonaws
 ```bash
 cd tribe-talk-frontend
 
-# Build with production API URL
-docker build --platform linux/amd64 \
-  --build-arg VITE_API_BASE_URL=http://<ALB-DNS> \
-  --build-arg VITE_GITHUB_CLIENT_ID=<YOUR_GITHUB_CLIENT_ID> \
-  -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend:v1.9 .
+# Build production bundle
+npm run build
+
+# Build and push Docker image
+docker buildx build --no-cache --platform linux/amd64 \
+  --build-arg VITE_API_BASE_URL=http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com \
+  -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend:v2.3-feather-icons \
+  --push .
 ```
 
-### Push to ECR
+### ECR Login
 
 ```bash
 # Login to ECR
-aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 430006376054.dkr.ecr.eu-north-1.amazonaws.com
-
-# Push all images
-docker push 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service:v1.1
-docker push 430006376054.dkr.ecr.eu-north-1.amazonaws.com/chatservice:v1.0
-docker push 430006376054.dkr.ecr.eu-north-1.amazonaws.com/notification-service:v1.1
-docker push 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend:v1.9
+aws ecr get-login-password --region eu-north-1 | \
+  docker login --username AWS --password-stdin \
+  430006376054.dkr.ecr.eu-north-1.amazonaws.com
 ```
 
 ---
@@ -325,11 +284,13 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
 ```bash
 # Install External Secrets Operator
 helm repo add external-secrets https://charts.external-secrets.io
-helm install external-secrets external-secrets/external-secrets -n kube-system
+helm install external-secrets external-secrets/external-secrets \
+  -n external-secrets-system \
+  --create-namespace
 
 # Create IAM role for External Secrets
 eksctl create iamserviceaccount \
-  --name tribetalk-external-secrets \
+  --name tribetalk-sa \
   --namespace default \
   --cluster tribetalk-eks-cluster \
   --attach-policy-arn arn:aws:iam::aws:policy/SecretsManagerReadWrite \
@@ -343,9 +304,6 @@ kubectl apply -f k8s/external-secrets.yaml
 ### Deploy Application Services
 
 ```bash
-# Create Kubernetes secrets
-kubectl apply -f k8s/secrets/
-
 # Deploy services
 kubectl apply -f k8s/deployments/tribetalk.yaml
 kubectl apply -f k8s/deployments/chatservice.yaml
@@ -359,16 +317,93 @@ kubectl apply -f k8s/ingress.yaml
 kubectl get pods
 kubectl get svc
 kubectl get ingress
-```
 
-### Get Application URL
-
-```bash
 # Get ALB DNS name
 kubectl get ingress tribetalk-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+```
 
-# Example output:
-# k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com
+---
+
+## 🔄 Update Deployment
+
+### Update Backend Service
+
+```bash
+# Example: Update TribeTalk service
+cd tribetalk
+mvn clean package -DskipTests
+
+docker buildx build --no-cache --platform linux/amd64 \
+  -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service:v1.2 \
+  --push .
+
+# Update deployment
+kubectl set image deployment/tribetalk \
+  tribetalk=430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service:v1.2
+
+# Watch rollout
+kubectl rollout status deployment/tribetalk
+```
+
+### Update Frontend
+
+```bash
+cd tribe-talk-frontend
+npm run build
+
+docker buildx build --no-cache --platform linux/amd64 \
+  --build-arg VITE_API_BASE_URL=http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com \
+  -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend:v2.4 \
+  --push .
+
+kubectl set image deployment/tribe-talk-frontend \
+  tribe-talk-frontend=430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend:v2.4
+
+kubectl rollout status deployment/tribe-talk-frontend
+```
+
+---
+
+## 📊 Monitoring & Observability
+
+### Grafana Monitoring Stack
+
+Self-hosted Grafana deployed on EKS for metrics visualization.
+
+**Access Grafana:**
+```bash
+kubectl port-forward -n default svc/grafana 3000:80
+```
+Open: **http://localhost:3000**
+
+**Default Credentials:**
+- Username: `admin`
+- Password: Retrieve with `kubectl get secret grafana -o jsonpath="{.data.admin-password}" | base64 --decode`
+
+**Import Dashboards:**
+1. Navigate to Dashboards → Import
+2. Import dashboard IDs:
+   - **7249** - Kubernetes Cluster Monitoring
+   - **12900** - Spring Boot Statistics
+   - **1860** - Node Exporter Full
+
+### View Application Logs
+
+```bash
+# TribeTalk logs
+kubectl logs -f deployment/tribetalk --tail=100
+
+# Chat Service logs
+kubectl logs -f deployment/chatservice --tail=100
+
+# Notification Service logs
+kubectl logs -f deployment/notification-service --tail=100
+
+# Frontend logs
+kubectl logs -f deployment/tribe-talk-frontend --tail=100
+
+# All pods
+kubectl logs --all-containers=true --tail=100 -n default
 ```
 
 ---
@@ -402,8 +437,6 @@ aws secretsmanager create-secret \
     --region eu-north-1
 ```
 
-> **Security Note:** Never commit actual credentials to Git. Use AWS Secrets Manager or environment variables.
-
 ---
 
 ## 🧪 Testing & Verification
@@ -420,229 +453,45 @@ kubectl get pods --all-namespaces
 # Check services
 kubectl get svc
 
-# Check ingress and ALB
+# Check ingress
 kubectl get ingress
 kubectl describe ingress tribetalk-ingress
-```
-
-### Verify Database Connectivity
-
-```bash
-# SSH into database instance
-ssh -i <your-key.pem> ubuntu@<DATABASE_INSTANCE_IP>
-
-# Test PostgreSQL
-psql -U admin -d tribetalk -h localhost
-
-# Test MongoDB
-mongosh mongodb://<USERNAME>:<PASSWORD>@localhost:27017/tribetalknosqldb?authSource=admin
-
-# Test Redis
-redis-cli ping
-
-# Test Kafka
-kafka-topics.sh --bootstrap-server localhost:9092 --list
 ```
 
 ### Test Application
 
 ```bash
 # Access application
-open http://<ALB-DNS>
+open http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com
 
 # Test API endpoints
-curl http://<ALB-DNS>/actuator/health
-curl http://<ALB-DNS>/api/auth/validateUser
+curl http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/api/actuator/health
 
 # Test OAuth2 flow
-# Navigate to: http://<ALB-DNS> and click "Sign in with GitHub"
+# Navigate to ALB URL and click "Sign in with GitHub"
 ```
 
 ---
 
-## 📊 Monitoring & Observability
+## ✨ Recent Features & Improvements
 
-### Grafana Monitoring Stack
+### Frontend (v2.3-feather-icons)
+- ✅ User profile images with FiUser icon fallback
+- ✅ Bouncy animations on like/bookmark buttons
+- ✅ Loading states for posts, bookmarks, messages, suggestions
+- ✅ 1-on-1 chat support from SelectUser component
+- ✅ WebSocket error handling for chat
+- ✅ Enter key to send messages
+- ✅ Logo clickable to redirect to home
+- ✅ Follow button cursor pointer
+- ✅ Color adjustments for better contrast
+- ✅ Fixed icon display using Feather Icons only
 
-The project includes a self-hosted Grafana monitoring stack deployed on EKS for metrics visualization and monitoring.
-
-#### What's Deployed
-
-- **Grafana** (v12.3.0) - Visualization and dashboarding
-- **Prometheus** - Metrics collection and storage (7-day retention)
-- **Kube State Metrics** - Kubernetes cluster metrics
-- **Node Exporter** - Node-level system metrics
-- **Prometheus Operator** - Manages Prometheus instances
-
-#### Access Grafana
-
-**Via Port Forward (Recommended):**
-```bash
-kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
-```
-Then open: **http://localhost:3000**
-
-**Default Credentials:**
-- Username: `admin`
-- Password: `admin123` (⚠️ Change immediately after first login!)
-
-#### Import Dashboards
-
-1. Login to Grafana
-2. Navigate to **Dashboards** → **Import**
-3. Import these dashboard IDs:
-   - **7249** - Kubernetes Cluster Monitoring
-   - **12900** - Spring Boot Statistics
-   - **1860** - Node Exporter Full
-
-#### View Application Metrics
-
-```bash
-# TribeTalk metrics endpoint
-curl http://<ALB-DNS>/actuator/prometheus
-
-# Query Prometheus directly
-kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
-# Open: http://localhost:9090
-```
-
-#### ServiceMonitor Configuration
-
-TribeTalk application metrics are automatically scraped via ServiceMonitor:
-```yaml
-# k8s/monitoring/servicemonitor-tribetalk.yaml
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: tribetalk-metrics
-  namespace: monitoring
-spec:
-  selector:
-    matchLabels:
-      app: tribetalk
-  endpoints:
-  - port: http
-    path: /actuator/prometheus
-    interval: 30s
-```
-
-### View Application Logs
-
-```bash
-# TribeTalk logs
-kubectl logs -f deployment/tribetalk --tail=100
-
-# Chat Service logs
-kubectl logs -f deployment/chatservice --tail=100
-
-# Notification Service logs
-kubectl logs -f deployment/notification-service --tail=100
-
-# Frontend logs
-kubectl logs -f deployment/tribe-talk-frontend --tail=100
-
-# All pods in namespace
-kubectl logs --all-containers=true --tail=100 -n default
-
-# Ingress controller logs
-kubectl logs -n kube-system deployment/aws-load-balancer-controller --tail=100
-```
-
-### Monitoring Stack Details
-
-**Resource Usage:**
-- Grafana: 256Mi memory, 100m CPU
-- Prometheus: 1Gi memory, 500m CPU
-- Total pods: 7 (Grafana, Prometheus, 2x Node Exporters, Operator, Kube State Metrics, Admission Patch)
-
-**Storage:**
-- No persistence (metrics stored in memory)
-- 7-day retention period
-- Metrics lost on pod restart
-
-**Cost:** $0 additional (uses existing cluster resources)
-
-**Configuration Files:**
-- `k8s/monitoring/namespace.yaml` - Monitoring namespace
-- `k8s/monitoring/values-lightweight.yaml` - Helm chart configuration
-- `k8s/monitoring/servicemonitor-tribetalk.yaml` - TribeTalk metrics scraping
-- `docs/monitoring/grafana-stack-implementation.md` - Full deployment guide
-- `docs/monitoring/grafana-deployment-walkthrough.md` - Deployment walkthrough
-
-### Troubleshooting
-
-**Grafana not accessible:**
-```bash
-# Check pod status
-kubectl get pods -n monitoring
-
-# Check port-forward
-kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
-
-# Check logs
-kubectl logs -n monitoring -l app.kubernetes.io/name=grafana
-```
-
-**Prometheus not scraping metrics:**
-```bash
-# Check ServiceMonitor
-kubectl get servicemonitor -n monitoring
-
-# Check Prometheus targets
-kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
-# Open: http://localhost:9090/targets
-
-# Verify TribeTalk metrics endpoint
-curl http://<ALB-DNS>/actuator/prometheus
-```
-
-### Future Enhancements
-
-For production environments, consider:
-- **Loki** - Log aggregation and querying
-- **Tempo** - Distributed tracing
-- **AlertManager** - Alert routing and notifications
-- **Persistent storage** - EBS volumes for metrics retention
-- **Grafana Cloud** - Managed Grafana service
-
----
-
-## 🔄 Update Deployment
-
-### Update Backend Service
-
-```bash
-# Build new version
-cd tribetalk
-mvn clean package -DskipTests
-docker build --platform linux/amd64 -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service:v1.2 .
-docker push 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service:v1.2
-
-# Update deployment
-kubectl set image deployment/tribetalk tribetalk=430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk-service:v1.2
-
-# Or edit deployment YAML and apply
-kubectl apply -f k8s/deployments/tribetalk.yaml
-
-# Watch rollout
-kubectl rollout status deployment/tribetalk
-```
-
-### Update Frontend
-
-```bash
-# Build new version
-cd tribe-talk-frontend
-docker build --platform linux/amd64 \
-  --build-arg VITE_API_BASE_URL=http://<ALB-DNS> \
-  --build-arg VITE_GITHUB_CLIENT_ID=<CLIENT_ID> \
-  -t 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend:v2.0 .
-
-docker push 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend:v2.0
-
-# Update deployment
-kubectl set image deployment/tribe-talk-frontend tribe-talk-frontend=430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribe-talk-frontend:v2.0
-```
+### Backend
+- ✅ Notification Service (v3.4-bulk-update): Fixed markAllAsRead MongoDB bulk update
+- ✅ Async notification sending to prevent follow timeout
+- ✅ WebSocket notifications with real-time delivery
+- ✅ STOMP over SockJS for chat messaging
 
 ---
 
@@ -654,13 +503,11 @@ kubectl set image deployment/tribe-talk-frontend tribe-talk-frontend=43000637605
 # Delete all deployments
 kubectl delete -f k8s/deployments/
 kubectl delete -f k8s/ingress.yaml
-
-# Delete External Secrets
 kubectl delete -f k8s/external-secrets.yaml
 
 # Uninstall Helm charts
 helm uninstall aws-load-balancer-controller -n kube-system
-helm uninstall external-secrets -n kube-system
+helm uninstall external-secrets -n external-secrets-system
 ```
 
 ### Destroy Terraform Infrastructure
@@ -668,8 +515,6 @@ helm uninstall external-secrets -n kube-system
 ```bash
 cd terraform
 terraform destroy
-
-# Confirm with: yes
 ```
 
 **⚠️ Warning:** This will delete:
@@ -683,77 +528,34 @@ terraform destroy
 
 ## 📝 Important Notes
 
+### Current Infrastructure Specs
+
+- **EKS Cluster**: tribetalk-eks-cluster (Kubernetes 1.31)
+- **Nodes**: 3x t3.small (2 vCPU, 2GB RAM each)
+- **Region**: eu-north-1 (Stockholm)
+- **ALB**: k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com
+
 ### Security Best Practices
 
-1. **Never commit secrets** to Git
-2. Use **AWS Secrets Manager** for production credentials
-3. Enable **HTTPS** with ACM certificates for production
-4. Implement **CSRF protection** for cookie-based auth
-5. Use **Security Groups** to restrict database access
-6. Enable **VPC Flow Logs** for network monitoring
+1. Never commit secrets to Git
+2. Use AWS Secrets Manager for production credentials
+3. Enable HTTPS with ACM certificates for production
+4. Implement CSRF protection for cookie-based auth
+5. Use Security Groups to restrict database access
 
 ### Cost Optimization
 
 - **EKS Cluster**: ~$73/month (control plane)
-- **EC2 Instances**: ~$30/month per t3.medium
+- **EC2 Instances**: ~$20/month per t3.small node (~$60 total)
 - **NAT Gateway**: ~$32/month
 - **ALB**: ~$16/month + data transfer
-- **Total**: ~$150-200/month for dev environment
+- **Total**: ~$180/month for dev environment
 
 **Cost Saving Tips:**
 - Use Spot Instances for EKS nodes
 - Stop EC2 instances when not in use
 - Use smaller instance types for dev
 - Delete unused ALBs and EBS volumes
-
-### Production Considerations
-
-1. **High Availability**
-   - Multi-AZ deployment
-   - RDS instead of EC2 PostgreSQL
-   - Amazon MQ instead of self-hosted Kafka
-   - ElastiCache instead of EC2 Redis
-
-2. **Backup & Recovery**
-   - Enable RDS automated backups
-   - S3 backups for MongoDB
-   - EBS snapshots for volumes
-
-3. **Monitoring**
-   - CloudWatch for metrics and logs
-   - X-Ray for distributed tracing
-   - Prometheus + Grafana for custom metrics
-
-4. **CI/CD**
-   - GitHub Actions or Jenkins pipeline
-   - Automated testing
-   - Blue-green deployments
-   - Rollback strategies
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
----
-
-## 👥 Team
-
-- **Backend Development**: Spring Boot microservices
-- **Frontend Development**: React SPA
-- **DevOps**: Terraform, Ansible, Kubernetes
-- **Infrastructure**: AWS EKS, EC2, ALB
 
 ---
 
@@ -765,3 +567,10 @@ This project is licensed under the MIT License.
 - [AWS EKS Best Practices](https://aws.github.io/aws-eks-best-practices/)
 - [Spring Boot Documentation](https://spring.io/projects/spring-boot)
 - [React Documentation](https://react.dev/)
+- [Vite Documentation](https://vitejs.dev/)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.

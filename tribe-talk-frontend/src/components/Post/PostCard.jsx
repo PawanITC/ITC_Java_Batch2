@@ -6,6 +6,7 @@ import {
   FiEye,
   FiRepeat,
   FiMoreHorizontal,
+  FiUser,
 } from "react-icons/fi";
 import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
@@ -144,6 +145,13 @@ function PostCard({ post }) {
     navigate(`/post/${post.id}`);
   };
 
+  const handleUserClick = (e) => {
+    e.stopPropagation();
+    if (post.userId) {
+      navigate(`/profile/${post.userId}`);
+    }
+  };
+
   const formatPostTime = (timestamp) => {
     if (!timestamp) return "";
 
@@ -191,17 +199,35 @@ function PostCard({ post }) {
         )}
         {/* Header: User Info */}
         <div className="flex items-start gap-3 mb-2">
-          <img
-            src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1031"
-            alt="User"
-            className="w-10 h-10 rounded-full object-cover border border-yellow-500"
-          />
+          {/* User Avatar */}
+          {userDetails?.profileImageUrl && userDetails.profileImageUrl.trim() !== "" ? (
+            <img
+              src={userDetails.profileImageUrl}
+              alt={userDetails.displayname || "User"}
+              className="w-10 h-10 rounded-full object-cover border border-yellow-500 cursor-pointer hover:opacity-80 transition"
+              loading="lazy"
+              onClick={handleUserClick}
+            />
+          ) : (
+            <div
+              className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center border border-yellow-500 cursor-pointer hover:opacity-80 transition"
+              onClick={handleUserClick}
+            >
+              <FiUser className="text-neutral-900" size={20} />
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-900 dark:text-yellow-100">
+              <span
+                className="font-semibold text-gray-900 dark:text-yellow-100 cursor-pointer hover:underline"
+                onClick={handleUserClick}
+              >
                 {userDetails?.displayname || "User"}
               </span>
-              <span className="text-yellow-400 dark:text-gray-600 text-sm">
+              <span
+                className="text-yellow-900 dark:text-gray-600 text-sm cursor-pointer hover:underline"
+                onClick={handleUserClick}
+              >
                 {" "}
                 @{userDetails?.username || "user"}
               </span>
@@ -287,10 +313,10 @@ function PostCard({ post }) {
             e.stopPropagation();
             handleBookmarkToggle();
           }}
-          className={`flex items-center gap-1 transition ${bookmarked ? "text-yellow-900" : "hover:text-yellow-200 dark:hover:text-gray-900"
+          className={`flex items-center gap-1 transition ${bookmarked ? "text-yellow-900 animate-bounce-once" : "hover:text-yellow-200 dark:hover:text-gray-900"
             }`}
         >
-          <FiBookmark />
+          <FiBookmark className={bookmarked ? "fill-current" : ""} />
         </button>
         <button
           title="Like"
@@ -298,10 +324,10 @@ function PostCard({ post }) {
             e.stopPropagation();
             handleLikeToggle();
           }}
-          className={`flex items-center gap-1 transition ${liked ? "text-red-500" : "hover:text-yellow-200 dark:hover:text-gray-900"
+          className={`flex items-center gap-1 transition ${liked ? "text-red-500 animate-bounce-once" : "hover:text-yellow-200 dark:hover:text-gray-900"
             }`}
         >
-          <FiHeart />
+          <FiHeart className={liked ? "fill-current" : ""} />
           <span>{likeCount}</span>
         </button>
         <button

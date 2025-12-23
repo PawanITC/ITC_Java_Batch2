@@ -1,7 +1,7 @@
 import axios from "axios";
 import axiosInstance from "./axiosInstance";
 
-const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/notification/api/notifications`;
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || window.location.origin}/notification/api/notifications`;
 
 axios.defaults.withCredentials = true;
 

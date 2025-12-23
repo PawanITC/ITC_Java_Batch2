@@ -1,0 +1,84 @@
+---
+- name: Start Database Services
+  hosts: databases,kafka
+  become: yes
+  gather_facts: yes
+  tasks:
+    - name: Check if Docker is running
+      service:
+        name: docker
+        state: started
+      ignore_errors: yes
+
+    - name: Check for Docker Compose files
+      find:
+        paths: /home/ubuntu
+        patterns: "docker-compose*.yml,docker-compose*.yaml"
+      register: compose_files
+
+    - name: Start Docker Compose services if found
+      shell: |
+        cd /home/ubuntu
+        docker-compose up -d
+      when: compose_files.matched > 0
+      ignore_errors: yes
+
+    - name: Check MongoDB Docker container
+      shell: docker ps -a | grep mongo || echo "not-found"
+      register: mongo_check
+      when: "'mongodb' in inventory_hostname"
+
+    - name: Start MongoDB container if exists
+      shell: docker start $(docker ps -a | grep mongo | awk '{print $1}')
+      when: 
+        - "'mongodb' in inventory_hostname"
+        - "'not-found' not in mongo_check.stdout"
+      ignore_errors: yes
+
+    - name: Check PostgreSQL Docker container
+      shell: docker ps -a | grep postgres || echo "not-found"
+      register: postgres_check
+      when: "'postgresql' in inventory_hostname"
+
+    - name: Start PostgreSQL container if exists
+      shell: docker start $(docker ps -a | grep postgres | awk '{print $1}')
+      when:
+        - "'postgresql' in inventory_hostname"
+        - "'not-found' not in postgres_check.stdout"
+      ignore_errors: yes
+
+    - name: Check Redis Docker container
+      shell: docker ps -a | grep redis || echo "not-found"
+      register: redis_check
+      when: "'redis' in inventory_hostname"
+
+    - name: Start Redis container if exists
+      shell: docker start $(docker ps -a | grep redis | awk '{print $1}')
+      when:
+        - "'redis' in inventory_hostname"
+        - "'not-found' not in redis_check.stdout"
+      ignore_errors: yes
+
+    - name: Check Kafka Docker container
+      shell: docker ps -a | grep kafka || echo "not-found"
+      register: kafka_check
+      when: "'kafka' in inventory_hostname"
+
+    - name: Start Kafka container if exists
+      shell: docker start $(docker ps -a | grep kafka | awk '{print $1}')
+      when:
+        - "'kafka' in inventory_hostname"
+        - "'not-found' not in kafka_check.stdout"
+      ignore_errors: yes
+
+    - name: Wait for services to start
+      pause:
+        seconds: 10
+
+    - name: Check running containers
+      shell: docker ps
+      register: running_containers
+
+    - name: Display running containers
+      debug:
+        msg: "{{ running_containers.stdout_lines }}"

@@ -36,14 +36,20 @@ public class User {
     private Set<Authority> authorities;
 
     @Column(nullable = false)
-    private Long followersCount= Long.valueOf(0);
+    private Long followersCount = Long.valueOf(0);
 
     @Column(nullable = false)
-    private Long followingCount= Long.valueOf(0);;
+    private Long followingCount = Long.valueOf(0);
 
-    /*public User(@NotBlank @Size(min = 3,max = 20) String username, @NotBlank String email, String password) {
-        this.username=username;
-        this.email=email;
-        this.password=password;
-    }*/
+    @Column
+    private String profileImageUrl;
+
+    /*
+     * public User(@NotBlank @Size(min = 3,max = 20) String username, @NotBlank
+     * String email, String password) {
+     * this.username=username;
+     * this.email=email;
+     * this.password=password;
+     * }
+     */
 }

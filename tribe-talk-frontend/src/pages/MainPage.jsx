@@ -58,6 +58,22 @@ function MainPage() {
         };
 
         fetchPublicPosts();
+
+        // Request browser notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    console.log('Browser notification permission granted');
+                    toast.success('Notifications enabled! You\'ll receive updates in real-time.', {
+                        autoClose: 2000
+                    });
+                } else if (permission === 'denied') {
+                    console.log('Browser notification permission denied');
+                }
+            }).catch(err => {
+                console.error('Error requesting notification permission:', err);
+            });
+        }
     }, []);
 
     return (

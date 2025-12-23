@@ -10,7 +10,7 @@ import axiosInstance from "../services/axiosInstance";
 import CreateAccountModal from "../components/CreateAccountModal";
 import { AuthContext } from "../auth/AuthContext";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || window.location.origin;
 const GITHUB_AUTH_URL = `${API_BASE_URL}/oauth2/authorization/github`;
 const GOOGLE_AUTH_URL = `${API_BASE_URL}/oauth2/authorization/google`;
 

@@ -3,7 +3,7 @@ import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../auth/AuthContext";
 import { GlobalContext } from "../GlobalContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import PostCard from "../Post/PostCard";
 import { FiCalendar } from "react-icons/fi";
 import EditProfileModal from "./EditProfileModal";
@@ -16,12 +16,16 @@ function Profile() {
   const [likedPosts, setLikedPosts] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
+  const [viewedUserFollowersCount, setViewedUserFollowersCount] = useState(0);
+  const [viewedUserFollowingCount, setViewedUserFollowingCount] = useState(0);
 
   const { user } = useContext(AuthContext);
-  const { followersCount, followingCount } = useContext(GlobalContext);
+  const { refreshUserProfile } = useContext(GlobalContext);
   const navigate = useNavigate();
-  const userId = user?.userId;
-  const username = user?.username;
+  const location = useLocation();
+  const { userId } = useParams(); // Get userId from URL
+  const loggedInUserId = user?.userId;
+  const isOwnProfile = loggedInUserId && userId && parseInt(userId) === loggedInUserId;
 
   // ======================
   // Fetch profile
@@ -34,6 +38,29 @@ function Profile() {
       .then((res) => setUserProfile(res.data))
       .catch(() => toast.error("Failed to load profile"));
   }, [userId]);
+
+  // ======================
+  // Fetch follower/following counts for viewed user
+  // ======================
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchCounts = () => {
+      // Fetch followers count
+      axiosInstance
+        .get(`/api/users/${userId}/followers-count`)
+        .then((res) => setViewedUserFollowersCount(res.data))
+        .catch(() => console.error("Failed to fetch followers count"));
+
+      // Fetch following count
+      axiosInstance
+        .get(`/api/users/${userId}/following-count`)
+        .then((res) => setViewedUserFollowingCount(res.data))
+        .catch(() => console.error("Failed to fetch following count"));
+    };
+
+    fetchCounts();
+  }, [userId, location]); // Refetch when userId or location changes
 
   // ======================
   // Fetch posts
@@ -83,20 +110,22 @@ function Profile() {
           alt="Avatar"
           className="w-24 h-24 rounded-full border-4 border-neutral-900 object-cover"
         />
-        <div className="ml-auto mt-6">
-          <button
-            onClick={() => setShowEdit(true)}
-            className="px-4 py-2 bg-yellow-500 text-neutral-900 font-semibold rounded-full"
-          >
-            Edit profile
-          </button>
-        </div>
+        {isOwnProfile && (
+          <div className="ml-auto mt-6">
+            <button
+              onClick={() => setShowEdit(true)}
+              className="px-4 py-2 bg-yellow-500 text-neutral-900 font-semibold rounded-full cursor-pointer"
+            >
+              Edit profile
+            </button>
+          </div>
+        )}
       </div>
 
       {/* User Info */}
       <div className="mb-2 px-2">
         <h2 className="text-xl font-bold">{userProfile.displayName}</h2>
-        <p className="text-yellow-400 text-sm">@{username}</p>
+        <p className="text-yellow-400 text-sm">@{userProfile.username}</p>
         {userProfile.bio && <p className="mt-2 text-sm">{userProfile.bio}</p>}
       </div>
 
@@ -110,11 +139,17 @@ function Profile() {
 
       {/* Followers */}
       <div className="flex gap-6 text-sm mb-6 px-2">
-        <button onClick={() => navigate("/connections?tab=following")}>
-          <strong>{followingCount}</strong> Following
+        <button
+          onClick={() => navigate(`/connections/${userId}?tab=following`)}
+          className="cursor-pointer hover:underline transition"
+        >
+          <strong>{viewedUserFollowingCount}</strong> Following
         </button>
-        <button onClick={() => navigate("/connections?tab=followers")}>
-          <strong>{followersCount}</strong> Followers
+        <button
+          onClick={() => navigate(`/connections/${userId}?tab=followers`)}
+          className="cursor-pointer hover:underline transition"
+        >
+          <strong>{viewedUserFollowersCount}</strong> Followers
         </button>
       </div>
 
@@ -156,7 +191,10 @@ function Profile() {
         <EditProfileModal
           userDetails={userProfile}
           onClose={() => setShowEdit(false)}
-          onSaved={setUserProfile}
+          onSaved={(updatedProfile) => {
+            setUserProfile(updatedProfile);
+            refreshUserProfile();
+          }}
         />
       )}
     </div>

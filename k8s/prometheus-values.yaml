@@ -1,0 +1,91 @@
+# Prometheus Configuration for TribeTalk
+# Minimal setup to avoid affecting existing services
+
+# Disable Grafana (we already have it in default namespace)
+grafana:
+  enabled: false
+
+# Prometheus configuration
+prometheus:
+  prometheusSpec:
+    # Minimal resource requests to avoid node pressure
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    
+    # Retention settings
+    retention: 7d
+    retentionSize: "10GB"
+    
+    # Service monitor selector - scrape all service monitors
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    
+    # Additional scrape configs for TribeTalk services
+    additionalScrapeConfigs:
+      # TribeTalk main service
+      - job_name: 'tribetalk'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['tribetalk.default.svc.cluster.local:8080']
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: instance
+          - target_label: application
+            replacement: 'tribetalk'
+      
+      # Notification service
+      - job_name: 'notification-service'
+        metrics_path: '/notification/actuator/prometheus'
+        static_configs:
+          - targets: ['notification-service.default.svc.cluster.local:8082']
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: instance
+          - target_label: application
+            replacement: 'notification-service'
+      
+      # Chat service
+      - job_name: 'chatservice'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['chatservice.default.svc.cluster.local:8081']
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: instance
+          - target_label: application
+            replacement: 'chatservice'
+
+# Alertmanager - minimal config
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+# Prometheus Operator
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Node exporter for node metrics
+nodeExporter:
+  enabled: true
+
+# Kube-state-metrics for Kubernetes metrics
+kubeStateMetrics:
+  enabled: true

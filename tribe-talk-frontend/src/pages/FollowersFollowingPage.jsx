@@ -1,18 +1,29 @@
 import { useContext, useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import SuggestionSidebar from "../components/Suggestion/SuggestionSibebar";
 import MainHeader from "../components/MainHeader";
 import FollowersListComponent from "../components/Profile/FollowersListComponent";
 import FollowingListComponent from "../components/Profile/FollowingListComponent";
 import { AuthContext } from "../auth/AuthContext";
+import axiosInstance from "../services/axiosInstance";
 
 function FollowersFollowingPage() {
   const { user } = useContext(AuthContext);
-  const userId = user?.userId;
-
+  const { userId } = useParams(); // Get userId from URL
+  const [viewedUser, setViewedUser] = useState(null);
   const [activeTab, setActiveTab] = useState("followers"); // default tab
   const [searchParams] = useSearchParams();
+
+  // Fetch the viewed user's profile
+  useEffect(() => {
+    if (!userId) return;
+
+    axiosInstance
+      .get(`/api/users/user-profile/${userId}`)
+      .then((res) => setViewedUser(res.data))
+      .catch((err) => console.error("Failed to load user profile:", err));
+  }, [userId]);
 
   // Read ?tab=followers or ?tab=following from URL
   useEffect(() => {
@@ -34,29 +45,27 @@ function FollowersFollowingPage() {
 
           {/* User Header */}
           <div className="px-4 pt-6 pb-2">
-            <h2 className="text-xl font-bold text-yellow-100">{user?.displayname}</h2>
-            <p className="text-yellow-400 text-sm">@{user?.username}</p>
+            <h2 className="text-xl font-bold text-yellow-100">{viewedUser?.displayName || "Loading..."}</h2>
+            <p className="text-yellow-400 text-sm">@{viewedUser?.username || ""}</p>
           </div>
 
           {/* Tabs */}
           <div className="flex space-x-4 mt-2 border-b border-yellow-700/30">
             <button
-              className={`relative py-3 text-sm font-semibold text-center transition ${
-                activeTab === "followers"
+              className={`relative py-3 text-sm font-semibold text-center transition ${activeTab === "followers"
                   ? "text-yellow-300 after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:border-b-2 after:border-yellow-400"
                   : "text-yellow-500 hover:text-yellow-300"
-              }`}
+                }`}
               onClick={() => setActiveTab("followers")}
             >
               Followers
             </button>
 
             <button
-              className={`relative py-3 text-sm font-semibold text-center transition ${
-                activeTab === "following"
+              className={`relative py-3 text-sm font-semibold text-center transition ${activeTab === "following"
                   ? "text-yellow-300 after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:border-b-2 after:border-yellow-400"
                   : "text-yellow-500 hover:text-yellow-300"
-              }`}
+                }`}
               onClick={() => setActiveTab("following")}
             >
               Following
@@ -66,9 +75,9 @@ function FollowersFollowingPage() {
           {/* Content Section */}
           <div className="px-4 py-6 space-y-4">
             {activeTab === "followers" ? (
-              <FollowersListComponent />
+              <FollowersListComponent userId={userId} />
             ) : (
-              <FollowingListComponent />
+              <FollowingListComponent userId={userId} />
             )}
           </div>
         </main>

@@ -195,3 +195,24 @@ output "deployment_summary" {
   EOT
 }
 
+# Monitoring Instance Outputs
+output "monitoring_public_ip" {
+  description = "Public IP of monitoring instance"
+  value       = aws_eip.monitoring.public_ip
+}
+
+output "grafana_url" {
+  description = "Grafana dashboard URL"
+  value       = "http://${aws_eip.monitoring.public_ip}:3000"
+}
+
+output "prometheus_url" {
+  description = "Prometheus URL (internal)"
+  value       = "http://${aws_instance.monitoring.private_ip}:9090"
+}
+
+output "monitoring_ssh_command" {
+  description = "SSH command to connect to monitoring instance"
+  value       = "ssh -i ~/.ssh/${var.key_pair_name}.pem ubuntu@${aws_eip.monitoring.public_ip}"
+}
+
