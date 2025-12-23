@@ -7,6 +7,7 @@ import { AuthContext } from "../auth/AuthContext";
 function BookmarkDetails() {
   const [searchQuery, setSearchQuery] = useState("");
   const [bookmarks, setBookmarks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useContext(AuthContext);
 
   const userId = user?.userId;
@@ -16,12 +17,15 @@ function BookmarkDetails() {
 
     const fetchBookmarks = async () => {
       try {
+        setIsLoading(true);
         const res = await axiosInstance.get(
-          `/v1/posts/bookmarked?userId=${userId}`
+          `/api/v1/posts/bookmarked?userId=${userId}`
         );
         setBookmarks(res.data);
       } catch (err) {
         console.error("Failed to fetch bookmarks", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -52,7 +56,14 @@ function BookmarkDetails() {
       </div> */}
 
       {/* Content */}
-      {isEmpty ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-[200px]">
+          <div className="text-yellow-400 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto mb-2"></div>
+            <p>Loading bookmarks...</p>
+          </div>
+        </div>
+      ) : isEmpty ? (
         <div className="min-h-[200px] flex flex-col items-center justify-center text-center">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-yellow-100 mb-2">
             Save posts for later

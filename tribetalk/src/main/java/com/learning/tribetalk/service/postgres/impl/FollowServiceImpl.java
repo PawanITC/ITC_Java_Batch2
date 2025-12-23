@@ -10,6 +10,7 @@ import com.learning.tribetalk.exception.ResourceNotFoundException;
 import com.learning.tribetalk.repository.postgres.FollowRepository;
 import com.learning.tribetalk.repository.postgres.UserRepository;
 import com.learning.tribetalk.service.NotificationProducer;
+import com.learning.tribetalk.service.mongo.S3Service;
 import com.learning.tribetalk.service.postgres.FollowService;
 
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -35,15 +37,18 @@ public class FollowServiceImpl implements FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
     private final NotificationProducer notificationProducer;
+    private final S3Service s3Service;
 
     private static final Logger log = LoggerFactory.getLogger(FollowServiceImpl.class);
 
     public FollowServiceImpl(FollowRepository followRepository,
             UserRepository userRepository,
-            NotificationProducer notificationProducer) {
+            NotificationProducer notificationProducer,
+            S3Service s3Service) {
         this.followRepository = followRepository;
         this.userRepository = userRepository;
         this.notificationProducer = notificationProducer;
+        this.s3Service = s3Service;
     }
 
     @Override
@@ -83,6 +88,7 @@ public class FollowServiceImpl implements FollowService {
                 } catch (Exception e) {
                     // Log error but don't fail the follow operation
                     log.error("Failed to send follow notification: " + e.getMessage(), e);
+                    System.err.println("Failed to send follow notification: " + e.getMessage());
                 }
             }
         });
@@ -136,7 +142,8 @@ public class FollowServiceImpl implements FollowService {
                         f.getFollower().getId(),
                         f.getFollower().getUsername(),
                         f.getFollower().getEmail(),
-                        f.getFollower().getDisplayname()))
+                        f.getFollower().getDisplayname(),
+                        generatePresignedUrl(f.getFollower().getProfileImageUrl())))
                 .toList();
     }
 
@@ -152,8 +159,21 @@ public class FollowServiceImpl implements FollowService {
                         f.getFollowing().getId(),
                         f.getFollowing().getUsername(),
                         f.getFollowing().getEmail(),
-                        f.getFollowing().getDisplayname()))
+                        f.getFollowing().getDisplayname(),
+                        generatePresignedUrl(f.getFollowing().getProfileImageUrl())))
                 .toList();
+    }
+
+    // Helper method to generate presigned URL from S3 key
+    private String generatePresignedUrl(String s3Key) {
+        if (s3Key == null || s3Key.isBlank()) {
+            return null;
+        }
+        try {
+            return s3Service.generatePresignedUrl(s3Key, Duration.ofHours(1));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private void sendFollowNotification(User follower, User following) {

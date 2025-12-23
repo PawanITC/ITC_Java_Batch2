@@ -5,23 +5,23 @@ import { AuthContext } from "../../auth/AuthContext";
 import { GlobalContext } from "../GlobalContext";
 import UserCard from "../user/UserCard";
 
-function FollowersList() {
+function FollowersList({ userId: viewedUserId }) {
   const { user } = useContext(AuthContext);
   const { setFollowingCount } = useContext(GlobalContext);
 
-  const userId = user?.userId;
+  const loggedInUserId = user?.userId;
 
   const [users, setUsers] = useState([]);
   const [followingMap, setFollowingMap] = useState({});
 
   useEffect(() => {
-    if (!userId) return;
+    if (!viewedUserId || !loggedInUserId) return;
 
     const fetchData = async () => {
       try {
         const [followersRes, followingRes] = await Promise.all([
-          axiosInstance.get(`/api/follow/followers-list/${userId}`),
-          axiosInstance.get(`/api/follow/following-list/${userId}`),
+          axiosInstance.get(`/api/follow/followers-list/${viewedUserId}`),
+          axiosInstance.get(`/api/follow/following-list/${loggedInUserId}`),
         ]);
 
         setUsers(followersRes.data);
@@ -36,7 +36,7 @@ function FollowersList() {
     };
 
     fetchData();
-  }, [userId]);
+  }, [viewedUserId, loggedInUserId]);
 
   const toggleFollow = async (targetId) => {
     const isFollowing = followingMap[targetId];
@@ -47,7 +47,7 @@ function FollowersList() {
         url: isFollowing
           ? "/api/follow/unfollow-user"
           : "/api/follow/follow-user",
-        data: { followerId: userId, followingId: targetId },
+        data: { followerId: loggedInUserId, followingId: targetId },
       });
 
       setFollowingMap(prev => ({

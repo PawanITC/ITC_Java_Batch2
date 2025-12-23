@@ -9,21 +9,22 @@ public class UserClient {
 
     private final WebClient webClient;
 
-
     public UserClient(WebClient.Builder builder) {
-        this.webClient = builder.baseUrl("http://localhost:8080/api/users").build();
+        // Use Kubernetes service name instead of localhost for inter-service
+        // communication
+        String baseUrl = System.getenv().getOrDefault("USER_SERVICE_URL", "http://tribetalk:8080/api/users");
+        this.webClient = builder.baseUrl(baseUrl).build();
     }
 
-    public UserResponse getUserById(String userId){
-        try{
+    public UserResponse getUserById(String userId) {
+        try {
             return webClient.get()
-                    .uri("/{id}",userId)
+                    .uri("/{id}", userId)
                     .retrieve()
                     .bodyToMono(UserResponse.class)
                     .block();
-        }
-        catch (Exception e){
-            System.out.println("Exception while accessing user via WebClient "+e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Exception while accessing user via WebClient " + e.getMessage());
         }
         return null;
     }

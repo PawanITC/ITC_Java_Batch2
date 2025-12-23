@@ -18,7 +18,7 @@ function NewsItemCard({ id, image, headline, timestamp, category, summary, url }
           {headline}
         </p>
 
-        <p className="text-xs text-yellow-400 dark:text-gray-600 mt-1">
+        <p className="text-xs text-yellow-700 dark:text-gray-600 mt-1">
           {timestamp ? timestamp : "Just now"} · {category}
         </p>
       </div>

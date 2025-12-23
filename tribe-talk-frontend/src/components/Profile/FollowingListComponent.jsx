@@ -4,26 +4,27 @@ import { toast } from "react-toastify";
 import { AuthContext } from "../../auth/AuthContext";
 import UserCard from "../user/UserCard";
 
-function FollowingList() {
+function FollowingList({ userId: viewedUserId }) {
   const { user } = useContext(AuthContext);
-  const userId = user?.userId;
+  const loggedInUserId = user?.userId;
 
   const [users, setUsers] = useState([]);
   const [followingMap, setFollowingMap] = useState({});
 
   useEffect(() => {
-    if (!userId) return;
+    if (!viewedUserId || !loggedInUserId) return;
 
     const fetchFollowing = async () => {
       try {
-        const res = await axiosInstance.get(
-          `/api/follow/following-list/${userId}`
-        );
+        const [viewedUserFollowingRes, loggedInUserFollowingRes] = await Promise.all([
+          axiosInstance.get(`/api/follow/following-list/${viewedUserId}`),
+          axiosInstance.get(`/api/follow/following-list/${loggedInUserId}`),
+        ]);
 
-        setUsers(res.data);
+        setUsers(viewedUserFollowingRes.data);
 
         const map = {};
-        res.data.forEach(u => (map[u.id] = true));
+        loggedInUserFollowingRes.data.forEach(u => (map[u.id] = true));
         setFollowingMap(map);
 
       } catch {
@@ -32,7 +33,7 @@ function FollowingList() {
     };
 
     fetchFollowing();
-  }, [userId]);
+  }, [viewedUserId, loggedInUserId]);
 
   const toggleFollow = async (targetId) => {
     const isFollowing = followingMap[targetId];
@@ -43,7 +44,7 @@ function FollowingList() {
         url: isFollowing
           ? "/api/follow/unfollow-user"
           : "/api/follow/follow-user",
-        data: { followerId: userId, followingId: targetId },
+        data: { followerId: loggedInUserId, followingId: targetId },
       });
 
       setFollowingMap(prev => ({

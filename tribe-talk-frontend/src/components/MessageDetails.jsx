@@ -23,7 +23,7 @@ function MessageDetails({ currentUser, setSelectedUser }) {
     if (!currentUser) return;
     try {
       const res = await axiosInstance.get(
-        `http://localhost:8081/api/chat/conversations/user/${currentUser.id}`
+        `/api/chat/conversations/user/${currentUser.id}`
       );
       setGroupedChats(res.data);
     } catch (err) {
@@ -35,7 +35,7 @@ function MessageDetails({ currentUser, setSelectedUser }) {
     if (!currentUser) return;
     try {
       const res = await axiosInstance.get(
-        `http://localhost:8081/api/chat/conversations/unread/${currentUser.id}`
+        `/api/chat/conversations/unread/${currentUser.id}`
       );
       setGroupedChats(res.data);
     } catch (err) {

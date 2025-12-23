@@ -1,0 +1,48 @@
+---
+- name: Check Database Services Status
+  hosts: databases,kafka
+  gather_facts: no
+  tasks:
+    - name: Check MongoDB service
+      shell: sudo systemctl is-active mongod || echo "not-running"
+      register: mongodb_status
+      when: inventory_hostname == 'mongodb'
+      ignore_errors: yes
+
+    - name: Check PostgreSQL service
+      shell: sudo systemctl is-active postgresql || echo "not-running"
+      register: postgresql_status
+      when: inventory_hostname == 'postgresql'
+      ignore_errors: yes
+
+    - name: Check Redis service
+      shell: sudo systemctl is-active redis || echo "not-running"
+      register: redis_status
+      when: inventory_hostname == 'redis'
+      ignore_errors: yes
+
+    - name: Check Kafka service
+      shell: sudo systemctl is-active kafka || echo "not-running"
+      register: kafka_status
+      when: inventory_hostname == 'kafka1'
+      ignore_errors: yes
+
+    - name: Display MongoDB status
+      debug:
+        msg: "MongoDB: {{ mongodb_status.stdout }}"
+      when: inventory_hostname == 'mongodb'
+
+    - name: Display PostgreSQL status
+      debug:
+        msg: "PostgreSQL: {{ postgresql_status.stdout }}"
+      when: inventory_hostname == 'postgresql'
+
+    - name: Display Redis status
+      debug:
+        msg: "Redis: {{ redis_status.stdout }}"
+      when: inventory_hostname == 'redis'
+
+    - name: Display Kafka status
+      debug:
+        msg: "Kafka: {{ kafka_status.stdout }}"
+      when: inventory_hostname == 'kafka1'

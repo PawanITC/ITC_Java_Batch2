@@ -111,7 +111,7 @@ function ExploreTabs() {
     <div className="w-full max-w-3xl mx-auto px-4 py-6 text-gray-900 dark:text-yellow-100">
       {/* Search Bar */}
       <div className="flex items-center gap-2 bg-gray-100 dark:bg-neutral-800 border border-yellow-700 rounded-full px-4 py-2 mb-6">
-        <FiSearch className="text-yellow-400 dark:text-gray-600 text-lg" />
+        <FiSearch className="text-yellow-700 dark:text-gray-600 text-lg" />
         <input
           type="text"
           placeholder="Search"
@@ -128,11 +128,10 @@ function ExploreTabs() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-2 font-semibold capitalize ${
-                activeTab === tab
-                  ? "border-b-2 border-yellow-400 text-yellow-100"
-                  : "text-yellow-400"
-              }`}
+              className={`pb-2 font-semibold capitalize ${activeTab === tab
+                ? "border-b-2 border-yellow-400 text-yellow-600"
+                : "text-yellow-700"
+                }`}
             >
               {tab}
             </button>
@@ -143,7 +142,7 @@ function ExploreTabs() {
       {/* Tab Content */}
       <div className="space-y-4 px-2">
         {feeds[activeTab].length === 0 && (
-          <p className="text-yellow-400 dark:text-gray-600">Loading...</p>
+          <p className="text-yellow-600 dark:text-gray-600">Loading...</p>
         )}
         {feeds[activeTab].map((item) => (
           <NewsItemCard key={item.id} {...item} />

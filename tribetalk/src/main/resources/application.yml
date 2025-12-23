@@ -53,15 +53,15 @@ spring:
       client:
         registration:
           github:
-            client-id: ${GITHUB_CLIENT_ID:Ov23lizJ8kpXKzpZZi2P}
-            client-secret: ${GITHUB_CLIENT_SECRET:1d7473e335aa10c61f775d76b6cc7e4e68eba7a2}
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
             redirect-uri: ${GITHUB_REDIRECT_URI:http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/login/oauth2/code/github}
             scope:
               - read:user
               - user:email
           google:
-            client-id: ${GOOGLE_CLIENT_ID:634703536163-6tqkifb0cg96l302sabbgimf5t4r3qqk.apps.googleusercontent.com}
-            client-secret: ${GOOGLE_CLIENT_SECRET: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}
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/login/oauth2/code/google}
             scope:
               - openid
@@ -109,40 +109,27 @@ otel:
 
 management:
   tracing:
-    enabled: ${OTEL_TRACING_ENABLED:false}
+    enabled: ${OTEL_TRACING_ENABLED:true}
     sampling:
-      probability: 1.0
+      probability: 1.0  # Sample 100% of requests
+  otlp:
+    tracing:
+      endpoint: http://10.0.0.193:4318/v1/traces
   endpoints:
     web:
       exposure:
         include: health,info,metrics,prometheus
   endpoint:
-    include: health, info, metrics, prometheus
     prometheus:
-      enabled: false
+      enabled: true
     health:
       show-details: always
   metrics:
     export:
       prometheus:
-        enabled: false
+        enabled: true
     distribution:
       percentiles-histogram:
-        http.server.requests: false
+        http.server.requests: true
     tags:
       application: ${spring.application.name}
-  prometheus:
-    metrics:
-      export:
-        enabled: false
-
-  kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    producer:
-      bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-
-
-app:
-  url: ${APP_URL:http://localhost:5173}

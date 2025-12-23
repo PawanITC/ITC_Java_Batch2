@@ -113,7 +113,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public List<UserResponse> getAllUsers() {
         return repo.findAll().stream()
-                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname()))
+                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname(),
+                        user.getProfileImageUrl()))
                 .toList();
     }
 
@@ -150,15 +151,16 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public Optional<UserResponse> findByUsername(String username) {
-        return Optional.ofNullable(repo.findByUsername(username)
-                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname()))
-                .orElseThrow(() -> new ResourceNotFoundException("User not found")));
+        return repo.findByUsername(username)
+                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
+                        user.getDisplayname(), user.getProfileImageUrl()));
     }
 
     @Override
     public Optional<UserResponse> findByUserId(Long userId) {
         return Optional.ofNullable(repo.findById(userId)
-                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname()))
+                .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname(),
+                        user.getProfileImageUrl()))
                 .orElseThrow(() -> new ResourceNotFoundException("User not found")));
     }
 
@@ -192,7 +194,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                         user.getId(),
                         user.getUsername(),
                         user.getEmail(),
-                        user.getDisplayname()))
+                        user.getDisplayname(),
+                        user.getProfileImageUrl()))
                 .toList();
     }
 

@@ -23,7 +23,7 @@ spec:
       serviceAccountName: tribetalk-sa
       containers:
       - name: chatservice
-        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/chatservice:v1.5
+        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/chatservice:v1.7-kafka-fix
         imagePullPolicy: Always
         ports:
         - containerPort: 8081
@@ -54,17 +54,17 @@ spec:
           httpGet:
             path: /actuator/health
             port: 8081
-          initialDelaySeconds: 60
+          initialDelaySeconds: 90
           periodSeconds: 10
-          timeoutSeconds: 3
+          timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: 8081
           initialDelaySeconds: 30
-          periodSeconds: 5
-          timeoutSeconds: 3
+          periodSeconds: 10
+          timeoutSeconds: 10
           failureThreshold: 3
       restartPolicy: Always
 ---

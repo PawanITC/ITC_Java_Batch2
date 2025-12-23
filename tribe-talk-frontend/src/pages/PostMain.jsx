@@ -5,7 +5,7 @@ import PostDetails from "../components/Post/PostDetails";
 
 function PostMain() {
   return (
-    <div className="flex bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-700 min-h-screen">
+    <div className="flex bg-white dark:bg-neutral-900 text-gray-900 dark:text-yellow-200 min-h-screen">
       <Sidebar />
 
       {/* Main content area */}

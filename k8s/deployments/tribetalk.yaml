@@ -23,7 +23,7 @@ spec:
       serviceAccountName: tribetalk-sa
       containers:
       - name: tribetalk
-        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk:v2.1-websocket
+        image: 430006376054.dkr.ecr.eu-north-1.amazonaws.com/tribetalk:v3.9-google-oauth-fix
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -59,8 +59,6 @@ spec:
             secretKeyRef:
               name: tribetalk-database-secrets
               key: mongodb_uri
-        - name: GOOGLE_REDIRECT_URI
-          value: "$(APP_URL)/api/login/oauth2/code/google"
         - name: SPRING_REDIS_HOST
           valueFrom:
             secretKeyRef:
@@ -86,6 +84,8 @@ spec:
             configMapKeyRef:
               name: app-config
               key: ALB_URL
+        - name: GOOGLE_REDIRECT_URI
+          value: "http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/login/oauth2/code/google"
         - name: GITHUB_CLIENT_ID
           valueFrom:
             secretKeyRef:
@@ -98,6 +98,16 @@ spec:
               key: github_client_secret
         - name: GITHUB_REDIRECT_URI
           value: "http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com/login/oauth2/code/github"
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: tribetalk-app-secrets
+              key: google_client_id
+        - name: GOOGLE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: tribetalk-app-secrets
+              key: google_client_secret
         resources:
           requests:
             memory: "256Mi"

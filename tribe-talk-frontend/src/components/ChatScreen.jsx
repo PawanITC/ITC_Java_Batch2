@@ -8,6 +8,7 @@ function ChatScreen({ user, currentUser, stompClient }) {
   const [messageInput, setMessageInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const toIdString = (id) => id?.toString?.() ?? "";
 
@@ -37,10 +38,11 @@ function ChatScreen({ user, currentUser, stompClient }) {
   // Load previous messages
   useEffect(() => {
     if (!roomId) return;
-    fetch(`http://localhost:8081/api/chat/messages/${roomId}`)
-      .then((res) => res.json())
-      .then((data) => setMessages(data))
-      .catch((err) => console.error("Error fetching messages:", err));
+    setIsLoading(true);
+    axiosInstance.get(`/api/chat/messages/${roomId}`)
+      .then((res) => setMessages(res.data))
+      .catch((err) => console.error("Error fetching messages:", err))
+      .finally(() => setIsLoading(false));
   }, [roomId]);
 
   // Subscribe to WebSocket topic
@@ -62,7 +64,7 @@ function ChatScreen({ user, currentUser, stompClient }) {
           !newMessage.isRead
         ) {
           try {
-            await axios.put("http://localhost:8081/api/chat/mark-as-read", {
+            await axiosInstance.put("/api/chat/mark-as-read", {
               senderId: newMessage.senderId,
               receiverId: newMessage.receiverId,
             });
@@ -150,48 +152,57 @@ function ChatScreen({ user, currentUser, stompClient }) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 flex flex-col">
-        {Object.entries(groupedMessages).map(([date, msgs]) => (
-          <div key={date}>
-            {/* ✅ Date divider */}
-            <div className="text-center text-yellow-400 text-sm mb-2">{date}</div>
-            {msgs.map((msg, index) => {
-              const isSender =
-                msg?.senderId?.toString?.() === currentUser?.id?.toString?.();
-              return (
-                <div
-                  key={index}
-                  className={`flex w-full mb-2 ${
-                    isSender ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-xs px-4 py-2 rounded-lg ${
-                      isSender
-                        ? "bg-yellow-700 text-black"
-                        : "bg-neutral-800 text-yellow-100"
-                    }`}
-                  >
-                    {/* ✅ Show sender name in group chats */}
-                    {user?.type === "group" && (
-                      <p className="text-xs font-bold mb-1">
-                        {msg.senderUsername || `User ${msg.senderId}`}
-                      </p>
-                    )}
-                    <p>{msg?.content}</p>
-                    {/* ✅ Show timestamp */}
-                    <p className="text-xs text-yellow-400 mt-1 text-right">
-                      {formatTime(msg.timestamp)}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-yellow-400 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto mb-2"></div>
+              <p>Loading messages...</p>
+            </div>
           </div>
-        ))}
-        {messages.length === 0 && (
-          <p className="text-yellow-500 text-sm text-center">
-            No messages yet. Say hi!
-          </p>
+        ) : (
+          <>
+            {Object.entries(groupedMessages).map(([date, msgs]) => (
+              <div key={date}>
+                {/* ✅ Date divider */}
+                <div className="text-center text-yellow-400 text-sm mb-2">{date}</div>
+                {msgs.map((msg, index) => {
+                  const isSender =
+                    msg?.senderId?.toString?.() === currentUser?.id?.toString?.();
+                  return (
+                    <div
+                      key={index}
+                      className={`flex w-full mb-2 ${isSender ? "justify-end" : "justify-start"
+                        }`}
+                    >
+                      <div
+                        className={`max-w-xs px-4 py-2 rounded-lg ${isSender
+                          ? "bg-yellow-700 text-black"
+                          : "bg-neutral-800 text-yellow-100"
+                          }`}
+                      >
+                        {/* ✅ Show sender name in group chats */}
+                        {user?.type === "group" && (
+                          <p className="text-xs font-bold mb-1">
+                            {msg.senderUsername || `User ${msg.senderId}`}
+                          </p>
+                        )}
+                        <p>{msg?.content}</p>
+                        {/* ✅ Show timestamp */}
+                        <p className="text-xs text-yellow-400 mt-1 text-right">
+                          {formatTime(msg.timestamp)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+            {messages.length === 0 && (
+              <p className="text-yellow-500 text-sm text-center">
+                No messages yet. Say hi!
+              </p>
+            )}
+          </>
         )}
       </div>
 
@@ -211,6 +222,12 @@ function ChatScreen({ user, currentUser, stompClient }) {
           placeholder="Start a new message"
           value={messageInput}
           onChange={(e) => setMessageInput(e.target.value)}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
           className="flex-1 bg-transparent text-yellow-100 placeholder-yellow-400 focus:outline-none"
         />
         <button onClick={handleSend}>

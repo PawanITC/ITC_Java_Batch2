@@ -38,8 +38,17 @@ frontend:
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
+      bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # Disable transactions to fix "No transaction is in process" error
+        enable.idempotence: false
+        # Performance tuning
+        acks: 1
+        retries: 3
+        max.in.flight.requests.per.connection: 5
+        compression.type: snappy
     consumer:
       group-id: user-group
       auto-offset-reset: earliest

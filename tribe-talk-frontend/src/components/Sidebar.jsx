@@ -25,7 +25,7 @@ function Sidebar() {
     { icon: <FiBell />, label: "Notifications" },
     { icon: <FiMail />, label: "Messages" },
     { icon: <FiBookmark />, label: "Bookmarks" },
-    { icon: <HiOutlineUserGroup />, label: "Communities" },
+    // { icon: <HiOutlineUserGroup />, label: "Communities" },
     { icon: <FiUser />, label: "Profile" },
   ];
 
@@ -34,21 +34,7 @@ function Sidebar() {
   const navigate = useNavigate();
   const { isAuthenticated, setIsAuthenticated, user, setUser } =
     useContext(AuthContext);
-  const { unReadNotificationCount, openPostModal } = useContext(GlobalContext);
-  const [userDetails, setUserDetails] = useState(null);
-  useEffect(() => {
-    const fetchUserDetails = async (e) => {
-      try {
-        const userResponse = await axiosInstance.get(`/api/users/loggedUser`);
-        setUserDetails(userResponse.data);
-      } catch (err) {
-        console.log(err);
-        toast.warn("Error in fetching user details");
-      }
-    };
-
-    fetchUserDetails();
-  }, []);
+  const { unReadNotificationCount, openPostModal, userProfile } = useContext(GlobalContext);
   const logoutHandler = async (e) => {
     try {
       const response = await axiosInstance.post("/api/auth/logout", {});
@@ -66,36 +52,50 @@ function Sidebar() {
         {/* Top: Logo and Navigation */}
         <div className="flex flex-col md:space-y-6">
           <div className="flex justify-center md:justify-start mb-6 items-center align-center self-center" >
-            <img
-              src={logo}
-              alt="TribeTalk Logo"
-              className="w-10 h-10 md:w-32 md:h-auto rounded-md mt-3 shadow-[0px_20px_30px_-10px_rgb(38,57,77)] dark:shadow-none"
-            />
+            <Link to="/main">
+              <img
+                src={logo}
+                alt="TribeTalk Logo"
+                className="w-10 h-10 md:w-32 md:h-auto rounded-md mt-3 shadow-[0px_20px_30px_-10px_rgb(38,57,77)] dark:shadow-none cursor-pointer hover:opacity-80 transition"
+              />
+            </Link>
           </div>
 
           <nav className="flex flex-col justify-center mt-2 items-center md:items-start gap-6 md:gap-4 grow">
-            {navItems.map(({ icon, label }, idx) => (
-              <Link
-                to={label === "Home" ? "/main" : `/${label.toLowerCase()}`}
-                key={idx}
-                className="w-full flex flex-col md:flex-row items-center md:items-start gap-0 md:gap-4 px-2 py-2 rounded-md hover:bg-yellow-700 hover:text-white dark:hover:bg-neutral-800 dark:hover:text-yellow-200 transition"
-              >
-                {label === "Notifications" && (
-                  <div className="relative">
-                    <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
-                      {unReadNotificationCount}
-                    </span>
+            {navItems.map(({ icon, label }, idx) => {
+              // Determine the navigation path
+              let path;
+              if (label === "Home") {
+                path = "/main";
+              } else if (label === "Profile") {
+                path = `/profile/${user?.userId || ''}`;
+              } else {
+                path = `/${label.toLowerCase()}`;
+              }
+
+              return (
+                <Link
+                  to={path}
+                  key={idx}
+                  className="w-full flex flex-col md:flex-row items-center md:items-start gap-0 md:gap-4 px-2 py-2 rounded-md hover:bg-yellow-700 hover:text-white dark:hover:bg-neutral-800 dark:hover:text-yellow-200 transition"
+                >
+                  {label === "Notifications" && (
+                    <div className="relative">
+                      <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
+                        {unReadNotificationCount}
+                      </span>
+                      <span className="text-xl">{icon}</span>
+                    </div>
+                  )}
+                  {label !== "Notifications" && (
                     <span className="text-xl">{icon}</span>
-                  </div>
-                )}
-                {label !== "Notifications" && (
-                  <span className="text-xl">{icon}</span>
-                )}
-                <span className="hidden md:inline text-sm font-medium">
-                  {label}
-                </span>
-              </Link>
-            ))}
+                  )}
+                  <span className="hidden md:inline text-sm font-medium">
+                    {label}
+                  </span>
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="flex justify-center md:justify-start mt-6">
@@ -117,11 +117,20 @@ function Sidebar() {
             className="w-full text-left"
           >
             <div className="flex items-center justify-center md:justify-start gap-3 py-4 border-t border-yellow-800">
-              <img
-                src="https://images.unsplash.com/photo-1536164261511-3a17e671d380?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=682"
-                alt="Default Profile"
-                className="w-10 h-10 rounded-full object-cover"
-              />
+              {/* User Avatar */}
+              {userProfile?.profileImageUrl && userProfile.profileImageUrl.trim() !== "" ? (
+                <img
+                  src={`${userProfile.profileImageUrl}?t=${Date.now()}`}
+                  alt={userProfile.displayname || "User"}
+                  className="w-10 h-10 rounded-full object-cover border border-yellow-500"
+                  loading="lazy"
+                  key={userProfile.profileImageUrl}
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center border border-yellow-500">
+                  <FiUser className="text-neutral-900" size={20} />
+                </div>
+              )}
               <div className="hidden md:flex flex-col">
                 {/* <span className="text-sm font-semibold">
                   {loggedUser?.displayname || ""}
@@ -130,8 +139,8 @@ function Sidebar() {
                   @{loggedUser?.username || ""}
                 </span> */}
 
-                <span className="text-sm font-semibold">{userDetails?.displayname || ''}</span>
-                <span className="text-xs text-yellow-400 dark:text-gray-600">{'@' + (userDetails?.username || '')}</span>
+                <span className="text-sm font-semibold">{userProfile?.displayname || ''}</span>
+                <span className="text-xs text-yellow-400 dark:text-gray-600">{'@' + (userProfile?.username || '')}</span>
               </div>
             </div>
           </button>
@@ -144,7 +153,7 @@ function Sidebar() {
               >
                 Log out{" "}
                 <span className="text-yellow-400 dark:text-gray-600">
-                  {"@" + (userDetails?.username || "")}
+                  {"@" + (userProfile?.username || "")}
                 </span>
               </button>
             </div>
