@@ -12,7 +12,7 @@ function Poll({ post, user }) {
         if (isExpired) return;
         try {
             console.log(user);
-            const res = await axiosInstance.post(`/v1/posts/${localPost.id}/vote`, null, {
+            const res = await axiosInstance.post(`/api/v1/posts/${localPost.id}/vote`, null, {
                 params: { optionIndex, userId: user.userId },
             });
             setLocalPost(res.data); // updated votes/percentages from backend

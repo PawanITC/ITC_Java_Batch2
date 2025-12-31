@@ -7,7 +7,7 @@ import {
   FiUser,
 } from "react-icons/fi";
 import { HiOutlineUserGroup } from "react-icons/hi";
-import { MdOutlinePostAdd } from "react-icons/md";
+import { MdOutlineLogout, MdOutlinePostAdd } from "react-icons/md";
 import logo from "../assets/logo.png";
 import { Link } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
@@ -120,7 +120,7 @@ function Sidebar() {
               {/* User Avatar */}
               {userProfile?.profileImageUrl && userProfile.profileImageUrl.trim() !== "" ? (
                 <img
-                  src={`${userProfile.profileImageUrl}?t=${Date.now()}`}
+                  src={userProfile.profileImageUrl}
                   alt={userProfile.displayname || "User"}
                   className="w-10 h-10 rounded-full object-cover border border-yellow-500"
                   loading="lazy"
@@ -148,11 +148,12 @@ function Sidebar() {
           {showAccountMenu && (
             <div className="absolute bottom-16 left-4 bg-white dark:bg-neutral-900 text-gray-900 dark:text-yellow-100 rounded-md shadow-lg border border-yellow-700 w-64 z-50">
               <button
-                className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:bg-neutral-800 transition"
+                className="w-full cursor-pointer text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-neutral-800 transition group"
                 onClick={logoutHandler}
               >
+                <MdOutlineLogout className="text-xl" />
                 Log out{" "}
-                <span className="text-yellow-400 dark:text-gray-600">
+                <span className="text-yellow-700 dark:text-gray-600 group-hover:text-gray-900 dark:group-hover:text-yellow-400 transition-colors">
                   {"@" + (userProfile?.username || "")}
                 </span>
               </button>

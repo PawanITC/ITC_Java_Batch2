@@ -188,20 +188,39 @@ function MessageDetails({ currentUser, setSelectedUser }) {
             <button
               key={roomId}
               onClick={() => setSelectedUser(otherUser)}
-              className="w-full text-left bg-neutral-800 p-4 rounded-md border border-yellow-700/40 mb-2 hover:bg-yellow-700/10 transition"
+              className="w-full text-left bg-neutral-800 p-4 rounded-md border border-yellow-700/40 mb-2 hover:bg-yellow-700/10 transition flex items-center gap-3"
             >
-              <p className="text-yellow-100 font-semibold">
-                Chat with {otherUser?.displayname || `User ${otherUserId}`}
-              </p>
-              <p className="text-yellow-400 text-sm flex items-center gap-2">
-                Last message: {lastMessage.content}
-                {!lastMessage.isRead &&
-                  lastMessage.receiverId === currentUser.id && (
-                    <span className="text-yellow-500 text-xs font-bold ml-2">
-                      ● Unread
-                    </span>
-                  )}
-              </p>
+              {/* Profile Image */}
+              {otherUser?.profileImageUrl && otherUser.profileImageUrl.trim() !== "" ? (
+                <img
+                  src={otherUser.profileImageUrl}
+                  alt={otherUser.displayname || otherUser.username}
+                  className="w-12 h-12 rounded-full object-cover border border-yellow-500 flex-shrink-0"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center border border-yellow-500 flex-shrink-0">
+                  <span className="text-neutral-900 font-bold text-lg">
+                    {(otherUser?.displayname || otherUser?.username || 'U').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+
+              {/* Message Content */}
+              <div className="flex-1 min-w-0">
+                <p className="text-yellow-100 font-semibold truncate">
+                  {otherUser?.displayname || `User ${otherUserId}`}
+                </p>
+                <p className="text-yellow-400 text-sm flex items-center gap-2 truncate">
+                  Last message: {lastMessage.content}
+                  {!lastMessage.isRead &&
+                    lastMessage.receiverId === currentUser.id && (
+                      <span className="text-yellow-500 text-xs font-bold ml-2">
+                        ● Unread
+                      </span>
+                    )}
+                </p>
+              </div>
             </button>
           );
         }

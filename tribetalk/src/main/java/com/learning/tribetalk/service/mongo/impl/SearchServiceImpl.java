@@ -9,11 +9,13 @@ import com.learning.tribetalk.mapper.PostMapper;
 import com.learning.tribetalk.repository.mongo.PostRepository;
 import com.learning.tribetalk.repository.postgres.UserRepository;
 import com.learning.tribetalk.service.mongo.PostService;
+import com.learning.tribetalk.service.mongo.S3Service;
 import com.learning.tribetalk.service.mongo.SearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -24,11 +26,12 @@ public class SearchServiceImpl implements SearchService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PostService postService;
+    private final S3Service s3Service;
 
     @Override
     @Cacheable(value = "searchPosts", key = "#query")
     public List<PostResponse> searchPosts(String query) {
-         List<Post> posts = postRepository.findByTextContainingIgnoreCaseOrderByCreatedAtDesc(query);
+        List<Post> posts = postRepository.findByTextContainingIgnoreCaseOrderByCreatedAtDesc(query);
         return posts.stream().map(postService::mapToResponse).toList();
     }
 
@@ -53,7 +56,8 @@ public class SearchServiceImpl implements SearchService {
     public List<SearchUserDTO> searchPeople(String query) {
         List<User> users = userRepository.searchByUsernameOrDisplayname(query);
         return users.stream()
-                .map(u -> new SearchUserDTO(u.getId(), u.getUsername(), u.getDisplayname()))
+                .map(u -> new SearchUserDTO(u.getId(), u.getUsername(), u.getDisplayname(),
+                        generatePresignedUrl(u.getProfileImageUrl())))
                 .toList();
     }
 
@@ -63,16 +67,17 @@ public class SearchServiceImpl implements SearchService {
         // 1. Users
         List<User> users = userRepository.searchByPrefix(query);
         List<SearchUserDTO> userDTOs = users.stream()
-                .map(u -> new SearchUserDTO(u.getId(), u.getUsername(), u.getDisplayname()))
+                .map(u -> new SearchUserDTO(u.getId(), u.getUsername(), u.getDisplayname(),
+                        generatePresignedUrl(u.getProfileImageUrl())))
                 .toList();
 
         // 2. Hashtags
         List<Post> posts = postRepository.findDistinctHashtagsStartingWith(query);
-//        List<String> hashtags = posts.stream()
-//                .flatMap(p -> p.getHashtags().stream())
-//                .filter(tag -> tag.toLowerCase().startsWith(query.toLowerCase()))
-//                .distinct()
-//                .toList();
+        // List<String> hashtags = posts.stream()
+        // .flatMap(p -> p.getHashtags().stream())
+        // .filter(tag -> tag.toLowerCase().startsWith(query.toLowerCase()))
+        // .distinct()
+        // .toList();
         List<String> hashtags = posts.stream()
                 .flatMap(p -> Optional.ofNullable(p.getHashtags()).orElse(List.of()).stream())
                 .filter(tag -> tag.toLowerCase().startsWith(query.toLowerCase()))
@@ -80,5 +85,18 @@ public class SearchServiceImpl implements SearchService {
                 .toList();
 
         return new SearchSuggestionsResponse(userDTOs, hashtags);
+    }
+
+    // Helper method to generate presigned URL from S3 key (same methodology as
+    // posts and users)
+    private String generatePresignedUrl(String s3Key) {
+        if (s3Key == null || s3Key.isBlank()) {
+            return null;
+        }
+        try {
+            return s3Service.generatePresignedUrl(s3Key, Duration.ofHours(1));
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

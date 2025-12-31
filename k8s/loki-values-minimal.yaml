@@ -1,0 +1,98 @@
+# Ultra-lightweight Loki configuration for TribeTalk
+# Strict resource limits to prevent cluster strain
+
+loki:
+  enabled: true
+  
+  # Strict resource limits - will NOT exceed these
+  resources:
+    requests:
+      cpu: 50m          # Very minimal CPU
+      memory: 100Mi     # Minimal memory
+    limits:
+      cpu: 150m         # Hard cap - cannot exceed
+      memory: 200Mi     # Hard cap - cannot exceed
+  
+  # Minimal persistence
+  persistence:
+    enabled: true
+    storageClassName: gp2
+    size: 3Gi          # Small storage, just recent logs
+  
+  # Short retention to save resources
+  config:
+    limits_config:
+      retention_period: 72h  # Only 3 days of logs
+      max_query_length: 721h
+    
+    chunk_store_config:
+      max_look_back_period: 72h
+    
+    table_manager:
+      retention_deletes_enabled: true
+      retention_period: 72h
+    
+    compactor:
+      retention_enabled: true
+      retention_delete_delay: 2h
+
+# Promtail (log collector) - runs on each node
+promtail:
+  enabled: true
+  
+  # Strict resource limits per node
+  resources:
+    requests:
+      cpu: 25m          # Very minimal per node
+      memory: 50Mi      # Minimal memory per node
+    limits:
+      cpu: 50m          # Hard cap per node
+      memory: 100Mi     # Hard cap per node
+  
+  # Only collect logs from specific namespaces
+  config:
+    clients:
+      - url: http://loki:3100/loki/api/v1/push
+    
+    snippets:
+      scrapeConfigs: |
+        # Only scrape default and monitoring namespaces
+        - job_name: kubernetes-pods
+          kubernetes_sd_configs:
+            - role: pod
+          relabel_configs:
+            # Only keep default and monitoring namespaces
+            - source_labels: [__meta_kubernetes_namespace]
+              regex: (default|monitoring)
+              action: keep
+            
+            # Drop health check logs to reduce volume
+            - source_labels: [__meta_kubernetes_pod_label_app]
+              regex: .*
+              action: keep
+            
+            - source_labels: [__meta_kubernetes_pod_container_name]
+              target_label: container
+            
+            - source_labels: [__meta_kubernetes_namespace]
+              target_label: namespace
+            
+            - source_labels: [__meta_kubernetes_pod_name]
+              target_label: pod
+
+# Disable Grafana (we already have it)
+grafana:
+  enabled: false
+
+# Disable other components we don't need
+prometheus:
+  enabled: false
+
+filebeat:
+  enabled: false
+
+logstash:
+  enabled: false
+
+fluent-bit:
+  enabled: false

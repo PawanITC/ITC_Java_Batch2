@@ -1,8 +1,10 @@
 import { Heart, Repeat2 } from "lucide-react";
 import { AtSign, Bell, MessageSquare, UserPlus } from "lucide-react";
 import { notificationService } from "../services/notificationService";
+import { useNavigate } from "react-router-dom";
 
 const NotificationItem = ({ notification, onRead, onDelete }) => {
+  const navigate = useNavigate();
 
   const getIcon = () => {
     const iconClass = "w-8 h-8";
@@ -32,6 +34,13 @@ const NotificationItem = ({ notification, onRead, onDelete }) => {
 
   };
 
+  const handleProfileClick = (e) => {
+    e.stopPropagation(); // Prevent marking as read
+    if (notification.actorId) {
+      navigate(`/profile/${notification.actorId}`);
+    }
+  };
+
 
 
   const formatTime = (datestring) => {
@@ -52,13 +61,16 @@ const NotificationItem = ({ notification, onRead, onDelete }) => {
   return (
     <div
       key={notification.id}
-      className={`relative p-4 my-1 rounded-lg transition-all bg-gray-100 dark:bg-neutral-800 hover:bg-neutral-700 dark:hover:bg-gray-200 cursor-pointer ${!notification.readStatus ? 'bg-neutral-700 dark:bg-gray-200' : ''
+      className={`group relative p-4 my-1 rounded-lg transition-all bg-gray-100 dark:bg-neutral-800 hover:bg-neutral-700 dark:hover:bg-gray-200 cursor-pointer ${!notification.readStatus ? 'bg-neutral-700 dark:bg-gray-200' : ''
         }`}
       onClick={() => toggleRead(notification.id)}
     >
       <div className="flex gap-4">
         {/* Avatar */}
-        <div className="relative flex-shrink-0">
+        <div
+          className="relative flex-shrink-0 cursor-pointer hover:opacity-80 transition"
+          onClick={handleProfileClick}
+        >
           {notification.actorProfileImage && notification.actorProfileImage !== "" ? (
             <img
               src={notification.actorProfileImage}
@@ -81,7 +93,12 @@ const NotificationItem = ({ notification, onRead, onDelete }) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
             <div className="flex-1">
-              <span className="font-semibold text-white-900">@{notification.actorUsername}</span>
+              <span
+                className="font-semibold text-white-900 cursor-pointer hover:underline hover:text-black dark:hover:text-black group-hover:text-black dark:group-hover:text-black transition-colors"
+                onClick={handleProfileClick}
+              >
+                @{notification.actorUsername}
+              </span>
               <span className="text-gray-600 ml-2">{notification.payload}</span>
             </div>
             {!notification.readStatus && (

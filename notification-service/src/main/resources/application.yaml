@@ -46,7 +46,7 @@ management:
       probability: 1.0  # Sample 100% of requests
   otlp:
     tracing:
-      endpoint: http://10.0.0.193:4318/v1/traces
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://tempo.monitoring.svc.cluster.local:4318/v1/traces}
   metrics:
     export:
       prometheus:

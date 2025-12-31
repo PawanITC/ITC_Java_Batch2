@@ -1,0 +1,154 @@
+# Optimized Prometheus Configuration for TribeTalk EKS
+# Designed for t3.small nodes (2 vCPU, 2GB RAM each)
+# Reduces resource consumption while maintaining essential monitoring
+
+# Disable Grafana (we already have it in default namespace)
+grafana:
+  enabled: false
+
+# Prometheus configuration - OPTIMIZED
+prometheus:
+  prometheusSpec:
+    # Reduced resource requests to fit on t3.small nodes
+    resources:
+      requests:
+        cpu: 100m          # Reduced from 200m
+        memory: 256Mi      # Reduced from 512Mi
+      limits:
+        cpu: 500m          # Reduced from 1000m
+        memory: 1Gi        # Reduced from 2Gi
+    
+    # Shorter retention to save memory and storage
+    retention: 3d          # Reduced from 7d
+    retentionSize: "5GB"   # Reduced from 10GB
+    
+    # Reduce scrape interval to lower CPU usage
+    scrapeInterval: 30s    # Default is 15s
+    evaluationInterval: 30s
+    
+    # Service monitor selector - scrape all service monitors
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    
+    # Limit storage for TSDB
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp2
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi  # Reduced from default 10Gi
+    
+    # Additional scrape configs for TribeTalk services
+    additionalScrapeConfigs:
+      # TribeTalk main service
+      - job_name: 'tribetalk'
+        scrape_interval: 30s
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['tribetalk.default.svc.cluster.local:8080']
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: instance
+          - target_label: application
+            replacement: 'tribetalk'
+      
+      # Notification service
+      - job_name: 'notification-service'
+        scrape_interval: 30s
+        metrics_path: '/notification/actuator/prometheus'
+        static_configs:
+          - targets: ['notification-service.default.svc.cluster.local:8082']
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: instance
+          - target_label: application
+            replacement: 'notification-service'
+      
+      # Chat service
+      - job_name: 'chatservice'
+        scrape_interval: 30s
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['chatservice.default.svc.cluster.local:8081']
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: instance
+          - target_label: application
+            replacement: 'chatservice'
+
+# Alertmanager - MINIMAL config
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 25m           # Reduced from 50m
+        memory: 64Mi       # Reduced from 128Mi
+      limits:
+        cpu: 100m          # Reduced from 200m
+        memory: 128Mi      # Reduced from 256Mi
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp2
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+
+# Prometheus Operator - OPTIMIZED
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 50m             # Reduced from 100m
+      memory: 64Mi         # Reduced from 128Mi
+    limits:
+      cpu: 200m            # Reduced from 500m
+      memory: 256Mi        # Reduced from 512Mi
+
+# Node exporter - CRITICAL CHANGE
+# Use DaemonSet with tolerations but limit to 2 nodes max
+nodeExporter:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 30Mi
+    limits:
+      cpu: 100m
+      memory: 50Mi
+
+# Kube-state-metrics - OPTIMIZED
+kubeStateMetrics:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# Disable unnecessary components
+defaultRules:
+  create: true
+  rules:
+    # Disable some heavy rule groups to save resources
+    etcd: false
+    kubeScheduler: false
+
+# Disable components we don't need
+kubeControllerManager:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeEtcd:
+  enabled: false
+
+kubeProxy:
+  enabled: false

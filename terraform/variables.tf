@@ -93,19 +93,19 @@ variable "eks_node_instance_type" {
 variable "eks_desired_nodes" {
   description = "Desired number of EKS worker nodes"
   type        = number
-  default     = 2
+  default     = 4  # Increased from 2 to 4 for monitoring stack + future live streaming
 }
 
 variable "eks_min_nodes" {
   description = "Minimum number of EKS worker nodes"
   type        = number
-  default     = 1
+  default     = 3  # Increased from 1 to 3 for stability
 }
 
 variable "eks_max_nodes" {
   description = "Maximum number of EKS worker nodes"
   type        = number
-  default     = 4
+  default     = 6  # Increased from 4 to 6 for future live streaming scalability
 }
 
 variable "jenkins_instance_type" {

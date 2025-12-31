@@ -58,7 +58,9 @@ public class UserController {
                         "username", userResponse.get().username(),
                         "id", userResponse.get().id(),
                         "email", userResponse.get().email(),
-                        "displayname", userResponse.get().displayname()));
+                        "displayname", userResponse.get().displayname(),
+                        "profileImageUrl",
+                        userResponse.get().profileImageUrl() != null ? userResponse.get().profileImageUrl() : ""));
             } else {
                 return ResponseEntity.badRequest().build();
             }

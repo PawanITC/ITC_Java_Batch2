@@ -11,6 +11,7 @@ import com.learning.tribetalk.repository.mongo.UserProfileRepository;
 import com.learning.tribetalk.repository.postgres.FollowRepository;
 import com.learning.tribetalk.repository.postgres.UserRepository;
 import com.learning.tribetalk.service.postgres.UserService;
+import com.learning.tribetalk.service.mongo.S3Service;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,13 +32,15 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final FollowRepository followRepo;
     private final PasswordEncoder passwordEncoder;
     private final UserProfileRepository userProfileRepository;
+    private final S3Service s3Service;
 
     public UserServiceImpl(UserRepository repo, FollowRepository followRepo, PasswordEncoder passwordEncoder,
-            UserProfileRepository userProfileRepository) {
+            UserProfileRepository userProfileRepository, S3Service s3Service) {
         this.repo = repo;
         this.passwordEncoder = passwordEncoder;
         this.followRepo = followRepo;
         this.userProfileRepository = userProfileRepository;
+        this.s3Service = s3Service;
     }
 
     @Override
@@ -114,7 +118,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public List<UserResponse> getAllUsers() {
         return repo.findAll().stream()
                 .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname(),
-                        user.getProfileImageUrl()))
+                        generatePresignedUrl(user.getProfileImageUrl())))
                 .toList();
     }
 
@@ -153,14 +157,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public Optional<UserResponse> findByUsername(String username) {
         return repo.findByUsername(username)
                 .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
-                        user.getDisplayname(), user.getProfileImageUrl()));
+                        user.getDisplayname(), generatePresignedUrl(user.getProfileImageUrl())));
     }
 
     @Override
     public Optional<UserResponse> findByUserId(Long userId) {
         return Optional.ofNullable(repo.findById(userId)
                 .map(user -> new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getDisplayname(),
-                        user.getProfileImageUrl()))
+                        generatePresignedUrl(user.getProfileImageUrl())))
                 .orElseThrow(() -> new ResourceNotFoundException("User not found")));
     }
 
@@ -195,8 +199,21 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                         user.getUsername(),
                         user.getEmail(),
                         user.getDisplayname(),
-                        user.getProfileImageUrl()))
+                        generatePresignedUrl(user.getProfileImageUrl())))
                 .toList();
+    }
+
+    // Helper method to generate presigned URL from S3 key (same methodology as post
+    // images)
+    private String generatePresignedUrl(String s3Key) {
+        if (s3Key == null || s3Key.isBlank()) {
+            return null;
+        }
+        try {
+            return s3Service.generatePresignedUrl(s3Key, Duration.ofHours(1));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 }
