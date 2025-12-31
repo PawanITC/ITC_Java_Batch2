@@ -1,0 +1,82 @@
+# Ultra-lightweight Tempo configuration for TribeTalk
+# Strict resource limits to prevent cluster strain
+
+tempo:
+  # Resource limits - increased memory to prevent OOM
+  resources:
+    requests:
+      cpu: 100m         # Increased from 50m for stability
+      memory: 256Mi     # Increased from 100Mi
+    limits:
+      cpu: 200m         # Increased from 150m
+      memory: 512Mi     # Increased from 200Mi to prevent OOM kills
+  
+  # Minimal storage
+  persistence:
+    enabled: true
+    storageClassName: gp2
+    size: 2Gi          # Small storage, just recent traces
+  
+  # Short retention to save resources
+  retention: 24h       # Only 1 day of traces
+  
+  # Minimal configuration
+  tempo:
+    repository: grafana/tempo
+    tag: latest
+    pullPolicy: IfNotPresent
+    
+    # Simple configuration for minimal resources
+    structuredConfig:
+      # Disable unnecessary features
+      multitenancy_enabled: false
+      
+      # Minimal storage config
+      storage:
+        trace:
+          backend: local
+          local:
+            path: /var/tempo/traces
+          
+      # Limit ingestion rate
+      ingester:
+        max_block_duration: 5m
+        max_block_bytes: 10485760  # 10MB blocks
+      
+      # Minimal compactor
+      compactor:
+        compaction:
+          block_retention: 24h
+      
+      # Limit query resources
+      query_frontend:
+        max_outstanding_per_tenant: 100
+      
+      # Simple receiver config
+      receiver:
+        jaeger:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:14250
+            thrift_http:
+              endpoint: 0.0.0.0:14268
+
+# Disable components we don't need
+tempoQuery:
+  enabled: false
+
+# Minimal replicas
+replicas: 1
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 3200
+
+# No persistence for WAL (saves resources)
+persistence:
+  enabled: true
+  storageClassName: gp2
+  accessModes:
+    - ReadWriteOnce
+  size: 2Gi

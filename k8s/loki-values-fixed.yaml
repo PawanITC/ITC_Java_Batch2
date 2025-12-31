@@ -1,0 +1,134 @@
+# Fixed Loki configuration with proper containerd support
+# Ultra-lightweight with strict resource limits
+
+loki:
+  enabled: true
+  
+  # Strict resource limits
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 150m
+      memory: 200Mi
+  
+  # Persistence
+  persistence:
+    enabled: true
+    storageClassName: gp2
+    size: 3Gi
+  
+  # Short retention
+  config:
+    limits_config:
+      retention_period: 72h
+      max_query_length: 721h
+    
+    chunk_store_config:
+      max_look_back_period: 72h
+    
+    table_manager:
+      retention_deletes_enabled: true
+      retention_period: 72h
+    
+    compactor:
+      retention_enabled: true
+      retention_delete_delay: 2h
+
+# Promtail with FIXED containerd paths
+promtail:
+  enabled: true
+  
+  # Strict resource limits
+  resources:
+    requests:
+      cpu: 25m
+      memory: 50Mi
+    limits:
+      cpu: 50m
+      memory: 100Mi
+  
+  # CRITICAL: Mount containerd log paths + writable positions volume
+  volumeMounts:
+    - name: pods
+      mountPath: /var/log/pods
+      readOnly: true
+    - name: containers
+      mountPath: /var/lib/docker/containers
+      readOnly: true
+    - name: run
+      mountPath: /run/promtail
+      readOnly: false
+  
+  volumes:
+    - name: pods
+      hostPath:
+        path: /var/log/pods
+    - name: containers
+      hostPath:
+        path: /var/lib/docker/containers
+    - name: run
+      emptyDir: {}
+  
+  # Fixed configuration for containerd
+  config:
+    clients:
+      - url: http://loki:3100/loki/api/v1/push
+        tenant_id: ""
+    
+    positions:
+      filename: /run/promtail/positions.yaml
+    
+    scrape_configs:
+      # Kubernetes pod logs via containerd
+      - job_name: kubernetes-pods
+        kubernetes_sd_configs:
+          - role: pod
+        
+        pipeline_stages:
+          - cri: {}
+        
+        relabel_configs:
+          # Only scrape default and monitoring namespaces
+          - source_labels: [__meta_kubernetes_namespace]
+            regex: (default|monitoring)
+            action: keep
+          
+          # Add namespace label
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          
+          # Add pod name label
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          
+          # Add container name label
+          - source_labels: [__meta_kubernetes_pod_container_name]
+            target_label: container
+          
+          # Add app label if exists
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+          
+          # Set the log path for containerd
+          - source_labels: [__meta_kubernetes_pod_uid, __meta_kubernetes_pod_container_name]
+            target_label: __path__
+            separator: /
+            replacement: /var/log/pods/*$1*/*/*.log
+
+# Disable other components
+grafana:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+filebeat:
+  enabled: false
+
+logstash:
+  enabled: false
+
+fluent-bit:
+  enabled: false

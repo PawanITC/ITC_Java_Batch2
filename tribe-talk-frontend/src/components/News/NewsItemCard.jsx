@@ -14,7 +14,7 @@ function NewsItemCard({ id, image, headline, timestamp, category, summary, url }
       />
 
       <div className="flex-1">
-        <p className="text-sm font-semibold text-gray-900 dark:text-yellow-100 leading-snug">
+        <p className="text-sm font-semibold text-gray-900 dark:text-yellow-100 hover:text-black dark:hover:text-black transition-colors leading-snug">
           {headline}
         </p>
 

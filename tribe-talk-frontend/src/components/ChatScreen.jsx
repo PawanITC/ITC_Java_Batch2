@@ -12,23 +12,21 @@ function ChatScreen({ user, currentUser, stompClient }) {
 
   const toIdString = (id) => id?.toString?.() ?? "";
 
-  // ✅ Room ID logic
+  // ✅ Room ID logic - ALWAYS construct from participants for groups to ensure consistency
   let roomId;
   if (user?.type === "group") {
-    if (user.id) {
-      roomId = user.id;
-    } else {
-      const participantIds = [
-        ...user.members.map((m) => toIdString(m.id)),
-        toIdString(currentUser.id),
-      ].filter(Boolean);
-      const uniqueIds = [...new Set(participantIds)];
-      roomId = uniqueIds
-        .map(Number)
-        .sort((a, b) => a - b)
-        .map(String)
-        .join("_");
-    }
+    // Always construct from participants, even if group has an ID
+    // This ensures messages sent before and after group creation use the same roomId
+    const participantIds = [
+      ...user.members.map((m) => toIdString(m.id)),
+      toIdString(currentUser.id),
+    ].filter(Boolean);
+    const uniqueIds = [...new Set(participantIds)];
+    roomId = uniqueIds
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map(String)
+      .join("_");
   } else if (user?.id && currentUser?.id) {
     const a = Number(currentUser.id);
     const b = Number(user.id);
@@ -142,11 +140,20 @@ function ChatScreen({ user, currentUser, stompClient }) {
     <div className="flex flex-col w-full max-w-[600px] h-[90vh] bg-black text-yellow-100 border border-yellow-700 rounded-xl shadow-lg">
       <div className="flex items-center justify-between px-4 py-3 border-b border-yellow-700">
         <div className="flex items-center gap-2">
-          <img
-            src={`https://api.dicebear.com/9.x/thumbs/svg?seed=${user?.username || "group"}`}
-            alt={headerLabel}
-            className="w-8 h-8 rounded-full object-cover"
-          />
+          {/* Profile Image with Fallback */}
+          {user?.profileImageUrl && user.profileImageUrl.trim() !== "" ? (
+            <img
+              src={user.profileImageUrl}
+              alt={headerLabel}
+              className="w-10 h-10 rounded-full object-cover border border-yellow-500"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center border border-yellow-500">
+              <span className="text-neutral-900 font-bold">
+                {(user?.displayname || user?.username || headerLabel || 'U').charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
           <h2 className="font-semibold text-lg">{headerLabel}</h2>
         </div>
       </div>

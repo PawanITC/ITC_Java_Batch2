@@ -48,8 +48,8 @@ class FollowControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/follow/follow-user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Followed successfully!"));
 
@@ -64,8 +64,8 @@ class FollowControllerTest {
 
         // Act & Assert
         mockMvc.perform(delete("/api/follow/unfollow-user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Unfollowed successfully!"));
 
@@ -77,14 +77,13 @@ class FollowControllerTest {
         // Arrange
         Long userId = 1L;
         List<UserResponse> followers = Arrays.asList(
-                new UserResponse(2L, "user2", "user2@example.com", "User Two"),
-                new UserResponse(3L, "user3", "user3@example.com", "User Three")
-        );
+                new UserResponse(2L, "user2", "user2@example.com", "User Two", null),
+                new UserResponse(3L, "user3", "user3@example.com", "User Three", null));
         when(followService.getFollwersList(userId)).thenReturn(followers);
 
         // Act & Assert
         mockMvc.perform(get("/api/follow/followers-list/{userId}", userId)
-                        .contentType(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -101,14 +100,13 @@ class FollowControllerTest {
         // Arrange
         Long userId = 1L;
         List<UserResponse> following = Arrays.asList(
-                new UserResponse(4L, "user4", "user4@example.com", "User Four"),
-                new UserResponse(5L, "user5", "user5@example.com", "User Five")
-        );
+                new UserResponse(4L, "user4", "user4@example.com", "User Four", null),
+                new UserResponse(5L, "user5", "user5@example.com", "User Five", null));
         when(followService.getFollwingList(userId)).thenReturn(following);
 
         // Act & Assert
         mockMvc.perform(get("/api/follow/following-list/{userId}", userId)
-                        .contentType(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -128,7 +126,7 @@ class FollowControllerTest {
 
         // Act & Assert
         mockMvc.perform(get("/api/follow/followers-list/{userId}", userId)
-                        .contentType(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
@@ -143,14 +141,14 @@ class FollowControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/follow/follow-user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
         verify(followService, times(1)).follow(null, 2L);
     }
 
     private UserResponse createUserResponse(Long id, String username, String email) {
-        return new UserResponse(id, username, email, "Display Name");
+        return new UserResponse(id, username, email, "Display Name", null);
     }
 }
