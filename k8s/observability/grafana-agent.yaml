@@ -1,0 +1,150 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grafana-agent
+  namespace: observability
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: grafana-agent
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/proxy
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grafana-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: grafana-agent
+subjects:
+  - kind: ServiceAccount
+    name: grafana-agent
+    namespace: observability
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-agent
+  namespace: observability
+spec:
+  selector:
+    app: grafana-agent
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: grafana-agent
+  namespace: observability
+spec:
+  selector:
+    matchLabels:
+      app: grafana-agent
+  template:
+    metadata:
+      labels:
+        app: grafana-agent
+    spec:
+      serviceAccountName: grafana-agent
+      containers:
+        - name: agent
+          image: grafana/agent:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - -config.file=/etc/agent/agent.yaml
+            - -server.http.address=0.0.0.0:12345
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: PROMETHEUS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-cloud-credentials
+                  key: prometheus-url
+            - name: PROMETHEUS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-cloud-credentials
+                  key: prometheus-username
+            - name: PROMETHEUS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-cloud-credentials
+                  key: prometheus-password
+            - name: LOKI_URL
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-cloud-credentials
+                  key: loki-url
+            - name: LOKI_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-cloud-credentials
+                  key: loki-username
+            - name: LOKI_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-cloud-credentials
+                  key: loki-password
+            - name: TEMPO_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-cloud-credentials
+                  key: tempo-endpoint
+            - name: TEMPO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-cloud-credentials
+                  key: tempo-username
+            - name: TEMPO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-cloud-credentials
+                  key: tempo-password
+          ports:
+            - containerPort: 12345
+              name: http-metrics
+            - containerPort: 4317
+              name: otlp-grpc
+            - containerPort: 4318
+              name: otlp-http
+          volumeMounts:
+            - name: config
+              mountPath: /etc/agent
+            - name: varlog
+              mountPath: /var/log
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: grafana-agent-config
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers

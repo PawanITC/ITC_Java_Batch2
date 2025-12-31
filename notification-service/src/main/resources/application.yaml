@@ -3,21 +3,51 @@ spring:
     name: notification-service
   data:
     mongodb:
-      uri: mongodb://admin:admin123@localhost:27017/tribetalknosqldb?authSource=admin
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://admin:admin123@localhost:27017/tribetalknosqldb?authSource=admin}
 
 
   kafka:
     consumer:
-      bootstrap-servers: localhost:9092
-      group-id: notification-group
-      auto-offset-reset: earliest
+      bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+      group-id: notification-group-v2
+      auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
-        spring.json.trusted.packages: "com.learning.notification_service.dto"   # <-- your package containing NotificationEvent
+        spring.json.trusted.packages: "*"   # Trust all packages to allow deserialization
         spring.json.value.default.type: com.learning.notification_service.dto.NotificationDTO
+        spring.json.type.mapping: >
+          com.learning.tribetalk.dto.NotificationDTO:com.learning.notification_service.dto.NotificationDTO,
+          com.tribetalk.chatservice.DTO.NotificationDTO:com.learning.notification_service.dto.NotificationDTO
     admin:
       auto-create: true
 server:
   port: 8082
+  servlet:
+    context-path: /notification
+
+# Spring Boot Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    defaults:
+      enabled: true
+  # Distributed tracing configuration
+  tracing:
+    sampling:
+      probability: 1.0  # Sample 100% of requests
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://tempo.monitoring.svc.cluster.local:4318/v1/traces}
+  metrics:
+    export:
+      prometheus:
+        enabled: true

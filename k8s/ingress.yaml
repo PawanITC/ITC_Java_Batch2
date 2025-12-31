@@ -1,0 +1,120 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tribetalk-ingress
+  annotations:
+    # AWS Load Balancer Controller annotations
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/subnets: subnet-0d4f69b8dc0fcf915,subnet-08553c64b2d9e6157
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
+    # Optional: Enable HTTPS
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:region:account-id:certificate/certificate-id
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    # alb.ingress.kubernetes.io/ssl-redirect: '443'
+spec:
+  rules:
+  - http:
+      paths:
+      # ChatService API routes (must come before /api to match first)
+      - path: /api/chat
+        pathType: Prefix
+        backend:
+          service:
+            name: chatservice
+            port:
+              number: 8081
+      
+      # Backend API routes
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: tribetalk
+            port:
+              number: 8080
+      
+      # ChatService WebSocket and API
+      - path: /chat
+        pathType: Prefix
+        backend:
+          service:
+            name: chatservice
+            port:
+              number: 8081
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: chatservice
+            port:
+              number: 8081
+      
+      # Notification Service
+      - path: /notification
+        pathType: Prefix
+        backend:
+          service:
+            name: notification-service
+            port:
+              number: 8082
+      
+      # Grafana Monitoring Dashboard
+      - path: /grafana
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              number: 3000
+      
+      # Actuator endpoints (for health checks)
+      - path: /actuator
+        pathType: Prefix
+        backend:
+          service:
+            name: tribetalk
+            port:
+              number: 8080
+
+      # Authentication routes
+      - path: /auth
+        pathType: Prefix
+        backend:
+          service:
+            name: tribetalk
+            port:
+              number: 8080
+
+      # Login routes (including OAuth callbacks)
+      - path: /login
+        pathType: Prefix
+        backend:
+          service:
+            name: tribetalk
+            port:
+              number: 8080
+
+      # OAuth2 authentication routes (GitHub, Google)
+      - path: /oauth2
+        pathType: Prefix
+        backend:
+          service:
+            name: tribetalk
+            port:
+              number: 8080
+
+      # Frontend (default - serves React app)
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tribe-talk-frontend
+            port:
+              number: 80

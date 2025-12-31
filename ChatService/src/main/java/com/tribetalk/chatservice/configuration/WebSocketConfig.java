@@ -15,6 +15,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws") .setAllowedOrigins("http://localhost:8080","http://localhost:5173").withSockJS();
+        registry.addEndpoint("/ws")
+                .setAllowedOrigins(
+                        "http://localhost:8080",
+                        "http://localhost:5173",
+                        "http://k8s-default-tribetal-089de13287-2075252521.eu-north-1.elb.amazonaws.com")
+                .withSockJS();
     }
 }

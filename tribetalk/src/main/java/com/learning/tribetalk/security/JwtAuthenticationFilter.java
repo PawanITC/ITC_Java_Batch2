@@ -30,39 +30,62 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
+        final String token = extractFromCookies(request);
 
-        final String token=extractFromCookies(request);
+        log.info("=== JWT Authentication Debug ===");
+        log.info("Request URI: {}", request.getRequestURI());
+        log.info("JWT token extracted: {}", token != null ? "YES (length: " + token.length() + ")" : "NO");
 
         try {
+            if (token == null) {
+                log.info("No JWT token found in cookies");
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             String username = jwtUtil.extractUsername(token);
+            log.info("Username extracted from token: {}", username);
+
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                if (jwtUtil.isTokenValid(token, username)) {
+                boolean isValid = jwtUtil.isTokenValid(token, username);
+                log.info("Token valid for user '{}': {}", username, isValid);
+
+                if (isValid) {
                     // Option A: load userDetails from DB (preferred)
                     var userDetails = userDetailsService.loadUserByUsername(username);
+                    log.info("UserDetails loaded for: {}", username);
 
                     var authorities = userDetails.getAuthorities();
 
                     var authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, authorities
-                    );
+                            userDetails, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    log.info("✅ Authentication set for user: {}", username);
+                } else {
+                    log.warn("Token validation failed for user: {}", username);
                 }
+            } else if (username == null) {
+                log.warn("Username is null - token might be malformed");
+            } else {
+                log.info("User already authenticated or username is null");
             }
         } catch (Exception ex) {
-            log.debug("JWT invalid: {}", ex.getMessage());
+            log.error("❌ JWT authentication failed: {}", ex.getMessage(), ex);
             // optionally set response status or continue as anonymous
         }
 
+        log.info("================================");
         filterChain.doFilter(request, response);
     }
 
     private String extractFromCookies(HttpServletRequest request) {
-        if(request.getCookies()==null) return null;
-        for (Cookie cookie : request.getCookies()){
-            if("jwt".equalsIgnoreCase(cookie.getName())){
+        if (request.getCookies() == null)
+            return null;
+        for (Cookie cookie : request.getCookies()) {
+            if ("jwt".equalsIgnoreCase(cookie.getName())) {
                 return cookie.getValue();
             }
         }

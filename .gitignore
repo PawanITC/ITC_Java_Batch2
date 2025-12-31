@@ -1,3 +1,101 @@
+# =============================================
+# Terraform
+# =============================================
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+.terraform.lock.hcl
+terraform.tfstate.d/
+*.tfplan
+
+# =============================================
+# Security & Credentials
+# =============================================
+# SSH Keys
+*.pem
+*.key
+*.pub
+id_rsa*
+id_ed25519*
+*.ppk
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+*.env.local
+*.env.production
+*.env.development
+
+# AWS Credentials
+.aws/
+credentials
+config
+
+# Secrets
+secrets/
+**/secrets/
+*.secret
+secret.yaml
+secret.yml
+
+# Kubernetes Secrets (local copies)
+k8s-secrets/
+*.kubeconfig
+
+# =============================================
+# Database and Application Data
+# =============================================
+monitoring/terraform/data/  # PostgreSQL data directory
+
+# Database Backups
+*.sql
+*.dump
+*.backup
+backups/
+
+# =============================================
+# Data Directory
+# =============================================
+/data/
+/node/
+
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
 # Compiled class file
 *.class
 
@@ -22,3 +120,32 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# =============================================
+# OS Files
+# =============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =============================================
+# Temporary Files
+# =============================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# =============================================
+# Large Binary Files
+# =============================================
+# Docker images (should be in registry)
+*.tar
+
+# Node modules (should use package.json)
+node_modules/

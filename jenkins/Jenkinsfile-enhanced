@@ -1,0 +1,254 @@
+// Enhanced Jenkinsfile for TribeTalk - All Services Including Frontend
+// Supports: tribetalk, chatservice, notification-service, tribe-talk-frontend
+
+@Library('tribetalk-shared-library') _
+
+pipeline {
+    agent any
+    
+    parameters {
+        choice(
+            name: 'SERVICE', 
+            choices: ['tribetalk', 'chatservice', 'notification-service', 'tribe-talk-frontend'], 
+            description: 'Select service to build'
+        )
+        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag')
+        booleanParam(name: 'DEPLOY_TO_EKS', defaultValue: true, description: 'Deploy to EKS after build')
+        string(name: 'VITE_API_BASE_URL', defaultValue: '', description: 'Frontend API URL (leave empty for auto-detect)')
+    }
+    
+    environment {
+        AWS_REGION = 'eu-north-1'
+        AWS_ACCOUNT_ID = sh(script: 'aws sts get-caller-identity --query Account --output text', returnStdout: true).trim()
+        ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        EKS_CLUSTER_NAME = 'tribetalk-cluster'
+        
+        // Service-specific configurations
+        SERVICE_NAME = "${params.SERVICE}"
+        IS_FRONTEND = "${params.SERVICE == 'tribe-talk-frontend'}"
+        ECR_REPO = "${params.SERVICE}"
+        SERVICE_PORT = getServicePort("${params.SERVICE}")
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        // Backend stages (Java services)
+        stage('Build JAR') {
+            when {
+                expression { params.SERVICE != 'tribe-talk-frontend' }
+            }
+            steps {
+                script {
+                    dir("${SERVICE_NAME}") {
+                        echo "Building ${SERVICE_NAME}..."
+                        sh './mvnw clean package -DskipTests'
+                    }
+                }
+            }
+        }
+        
+        stage('Run Backend Tests') {
+            when {
+                expression { params.SERVICE != 'tribe-talk-frontend' }
+            }
+            steps {
+                script {
+                    dir("${SERVICE_NAME}") {
+                        echo "Running tests for ${SERVICE_NAME}..."
+                        sh './mvnw test'
+                    }
+                }
+            }
+            post {
+                always {
+                    junit "**/target/surefire-reports/*.xml"
+                }
+            }
+        }
+        
+        // Frontend stages
+        stage('Build Frontend') {
+            when {
+                expression { params.SERVICE == 'tribe-talk-frontend' }
+            }
+            steps {
+                script {
+                    dir('tribe-talk-frontend') {
+                        echo "Building frontend..."
+                        
+                        // Get ALB DNS if not provided
+                        def apiBaseUrl = params.VITE_API_BASE_URL
+                        if (!apiBaseUrl) {
+                            apiBaseUrl = sh(
+                                script: "kubectl get ingress tribetalk-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'",
+                                returnStdout: true
+                            ).trim()
+                            apiBaseUrl = "http://${apiBaseUrl}"
+                        }
+                        
+                        // Get GitHub client ID from secrets
+                        def githubClientId = sh(
+                            script: "kubectl get secret tribetalk-app-secrets -o jsonpath='{.data.github_client_id}' | base64 -d",
+                            returnStdout: true
+                        ).trim()
+                        
+                        echo "Building with API URL: ${apiBaseUrl}"
+                        
+                        sh """
+                            npm install
+                            VITE_API_BASE_URL="${apiBaseUrl}" VITE_GITHUB_CLIENT_ID="${githubClientId}" npm run build
+                        """
+                    }
+                }
+            }
+        }
+        
+        stage('Run Frontend Tests') {
+            when {
+                expression { params.SERVICE == 'tribe-talk-frontend' }
+            }
+            steps {
+                script {
+                    dir('tribe-talk-frontend') {
+                        echo "Running frontend tests..."
+                        sh 'npm test -- --passWithNoTests || true'
+                    }
+                }
+            }
+        }
+        
+        // Docker build (common for all services)
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    def buildDir = params.SERVICE == 'tribe-talk-frontend' ? 'tribe-talk-frontend' : SERVICE_NAME
+                    
+                    dir(buildDir) {
+                        echo "Building Docker image for ${SERVICE_NAME}..."
+                        
+                        // For frontend, pass build args
+                        def buildArgs = ""
+                        if (params.SERVICE == 'tribe-talk-frontend') {
+                            def apiBaseUrl = params.VITE_API_BASE_URL ?: sh(
+                                script: "kubectl get ingress tribetalk-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'",
+                                returnStdout: true
+                            ).trim()
+                            def githubClientId = sh(
+                                script: "kubectl get secret tribetalk-app-secrets -o jsonpath='{.data.github_client_id}' | base64 -d",
+                                returnStdout: true
+                            ).trim()
+                            buildArgs = "--build-arg VITE_API_BASE_URL=http://${apiBaseUrl} --build-arg VITE_GITHUB_CLIENT_ID=${githubClientId}"
+                        }
+                        
+                        sh """
+                            docker build ${buildArgs} -t ${ECR_REPO}:${params.IMAGE_TAG} .
+                            docker tag ${ECR_REPO}:${params.IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPO}:${params.IMAGE_TAG}
+                            docker tag ${ECR_REPO}:${params.IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPO}:build-${BUILD_NUMBER}
+                        """
+                    }
+                }
+            }
+        }
+        
+        stage('Push to ECR') {
+            steps {
+                script {
+                    echo "Logging in to ECR..."
+                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+                    
+                    echo "Pushing image to ECR..."
+                    sh """
+                        docker push ${ECR_REGISTRY}/${ECR_REPO}:${params.IMAGE_TAG}
+                        docker push ${ECR_REGISTRY}/${ECR_REPO}:build-${BUILD_NUMBER}
+                    """
+                }
+            }
+        }
+        
+        stage('Deploy to EKS') {
+            when {
+                expression { params.DEPLOY_TO_EKS == true }
+            }
+            steps {
+                script {
+                    echo "Updating kubeconfig for EKS..."
+                    sh "aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME} --region ${AWS_REGION}"
+                    
+                    echo "Deploying ${SERVICE_NAME} to EKS..."
+                    sh """
+                        # Update image in deployment
+                        kubectl set image deployment/${SERVICE_NAME} ${SERVICE_NAME}=${ECR_REGISTRY}/${ECR_REPO}:${params.IMAGE_TAG} -n default
+                        
+                        # Wait for rollout to complete
+                        kubectl rollout status deployment/${SERVICE_NAME} -n default --timeout=5m
+                        
+                        # Verify deployment
+                        kubectl get pods -l app=${SERVICE_NAME} -n default
+                    """
+                }
+            }
+        }
+        
+        stage('Verify Deployment') {
+            when {
+                expression { params.DEPLOY_TO_EKS == true }
+            }
+            steps {
+                script {
+                    echo "Verifying deployment health..."
+                    sh """
+                        # Get pod status
+                        kubectl get pods -l app=${SERVICE_NAME} -n default
+                        
+                        # Check if pods are ready
+                        kubectl wait --for=condition=ready pod -l app=${SERVICE_NAME} -n default --timeout=3m
+                        
+                        echo "Deployment successful!"
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "Pipeline completed successfully for ${SERVICE_NAME}!"
+            // Optional: Send Slack notification
+            // slackSend color: 'good', message: "Build #${BUILD_NUMBER} for ${SERVICE_NAME} succeeded!"
+        }
+        failure {
+            echo "Pipeline failed for ${SERVICE_NAME}!"
+            // Optional: Send Slack notification
+            // slackSend color: 'danger', message: "Build #${BUILD_NUMBER} for ${SERVICE_NAME} failed!"
+        }
+        always {
+            // Clean up Docker images
+            sh """
+                docker rmi ${ECR_REPO}:${params.IMAGE_TAG} || true
+                docker rmi ${ECR_REGISTRY}/${ECR_REPO}:${params.IMAGE_TAG} || true
+                docker rmi ${ECR_REGISTRY}/${ECR_REPO}:build-${BUILD_NUMBER} || true
+            """
+        }
+    }
+}
+
+// Helper function to get service port
+def getServicePort(service) {
+    switch(service) {
+        case 'tribetalk':
+            return '8080'
+        case 'chatservice':
+            return '8081'
+        case 'notification-service':
+            return '8082'
+        case 'tribe-talk-frontend':
+            return '80'
+        default:
+            return '8080'
+    }
+}

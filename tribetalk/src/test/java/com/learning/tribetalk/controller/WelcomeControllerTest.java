@@ -10,6 +10,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -21,17 +23,19 @@ public class WelcomeControllerTest {
 
     //Disabling Security for tests
     @TestConfiguration
-    static class TestSecurityConfig{
+    static class TestSecurityConfig {
         @Bean
-        public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception{
-            return httpSecurity.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(auth->auth.anyRequest().permitAll()).build();
+        public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+            return httpSecurity.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(auth -> auth.anyRequest().permitAll()).build();
         }
 
     }
+
     @Test
-    public void testWelcomePageLoads() throws Exception{
+    public void testWelcomePageLoads() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("index"));
+                .andExpect(content().string("Backend is running"));
+
     }
 }

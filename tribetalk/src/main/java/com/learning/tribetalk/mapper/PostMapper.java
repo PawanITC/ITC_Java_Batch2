@@ -1,14 +1,14 @@
 package com.learning.tribetalk.mapper;
 
-import com.learning.tribetalk.dto.PostCreateRequest;
-import com.learning.tribetalk.dto.PostResponse;
-import com.learning.tribetalk.entity.Post;
-
+import com.learning.tribetalk.dto.request.PostCreateRequest;
+import com.learning.tribetalk.dto.response.PostResponse;
+import com.learning.tribetalk.entity.mongo.Post;
+import java.util.HashSet;
 import java.util.List;
 
 public class PostMapper {
     // Entity -> DTO
-    public static PostResponse toResponse(Post post) {
+    public static PostResponse toResponse(Post post, List<String> presignedUrls) {
         Integer totalVotes = null;
         List<PostResponse.PollOptionDTO> optionDTOs = null;
 
@@ -23,6 +23,17 @@ public class PostMapper {
                     })
                     .toList();
         }
+
+        //  Map media list
+        List<PostResponse.MediaDTO> mediaDTOs = null;
+        if (post.getMediaList() != null && presignedUrls != null) {
+            mediaDTOs = post.getMediaList().stream()
+                    .map(m -> new PostResponse.MediaDTO(
+                            presignedUrls.get(post.getMediaList().indexOf(m)),
+                            m.type()))
+                    .toList();
+        }
+
         return new PostResponse(
                 post.getId(),
                 post.getUserId(),
@@ -33,9 +44,14 @@ public class PostMapper {
                 post.getHashtags(),
                 post.getMentions(),
                 post.getUrls(),
-                post.getMedia() != null ? new PostResponse.MediaDTO(post.getMedia().url(), post.getMedia().type()) : null,
+                mediaDTOs,
                 post.getPoll() != null ? new PostResponse.PollDTO(
-                        optionDTOs,post.getPoll().expiresAt(),totalVotes): null,
+                        optionDTOs, post.getPoll().expiresAt(), totalVotes, post.getVotedBy(), null) : null,
+                post.getReplyToPostId(),
+                post.getReplyToUsername(),
+                post.getReplyCount(),
+                post.getLikedBy(),
+                post.getBookmarkedBy(),
                 post.getLikeCount(),
                 post.getViewCount(),
                 post.getCreatedAt()
@@ -53,16 +69,24 @@ public class PostMapper {
                 .hashtags(dto.hashtags())
                 .mentions(dto.mentions())
                 .urls(dto.urls())
-                .media(mapMedia(dto.media()))
+                .mediaList(mapMediaList(dto.mediaList()))
                 .poll(mapPoll(dto.poll()))
+                .replyToPostId(dto.replyToPostId())
+                .replyToUsername(dto.replyToUsername())
+                .likedBy(dto.likedBy() != null ? new HashSet<>(dto.likedBy()) : new HashSet<>())
+                .bookmarkedBy(dto.bookmarkedBy() != null ? new HashSet<>(dto.bookmarkedBy()) : new HashSet<>())
                 .build();
     }
 
-    private static Post.Media mapMedia(PostCreateRequest.MediaDTO mediaDTO) {
-        if (mediaDTO == null) return null;
-        return new Post.Media(mediaDTO.url(), mediaDTO.type());
+    // Map list of media
+    private static List<Post.Media> mapMediaList(List<PostCreateRequest.MediaDTO> mediaList) {
+        if (mediaList == null) return null;
+        return mediaList.stream()
+                .map(m -> new Post.Media(m.url(), m.type()))
+                .toList();
     }
 
+    // Map poll
     private static Post.Poll mapPoll(PostCreateRequest.PollDTO pollDTO) {
         if (pollDTO == null) return null;
         List<Post.PollOption> options = pollDTO.options().stream()

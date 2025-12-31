@@ -1,0 +1,82 @@
+# Loki configuration for production with persistence
+# Single instance mode with PVC storage
+
+deploymentMode: SingleBinary
+
+loki:
+  auth_enabled: false
+  
+  commonConfig:
+    replication_factor: 1
+  
+  storage:
+    type: 'filesystem'
+  
+  schemaConfig:
+    configs:
+      - from: 2024-01-01
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+
+singleBinary:
+  replicas: 1
+  
+  # Enable persistence with PVC
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: gp2  # AWS EBS gp2
+  
+  # Production resource limits
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+# Disable gateway (not needed for single instance)
+gateway:
+  enabled: false
+
+# Disable read/write/backend (using SingleBinary mode)
+backend:
+  replicas: 0
+
+read:
+  replicas: 0
+
+write:
+  replicas: 0
+
+# Disable canary (testing component)
+lokiCanary:
+  enabled: false
+
+# Disable caches to save pods
+chunksCache:
+  enabled: false
+
+resultsCache:
+  enabled: false
+
+# Monitoring integration
+monitoring:
+  selfMonitoring:
+    enabled: false
+    grafanaAgent:
+      installOperator: false
+
+# Retention configuration
+limits_config:
+  retention_period: 168h  # 7 days
+  max_query_length: 721h  # Allow querying full retention period
+
+# Test configuration
+test:
+  enabled: false

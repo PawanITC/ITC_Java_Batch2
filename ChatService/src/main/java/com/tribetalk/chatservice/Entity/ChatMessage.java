@@ -22,4 +22,8 @@ public class ChatMessage {
     private String content;         // message text
     private Long timestamp;         // epoch millis for ordering
     private boolean isRead;
+
+    private boolean isGroup;        // flag to indicate group chat
+    private java.util.List<String> groupMembers; // list of userIds in the group
+    private String groupName;
 }
